@@ -6,8 +6,8 @@
 <title>World Cup 2026 Prediction Tracker</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#f5f5f0;--card:#fff;--text:#1a1a1a;--muted:#666;--hint:#999;--border:#e0e0e0;--accent:#1d9e75;--accent2:#0f6e56;--gold:#BA7517;--silver:#888;--bronze:#a0522d;--danger:#e24b4a;--blue:#378add;--purple:#7f77dd;--input-bg:#fff;--hover:#f0f0ea;--shadow:0 1px 3px rgba(0,0,0,0.08)}
-@media(prefers-color-scheme:dark){:root{--bg:#1a1a1a;--card:#252525;--text:#e8e8e8;--muted:#aaa;--hint:#777;--border:#333;--input-bg:#2a2a2a;--hover:#303030;--shadow:0 1px 3px rgba(0,0,0,0.3)}}
+:root{--bg:#f5f5f0;--card:#fff;--text:#1a1a1a;--muted:#666;--hint:#999;--border:#e0e0e0;--accent:#1d9e75;--accent2:#0f6e56;--gold:#BA7517;--silver:#888;--bronze:#a0522d;--danger:#e24b4a;--blue:#378add;--purple:#7f77dd;--input-bg:#fff;--hover:#f0f0ea;--shadow:0 1px 3px rgba(0,0,0,0.08);--locked-bg:#f9f9f5}
+@media(prefers-color-scheme:dark){:root{--bg:#1a1a1a;--card:#252525;--text:#e8e8e8;--muted:#aaa;--hint:#777;--border:#333;--input-bg:#2a2a2a;--hover:#303030;--shadow:0 1px 3px rgba(0,0,0,0.3);--locked-bg:#2a2a2a}}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 .container{max-width:900px;margin:0 auto;padding:16px}
 header{text-align:center;padding:24px 0 16px;border-bottom:1px solid var(--border);margin-bottom:20px}
@@ -32,20 +32,24 @@ tr:last-child td{border-bottom:none}
 .rank-3{color:var(--bronze);font-weight:700}
 input[type="number"]{width:48px;text-align:center;padding:6px;border:1px solid var(--border);border-radius:6px;font-size:16px;font-weight:600;background:var(--input-bg);color:var(--text)}
 input[type="number"]:focus{outline:none;border-color:var(--accent)}
+input[type="number"]:disabled{opacity:.6;background:var(--locked-bg);cursor:not-allowed}
 input[type="text"]{padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:var(--input-bg);color:var(--text);width:100%}
 input[type="text"]:focus{outline:none;border-color:var(--accent)}
 select{padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:var(--input-bg);color:var(--text)}
 select:focus{outline:none;border-color:var(--accent)}
 button{padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:14px;font-weight:500;transition:all .15s}
 button:hover{background:var(--hover)}
+button:disabled{opacity:.5;cursor:not-allowed}
 .btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
 .btn-primary:hover{background:var(--accent2)}
 .btn-danger{color:var(--danger);border-color:var(--danger)}
 .btn-sm{padding:4px 10px;font-size:12px}
+.btn-lock{background:var(--blue);color:#fff;border-color:var(--blue);padding:4px 12px;font-size:12px}
+.btn-lock:hover{opacity:.9}
 .match-card{background:var(--card);border-radius:10px;padding:14px;box-shadow:var(--shadow);margin-bottom:10px}
 .match-header{font-size:11px;color:var(--hint);margin-bottom:8px;display:flex;justify-content:space-between}
-.match-teams{display:flex;align-items:center;justify-content:center;gap:12px}
-.match-teams .team{font-size:14px;font-weight:500;min-width:100px}
+.match-teams{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
+.match-teams .team{font-size:14px;font-weight:500;min-width:90px}
 .match-teams .team:first-child{text-align:right}
 .match-vs{color:var(--hint);font-size:12px}
 .match-score{display:flex;align-items:center;gap:6px}
@@ -54,6 +58,8 @@ button:hover{background:var(--hover)}
 .result-correct{background:#faeeda;color:#854f0b}
 .result-wrong{background:#fcebeb;color:#a32d2d}
 @media(prefers-color-scheme:dark){.result-exact{background:#085041;color:#9fe1cb}.result-correct{background:#412402;color:#fac775}.result-wrong{background:#501313;color:#f09595}}
+.locked-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:#e6f1fb;color:#185fa5}
+@media(prefers-color-scheme:dark){.locked-badge{background:#042c53;color:#85b7eb}}
 .player-form{display:flex;gap:8px;margin-bottom:16px}
 .player-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
 .player-chip{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--hover);border-radius:20px;font-size:13px}
@@ -63,15 +69,18 @@ button:hover{background:var(--hover)}
 .group-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
 .hidden{display:none}
 .empty{text-align:center;padding:40px;color:var(--muted)}
-.flex-between{display:flex;justify-content:space-between;align-items:center}
-.mb-8{margin-bottom:8px}
-.mb-12{margin-bottom:12px}
-.mb-16{margin-bottom:16px}
-.actual-score-row{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border)}
-.actual-label{font-size:11px;color:var(--hint)}
-.points-display{font-weight:700;font-size:14px;color:var(--accent)}
+.flex-between{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.sync-status{font-size:12px;padding:4px 10px;border-radius:12px;display:inline-flex;align-items:center;gap:4px}
+.sync-online{background:#e1f5ee;color:#0f6e56}
+.sync-offline{background:#fcebeb;color:#a32d2d}
+@media(prefers-color-scheme:dark){.sync-online{background:#085041;color:#9fe1cb}.sync-offline{background:#501313;color:#f09595}}
+.live-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#e24b4a;color:#fff;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+.pred-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px;margin-top:8px}
+.pred-item{font-size:12px;padding:4px 8px;background:var(--hover);border-radius:6px;display:flex;justify-content:space-between}
+.pred-item .name{font-weight:500}
 .countdown{font-size:12px;color:var(--accent);font-weight:500}
-.export-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.admin-badge{font-size:10px;padding:1px 6px;border-radius:3px;background:var(--purple);color:#fff;margin-left:4px}
 </style>
 </head>
 <body>
@@ -79,20 +88,50 @@ button:hover{background:var(--hover)}
 <header>
 <h1>World Cup 2026 Prediction Tracker</h1>
 <p>June 11 - July 19 | USA, Mexico, Canada</p>
+<div id="syncStatus" style="margin-top:8px"></div>
 </header>
 
+<div id="loginScreen">
+  <div class="card" style="max-width:400px;margin:40px auto;text-align:center">
+    <h2 style="margin-bottom:16px">Join the game</h2>
+    <p style="font-size:14px;color:var(--muted);margin-bottom:16px">Enter your name to start predicting</p>
+    <div class="player-form" style="justify-content:center">
+      <input type="text" id="loginName" placeholder="Your name" style="max-width:200px" />
+      <button class="btn-primary" id="loginBtn">Join</button>
+    </div>
+    <div id="existingPlayers" style="margin-top:16px"></div>
+  </div>
+</div>
+
+<div id="mainApp" class="hidden">
 <div class="tabs" id="tabs">
 <button class="tab active" data-tab="dashboard">Dashboard</button>
+<button class="tab" data-tab="live">Live</button>
 <button class="tab" data-tab="predict">Predict</button>
 <button class="tab" data-tab="results">Results</button>
 <button class="tab" data-tab="leaderboard">Leaderboard</button>
 <button class="tab" data-tab="players">Players</button>
 </div>
-
 <div id="content"></div>
 </div>
+</div>
 
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCnIjQswJgCnf7h46X-mOqmiUw3L4kGjGA",
+  authDomain: "wc2026-predictions-3873b.firebaseapp.com",
+  databaseURL: "https://wc2026-predictions-3873b-default-rtdb.firebaseio.com",
+  projectId: "wc2026-predictions-3873b",
+  storageBucket: "wc2026-predictions-3873b.firebasestorage.app",
+  messagingSenderId: "36823058041",
+  appId: "1:36823058041:web:a0712d4ecef2bd39e0b6a8"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
 const MATCHES = [
 {id:1,group:"A",team1:"Mexico",team2:"South Africa",date:"2026-06-11",time:"15:00",venue:"Estadio Azteca, Mexico City"},
 {id:2,group:"A",team1:"South Korea",team2:"Czechia",date:"2026-06-11",time:"22:00",venue:"Estadio Akron, Guadalajara"},
@@ -169,29 +208,71 @@ const MATCHES = [
 ];
 
 const GROUPS = ["A","B","C","D","E","F","G","H","I","J","K","L"];
+const ADMIN = "Baba";
 
-// State
-let state = load();
-function load(){
-  try{const s=localStorage.getItem('wc2026');return s?JSON.parse(s):{players:[],predictions:{},actuals:{},currentPlayer:null};}
-  catch(e){return {players:[],predictions:{},actuals:{},currentPlayer:null};}
-}
-function save(){localStorage.setItem('wc2026',JSON.stringify(state));}
-
-// Tab routing
+let state = { players: {}, predictions: {}, actuals: {} };
+let currentPlayer = localStorage.getItem('wc2026_player') || null;
 let currentTab = 'dashboard';
-document.getElementById('tabs').addEventListener('click',e=>{
-  if(!e.target.classList.contains('tab'))return;
+let isOnline = false;
+
+const stateRef = db.ref('wc2026');
+stateRef.child('players').on('value', snap => { state.players = snap.val() || {}; updateExistingPlayers(); if(currentPlayer) render(); });
+stateRef.child('predictions').on('value', snap => { state.predictions = snap.val() || {}; if(currentPlayer) render(); });
+stateRef.child('actuals').on('value', snap => { state.actuals = snap.val() || {}; if(currentPlayer) render(); });
+db.ref('.info/connected').on('value', snap => { isOnline = snap.val() === true; updateSyncStatus(); });
+
+function updateSyncStatus() {
+  const el = document.getElementById('syncStatus');
+  el.innerHTML = isOnline
+    ? '<span class="sync-status sync-online">&#9679; Synced live</span>'
+    : '<span class="sync-status sync-offline">&#9679; Offline</span>';
+}
+
+function updateExistingPlayers() {
+  const el = document.getElementById('existingPlayers');
+  if(!el) return;
+  const players = Object.keys(state.players);
+  if(!players.length) { el.innerHTML = ''; return; }
+  el.innerHTML = '<p style="font-size:13px;color:var(--muted);margin-bottom:8px">Or pick your name:</p>' +
+    '<div class="player-list" style="justify-content:center">' +
+    players.map(p => '<button class="player-chip" onclick="loginAs(\'' + p.replace(/'/g, "\\'") + '\')" style="cursor:pointer;border:none">' + p + '</button>').join('') +
+    '</div>';
+}
+
+function loginAs(name) {
+  currentPlayer = name;
+  localStorage.setItem('wc2026_player', name);
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('mainApp').classList.remove('hidden');
+  render();
+}
+
+document.getElementById('loginBtn').addEventListener('click', () => {
+  const name = document.getElementById('loginName').value.trim();
+  if(!name) return;
+  db.ref('wc2026/players/' + name).set(true);
+  loginAs(name);
+});
+document.getElementById('loginName').addEventListener('keydown', e => { if(e.key === 'Enter') document.getElementById('loginBtn').click(); });
+
+if(currentPlayer) {
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('mainApp').classList.remove('hidden');
+}
+
+document.getElementById('tabs').addEventListener('click', e => {
+  if(!e.target.classList.contains('tab')) return;
   currentTab = e.target.dataset.tab;
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   e.target.classList.add('active');
   render();
 });
 
-function render(){
+function render() {
   const c = document.getElementById('content');
-  switch(currentTab){
+  switch(currentTab) {
     case 'dashboard': c.innerHTML = renderDashboard(); break;
+    case 'live': c.innerHTML = renderLive(); break;
     case 'predict': c.innerHTML = renderPredict(); break;
     case 'results': c.innerHTML = renderResults(); break;
     case 'leaderboard': c.innerHTML = renderLeaderboard(); break;
@@ -200,332 +281,233 @@ function render(){
   attachEvents();
 }
 
-function getCountdown(dateStr,timeStr){
-  const d = new Date(dateStr+'T'+timeStr+':00');
-  const now = new Date();
-  const diff = d - now;
-  if(diff<=0) return 'Started';
-  const days = Math.floor(diff/86400000);
-  const hrs = Math.floor((diff%86400000)/3600000);
-  if(days>0) return days+'d '+hrs+'h';
-  const mins = Math.floor((diff%3600000)/60000);
-  return hrs+'h '+mins+'m';
+function getMatchTime(m) { return new Date(m.date + 'T' + m.time + ':00-04:00'); }
+function getCountdown(m) {
+  const diff = getMatchTime(m) - new Date();
+  if(diff <= 0) return 'Started';
+  const d = Math.floor(diff / 86400000), h = Math.floor((diff % 86400000) / 3600000);
+  if(d > 0) return d + 'd ' + h + 'h';
+  return h + 'h ' + Math.floor((diff % 3600000) / 60000) + 'm';
+}
+function isMatchStarted(m) { return new Date() >= getMatchTime(m); }
+function isPredLocked(player, mid) { const p = state.predictions?.[player]?.['m' + mid]; return p && p.locked; }
+
+function calcPoints(pred, actual) {
+  if(!pred || !actual || actual.s1 === undefined || actual.s2 === undefined || actual.s1 === '' || actual.s2 === '') return null;
+  const ps1 = parseInt(pred.s1), ps2 = parseInt(pred.s2), as1 = parseInt(actual.s1), as2 = parseInt(actual.s2);
+  if(isNaN(ps1) || isNaN(ps2) || isNaN(as1) || isNaN(as2)) return null;
+  if(ps1 === as1 && ps2 === as2) return { pts: 3, type: 'exact' };
+  if(Math.sign(ps1 - ps2) === Math.sign(as1 - as2)) return { pts: 1, type: 'correct' };
+  return { pts: 0, type: 'wrong' };
 }
 
-function calcPoints(pred,actual){
-  if(!pred||!actual||actual.s1===''||actual.s2==='') return null;
-  const ps1=parseInt(pred.s1),ps2=parseInt(pred.s2);
-  const as1=parseInt(actual.s1),as2=parseInt(actual.s2);
-  if(isNaN(ps1)||isNaN(ps2)||isNaN(as1)||isNaN(as2)) return null;
-  if(ps1===as1&&ps2===as2) return {pts:3,type:'exact'};
-  const pRes=Math.sign(ps1-ps2), aRes=Math.sign(as1-as2);
-  if(pRes===aRes) return {pts:1,type:'correct'};
-  return {pts:0,type:'wrong'};
-}
-
-function getLeaderboardData(){
-  return state.players.map(p=>{
-    let total=0,exact=0,correct=0,wrong=0,predicted=0;
-    MATCHES.forEach(m=>{
-      const pred = state.predictions[p]?.[m.id];
-      const actual = state.actuals[m.id];
-      if(!pred) return;
-      const r = calcPoints(pred,actual);
-      if(r===null) return;
-      predicted++;
-      total+=r.pts;
-      if(r.type==='exact') exact++;
-      else if(r.type==='correct') correct++;
-      else wrong++;
+function getLeaderboard() {
+  return Object.keys(state.players || {}).map(p => {
+    let total = 0, exact = 0, correct = 0, wrong = 0, predicted = 0;
+    MATCHES.forEach(m => {
+      const pred = state.predictions?.[p]?.['m' + m.id];
+      if(!pred || !pred.locked) return;
+      const r = calcPoints(pred, state.actuals?.['m' + m.id]);
+      if(!r) return;
+      predicted++; total += r.pts;
+      if(r.type === 'exact') exact++; else if(r.type === 'correct') correct++; else wrong++;
     });
-    return {name:p,total,exact,correct,wrong,predicted};
-  }).sort((a,b)=>b.total-a.total||b.exact-a.exact);
+    return { name: p, total, exact, correct, wrong, predicted };
+  }).sort((a, b) => b.total - a.total || b.exact - a.exact);
 }
 
-function renderDashboard(){
-  const lb = getLeaderboardData();
-  const leader = lb[0];
-  const played = Object.keys(state.actuals).length;
-  const nextMatch = MATCHES.find(m=>!state.actuals[m.id]);
+function fmtDate(ds) { return new Date(ds + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
 
-  let html = '<div class="stats-row">';
-  html += `<div class="stat-card"><div class="label">Players</div><div class="value">${state.players.length}</div></div>`;
-  html += `<div class="stat-card"><div class="label">Matches played</div><div class="value">${played} / ${MATCHES.length}</div></div>`;
-  html += `<div class="stat-card"><div class="label">Leader</div><div class="value">${leader?leader.name:'-'}</div></div>`;
-  html += `<div class="stat-card"><div class="label">Top score</div><div class="value">${leader?leader.total+' pts':'-'}</div></div>`;
-  html += '</div>';
-
-  if(state.players.length===0){
-    html += '<div class="card"><div class="empty">Add players in the Players tab to get started!</div></div>';
-    return html;
+function renderDashboard() {
+  const lb = getLeaderboard(), leader = lb[0], played = Object.keys(state.actuals || {}).length, players = Object.keys(state.players || {});
+  let h = '<div class="stats-row">';
+  h += '<div class="stat-card"><div class="label">Players</div><div class="value">' + players.length + '</div></div>';
+  h += '<div class="stat-card"><div class="label">Matches played</div><div class="value">' + played + ' / ' + MATCHES.length + '</div></div>';
+  h += '<div class="stat-card"><div class="label">Leader</div><div class="value">' + (leader && leader.total > 0 ? leader.name : '-') + '</div></div>';
+  h += '<div class="stat-card"><div class="label">Top score</div><div class="value">' + (leader && leader.total > 0 ? leader.total + ' pts' : '-') + '</div></div></div>';
+  h += '<div style="text-align:center;margin-bottom:16px;font-size:13px;color:var(--muted)">Logged in as <strong>' + currentPlayer + '</strong> <button class="btn-sm" onclick="logout()" style="margin-left:8px">Switch</button></div>';
+  if(!players.length) return h + '<div class="card"><div class="empty">Share the link to get friends to join!</div></div>';
+  if(lb.length) {
+    h += '<div class="card"><h2>Leaderboard</h2><table><tr><th>#</th><th>Player</th><th style="text-align:right">Exact</th><th style="text-align:right">Correct</th><th style="text-align:right">Points</th></tr>';
+    lb.forEach((p, i) => { h += '<tr><td class="' + (i < 3 ? 'rank-' + (i + 1) : '') + '">' + (i + 1) + '</td><td>' + p.name + '</td><td style="text-align:right">' + p.exact + '</td><td style="text-align:right">' + p.correct + '</td><td style="text-align:right;font-weight:600">' + p.total + '</td></tr>'; });
+    h += '</table></div>';
   }
-
-  // Mini leaderboard
-  if(lb.length>0){
-    html += '<div class="card"><h2>Leaderboard</h2><table><tr><th>#</th><th>Player</th><th style="text-align:right">Exact</th><th style="text-align:right">Correct</th><th style="text-align:right">Points</th></tr>';
-    lb.forEach((p,i)=>{
-      const rc = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'';
-      html += `<tr><td class="${rc}">${i+1}</td><td>${p.name}</td><td style="text-align:right">${p.exact}</td><td style="text-align:right">${p.correct}</td><td style="text-align:right;font-weight:600">${p.total}</td></tr>`;
-    });
-    html += '</table></div>';
+  const nm = MATCHES.find(m => !state.actuals?.['m' + m.id]);
+  if(nm) {
+    h += '<div class="card"><h2>Next match</h2>';
+    h += '<div class="match-header"><span>Group ' + nm.group + '</span><span class="countdown">' + getCountdown(nm) + '</span></div>';
+    h += '<div class="match-teams"><span class="team">' + nm.team1 + '</span><span class="match-vs">vs</span><span class="team">' + nm.team2 + '</span></div>';
+    h += '<div style="text-align:center;margin-top:8px;font-size:12px;color:var(--hint)">' + nm.venue + '<br>' + fmtDate(nm.date) + ' ' + nm.time + ' ET</div>';
+    h += isPredLocked(currentPlayer, nm.id) ? '<div style="text-align:center;margin-top:8px"><span class="locked-badge">Your prediction is locked</span></div>' : '<div style="text-align:center;margin-top:8px"><span style="font-size:12px;color:var(--danger)">You haven\'t predicted this match yet!</span></div>';
+    h += '</div>';
   }
-
-  // Next match
-  if(nextMatch){
-    html += `<div class="card"><h2>Next match</h2>`;
-    html += `<div class="match-header"><span>Group ${nextMatch.group}</span><span class="countdown">${getCountdown(nextMatch.date,nextMatch.time)}</span></div>`;
-    html += `<div class="match-teams"><span class="team">${nextMatch.team1}</span><span class="match-vs">vs</span><span class="team">${nextMatch.team2}</span></div>`;
-    html += `<div style="text-align:center;margin-top:8px;font-size:12px;color:var(--hint)">${nextMatch.venue}<br>${formatDate(nextMatch.date)} ${nextMatch.time} ET</div>`;
-    html += '</div>';
-  }
-
-  return html;
+  return h;
 }
 
-function renderPredict(){
-  let html = '';
-  if(state.players.length===0) return '<div class="card"><div class="empty">Add players first in the Players tab.</div></div>';
+function renderLive() {
+  const now = new Date(), players = Object.keys(state.players || {});
+  const live = MATCHES.filter(m => { const t = getMatchTime(m); return now >= t && now <= new Date(t.getTime() + 7200000); });
+  const todayAll = MATCHES.filter(m => { const t = getMatchTime(m); return t.toDateString() === now.toDateString(); });
+  const upcoming = todayAll.filter(m => !live.includes(m));
+  let h = '';
+  if(live.length) { h += '<div class="card"><h2><span class="live-badge">LIVE</span> Matches in progress</h2>'; live.forEach(m => h += liveCard(m, players)); h += '</div>'; }
+  if(upcoming.length) { h += '<div class="card"><h2>Today\'s matches</h2>'; upcoming.forEach(m => h += liveCard(m, players)); h += '</div>'; }
+  if(!live.length && !upcoming.length) {
+    const next = MATCHES.filter(m => !isMatchStarted(m)).slice(0, 6);
+    h += '<div class="card"><h2>Upcoming matches</h2>';
+    if(next.length) next.forEach(m => h += liveCard(m, players));
+    else h += '<div class="empty">No upcoming matches</div>';
+    h += '</div>';
+  }
+  return h;
+}
 
-  // Player selector
-  html += '<div class="flex-between mb-12"><div>';
-  html += '<select id="playerSelect" style="min-width:150px">';
-  state.players.forEach(p=>{
-    html += `<option value="${p}" ${p===state.currentPlayer?'selected':''}>${p}</option>`;
-  });
-  html += '</select></div>';
-  html += '<div class="group-filter" id="groupFilter">';
-  html += '<button class="group-btn active" data-group="all">All</button>';
-  GROUPS.forEach(g=>html+=`<button class="group-btn" data-group="${g}">${g}</button>`);
-  html += '</div></div>';
-
-  // Matches
-  MATCHES.forEach(m=>{
-    const pred = state.predictions[state.currentPlayer||state.players[0]]?.[m.id] || {};
-    const actual = state.actuals[m.id];
-    const hasActual = actual && actual.s1!=='' && actual.s2!=='';
-    const result = calcPoints(pred, actual);
-    const cd = getCountdown(m.date, m.time);
-
-    html += `<div class="match-card" data-group="${m.group}">`;
-    html += `<div class="match-header"><span>Group ${m.group} | ${formatDate(m.date)} ${m.time} ET</span>`;
-    html += `<span>${m.venue}</span></div>`;
-    html += `<div class="match-teams">`;
-    html += `<span class="team">${m.team1}</span>`;
-    html += `<div class="match-score">`;
-    html += `<input type="number" min="0" max="20" value="${pred.s1??''}" data-match="${m.id}" data-side="s1" class="pred-input" ${hasActual?'':''}/>`;
-    html += `<span class="match-vs">-</span>`;
-    html += `<input type="number" min="0" max="20" value="${pred.s2??''}" data-match="${m.id}" data-side="s2" class="pred-input" ${hasActual?'':''}/>`;
-    html += `</div>`;
-    html += `<span class="team">${m.team2}</span>`;
-    html += `</div>`;
-    if(result!==null){
-      const cls = result.type==='exact'?'result-exact':result.type==='correct'?'result-correct':'result-wrong';
-      const label = result.type==='exact'?'Exact! +3':result.type==='correct'?'Correct result +1':'Wrong 0';
-      html += `<div style="text-align:center;margin-top:8px"><span class="result-badge ${cls}">${label}</span></div>`;
+function liveCard(m, players) {
+  const actual = state.actuals?.['m' + m.id], started = isMatchStarted(m);
+  let h = '<div class="match-card"><div class="match-header"><span>Group ' + m.group + ' | ' + fmtDate(m.date) + ' ' + m.time + ' ET</span>';
+  h += started && !actual ? '<span class="live-badge">LIVE</span>' : !started ? '<span class="countdown">' + getCountdown(m) + '</span>' : '';
+  h += '</div><div class="match-teams"><span class="team">' + m.team1 + '</span>';
+  h += actual && actual.s1 !== undefined ? '<div class="match-score"><span style="font-size:20px;font-weight:700">' + actual.s1 + ' - ' + actual.s2 + '</span></div>' : '<span class="match-vs">vs</span>';
+  h += '<span class="team">' + m.team2 + '</span></div>';
+  h += '<div style="margin-top:10px;border-top:1px dashed var(--border);padding-top:8px"><div style="font-size:11px;color:var(--hint);margin-bottom:6px">Everyone\'s predictions:</div><div class="pred-grid">';
+  players.forEach(p => {
+    const pred = state.predictions?.[p]?.['m' + m.id];
+    if(!pred || !pred.locked) { h += '<div class="pred-item"><span class="name">' + p + '</span><span style="color:var(--hint)">-</span></div>'; return; }
+    if(started || actual) {
+      const r = calcPoints(pred, actual);
+      const s = r ? (r.type === 'exact' ? 'color:#0f6e56;font-weight:700' : r.type === 'correct' ? 'color:#854f0b;font-weight:600' : 'color:var(--danger)') : '';
+      h += '<div class="pred-item"><span class="name">' + p + '</span><span style="' + s + '">' + pred.s1 + '-' + pred.s2 + '</span></div>';
+    } else {
+      h += '<div class="pred-item"><span class="name">' + p + '</span><span style="color:var(--accent)">Locked</span></div>';
     }
-    html += '</div>';
   });
-
-  return html;
+  h += '</div></div></div>';
+  return h;
 }
 
-function renderResults(){
-  let html = '<div class="card"><h2>Enter actual results</h2><p style="font-size:13px;color:var(--muted);margin-bottom:16px">Enter the real match scores after each game finishes.</p></div>';
+function renderPredict() {
+  let h = '<div class="flex-between" style="margin-bottom:16px"><div style="font-size:14px">Predicting as <strong>' + currentPlayer + '</strong></div>';
+  h += '<div class="group-filter" id="groupFilter"><button class="group-btn active" data-group="all">All</button>';
+  GROUPS.forEach(g => h += '<button class="group-btn" data-group="' + g + '">' + g + '</button>');
+  h += '</div></div>';
+  h += '<div class="card" style="padding:10px 16px;margin-bottom:16px"><p style="font-size:13px;color:var(--muted)">Enter your predicted score and click <strong>Lock</strong> to submit. Locked predictions cannot be changed. Predictions are hidden from others until the match starts.</p></div>';
+  MATCHES.forEach(m => {
+    const pred = state.predictions?.[currentPlayer]?.['m' + m.id] || {}, locked = pred.locked, started = isMatchStarted(m), result = calcPoints(pred, state.actuals?.['m' + m.id]);
+    h += '<div class="match-card" data-group="' + m.group + '"><div class="match-header"><span>Group ' + m.group + ' | ' + fmtDate(m.date) + ' ' + m.time + ' ET</span>';
+    h += locked ? '<span class="locked-badge">Locked</span>' : started ? '<span style="font-size:11px;color:var(--danger)">Match started</span>' : '<span class="countdown">' + getCountdown(m) + '</span>';
+    h += '</div><div class="match-teams"><span class="team">' + m.team1 + '</span><div class="match-score">';
+    h += '<input type="number" min="0" max="20" value="' + (pred.s1 ?? '') + '" data-match="' + m.id + '" data-side="s1" class="pred-input"' + (locked || started ? ' disabled' : '') + '/>';
+    h += '<span class="match-vs">-</span>';
+    h += '<input type="number" min="0" max="20" value="' + (pred.s2 ?? '') + '" data-match="' + m.id + '" data-side="s2" class="pred-input"' + (locked || started ? ' disabled' : '') + '/>';
+    if(!locked && !started) h += '<button class="btn-lock" onclick="lockPrediction(' + m.id + ')">Lock</button>';
+    h += '</div><span class="team">' + m.team2 + '</span></div>';
+    if(result) { const cls = result.type === 'exact' ? 'result-exact' : result.type === 'correct' ? 'result-correct' : 'result-wrong'; const lbl = result.type === 'exact' ? 'Exact! +3' : result.type === 'correct' ? 'Correct result +1' : 'Wrong 0'; h += '<div style="text-align:center;margin-top:8px"><span class="result-badge ' + cls + '">' + lbl + '</span></div>'; }
+    h += '</div>';
+  });
+  return h;
+}
 
-  html += '<div class="group-filter mb-12" id="groupFilter">';
-  html += '<button class="group-btn active" data-group="all">All</button>';
-  GROUPS.forEach(g=>html+=`<button class="group-btn" data-group="${g}">${g}</button>`);
-  html += '</div>';
-
-  MATCHES.forEach(m=>{
-    const actual = state.actuals[m.id] || {};
-    html += `<div class="match-card" data-group="${m.group}">`;
-    html += `<div class="match-header"><span>Group ${m.group} | ${formatDate(m.date)}</span><span>${m.venue}</span></div>`;
-    html += `<div class="match-teams">`;
-    html += `<span class="team">${m.team1}</span>`;
-    html += `<div class="match-score">`;
-    html += `<input type="number" min="0" max="20" value="${actual.s1??''}" data-match="${m.id}" data-side="s1" class="actual-input"/>`;
-    html += `<span class="match-vs">-</span>`;
-    html += `<input type="number" min="0" max="20" value="${actual.s2??''}" data-match="${m.id}" data-side="s2" class="actual-input"/>`;
-    html += `</div>`;
-    html += `<span class="team">${m.team2}</span>`;
-    html += `</div>`;
-
-    // Show everyone's predictions for this match if actual exists
-    if(actual.s1!==undefined && actual.s1!==''){
-      html += '<div style="margin-top:10px;border-top:1px dashed var(--border);padding-top:8px">';
-      html += '<div style="font-size:11px;color:var(--hint);margin-bottom:6px">Predictions:</div>';
-      state.players.forEach(p=>{
-        const pred = state.predictions[p]?.[m.id];
-        if(!pred) return;
-        const r = calcPoints(pred,actual);
-        const cls = r?r.type==='exact'?'result-exact':r.type==='correct'?'result-correct':'result-wrong':'';
-        const pts = r?r.pts:'?';
-        html += `<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:2px 0">`;
-        html += `<span>${p}: ${pred.s1}-${pred.s2}</span>`;
-        if(r) html += `<span class="result-badge ${cls}">+${pts}</span>`;
-        html += `</div>`;
+function renderResults() {
+  const isAdmin = currentPlayer === ADMIN;
+  let h = isAdmin
+    ? '<div class="card"><h2>Enter actual results</h2><p style="font-size:13px;color:var(--muted);margin-bottom:16px">Enter real match scores after each game.</p></div>'
+    : '<div class="card"><h2>Match results</h2><p style="font-size:13px;color:var(--muted);margin-bottom:16px">Only the admin (Baba) can enter results.</p></div>';
+  h += '<div class="group-filter" id="groupFilter"><button class="group-btn active" data-group="all">All</button>';
+  GROUPS.forEach(g => h += '<button class="group-btn" data-group="' + g + '">' + g + '</button>');
+  h += '</div>';
+  MATCHES.forEach(m => {
+    const actual = state.actuals?.['m' + m.id] || {}, hasA = actual.s1 !== undefined && actual.s1 !== '';
+    h += '<div class="match-card" data-group="' + m.group + '"><div class="match-header"><span>Group ' + m.group + ' | ' + fmtDate(m.date) + '</span><span>' + m.venue + '</span></div>';
+    h += '<div class="match-teams"><span class="team">' + m.team1 + '</span><div class="match-score">';
+    if(isAdmin) { h += '<input type="number" min="0" max="20" value="' + (actual.s1 ?? '') + '" data-match="' + m.id + '" data-side="s1" class="actual-input"/><span class="match-vs">-</span><input type="number" min="0" max="20" value="' + (actual.s2 ?? '') + '" data-match="' + m.id + '" data-side="s2" class="actual-input"/>'; }
+    else if(hasA) h += '<span style="font-size:18px;font-weight:700">' + actual.s1 + ' - ' + actual.s2 + '</span>';
+    else h += '<span class="match-vs">vs</span>';
+    h += '</div><span class="team">' + m.team2 + '</span></div>';
+    if(hasA) {
+      h += '<div style="margin-top:10px;border-top:1px dashed var(--border);padding-top:8px"><div style="font-size:11px;color:var(--hint);margin-bottom:6px">Predictions:</div>';
+      Object.keys(state.players || {}).forEach(p => {
+        const pred = state.predictions?.[p]?.['m' + m.id];
+        if(!pred || !pred.locked) return;
+        const r = calcPoints(pred, actual), cls = r ? (r.type === 'exact' ? 'result-exact' : r.type === 'correct' ? 'result-correct' : 'result-wrong') : '';
+        h += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:2px 0"><span>' + p + ': ' + pred.s1 + '-' + pred.s2 + '</span>';
+        if(r) h += '<span class="result-badge ' + cls + '">+' + r.pts + '</span>';
+        h += '</div>';
       });
-      html += '</div>';
+      h += '</div>';
     }
-    html += '</div>';
+    h += '</div>';
   });
-
-  return html;
+  return h;
 }
 
-function renderLeaderboard(){
-  const lb = getLeaderboardData();
-  if(lb.length===0) return '<div class="card"><div class="empty">No players yet.</div></div>';
-
-  let html = '<div class="card"><h2>Full leaderboard</h2>';
-  html += '<table><tr><th>#</th><th>Player</th><th style="text-align:right">Exact (3pts)</th><th style="text-align:right">Correct (1pt)</th><th style="text-align:right">Wrong</th><th style="text-align:right">Predicted</th><th style="text-align:right">Points</th></tr>';
-  lb.forEach((p,i)=>{
-    const rc = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'';
-    html += `<tr><td class="${rc}">${i+1}</td><td style="font-weight:500">${p.name}</td><td style="text-align:right">${p.exact}</td><td style="text-align:right">${p.correct}</td><td style="text-align:right">${p.wrong}</td><td style="text-align:right">${p.predicted}</td><td style="text-align:right;font-weight:700;font-size:16px">${p.total}</td></tr>`;
+function renderLeaderboard() {
+  const lb = getLeaderboard();
+  if(!lb.length) return '<div class="card"><div class="empty">No players yet.</div></div>';
+  let h = '<div class="card"><h2>Full leaderboard</h2><table><tr><th>#</th><th>Player</th><th style="text-align:right">Exact (3pts)</th><th style="text-align:right">Correct (1pt)</th><th style="text-align:right">Wrong</th><th style="text-align:right">Predicted</th><th style="text-align:right">Points</th></tr>';
+  lb.forEach((p, i) => { h += '<tr><td class="' + (i < 3 ? 'rank-' + (i + 1) : '') + '">' + (i + 1) + '</td><td style="' + (p.name === currentPlayer ? 'font-weight:600' : '') + '">' + p.name + (p.name === currentPlayer ? ' (you)' : '') + '</td><td style="text-align:right">' + p.exact + '</td><td style="text-align:right">' + p.correct + '</td><td style="text-align:right">' + p.wrong + '</td><td style="text-align:right">' + p.predicted + '</td><td style="text-align:right;font-weight:700;font-size:16px">' + p.total + '</td></tr>'; });
+  h += '</table></div>';
+  lb.forEach(p => {
+    const pct = p.predicted > 0 ? Math.round(((p.exact + p.correct) / p.predicted) * 100) : 0;
+    h += '<div class="card"><h2>' + p.name + (p.name === currentPlayer ? ' (you)' : '') + '</h2><div class="stats-row">';
+    h += '<div class="stat-card"><div class="label">Accuracy</div><div class="value">' + pct + '%</div></div>';
+    h += '<div class="stat-card"><div class="label">Points</div><div class="value">' + p.total + '</div></div>';
+    h += '<div class="stat-card"><div class="label">Exact scores</div><div class="value">' + p.exact + '</div></div></div></div>';
   });
-  html += '</table></div>';
-
-  // Per-player stats
-  lb.forEach(p=>{
-    const pct = p.predicted>0 ? Math.round(((p.exact+p.correct)/p.predicted)*100) : 0;
-    html += `<div class="card"><h2>${p.name}</h2>`;
-    html += `<div class="stats-row">`;
-    html += `<div class="stat-card"><div class="label">Accuracy</div><div class="value">${pct}%</div></div>`;
-    html += `<div class="stat-card"><div class="label">Points</div><div class="value">${p.total}</div></div>`;
-    html += `<div class="stat-card"><div class="label">Exact scores</div><div class="value">${p.exact}</div></div>`;
-    html += `</div></div>`;
-  });
-
-  return html;
+  return h;
 }
 
-function renderPlayers(){
-  let html = '<div class="card"><h2>Manage players</h2>';
-  html += '<div class="player-form"><input type="text" id="newPlayer" placeholder="Enter player name" /><button class="btn-primary" id="addPlayerBtn">Add</button></div>';
-  html += '<div class="player-list">';
-  state.players.forEach(p=>{
-    html += `<div class="player-chip"><span>${p}</span><span class="remove" data-player="${p}">&times;</span></div>`;
-  });
-  html += '</div></div>';
-
-  // Export / Import
-  html += '<div class="card"><h2>Data management</h2>';
-  html += '<div class="export-bar">';
-  html += '<button id="exportBtn" class="btn-sm">Export data</button>';
-  html += '<button id="importBtn" class="btn-sm">Import data</button>';
-  html += '<button id="resetBtn" class="btn-sm btn-danger">Reset all</button>';
-  html += '</div>';
-  html += '<input type="file" id="importFile" accept=".json" class="hidden"/>';
-  html += '</div>';
-
-  return html;
+function renderPlayers() {
+  const players = Object.keys(state.players || {}), isAdmin = currentPlayer === ADMIN;
+  let h = '<div class="card"><h2>Players (' + players.length + ')</h2><div class="player-list">';
+  players.forEach(p => { h += '<div class="player-chip"><span>' + p + '</span>' + (p === ADMIN ? '<span class="admin-badge">admin</span>' : '') + (isAdmin && p !== ADMIN ? '<span class="remove" onclick="removePlayer(\'' + p.replace(/'/g, "\\'") + '\')">&times;</span>' : '') + '</div>'; });
+  h += '</div></div>';
+  h += '<div class="card"><h2>Share this link</h2><p style="font-size:14px;color:var(--muted);margin-bottom:12px">Send this to your friends so they can join and predict:</p>';
+  h += '<div style="display:flex;gap:8px"><input type="text" value="https://tsowho.github.io/wc2026-predictions" id="shareLink" readonly style="font-size:13px"/>';
+  h += '<button class="btn-primary btn-sm" onclick="copyLink()">Copy</button></div></div>';
+  h += '<div class="card"><h2>Your account</h2><p style="font-size:14px;color:var(--muted);margin-bottom:12px">Logged in as <strong>' + currentPlayer + '</strong></p><button class="btn-sm" onclick="logout()">Switch player</button></div>';
+  return h;
 }
 
-function formatDate(ds){
-  const d=new Date(ds+'T12:00:00');
-  return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
-}
+window.lockPrediction = function(mid) {
+  const s1 = document.querySelector('[data-match="' + mid + '"][data-side="s1"]')?.value;
+  const s2 = document.querySelector('[data-match="' + mid + '"][data-side="s2"]')?.value;
+  if(s1 === '' || s2 === '' || s1 === undefined || s2 === undefined) { alert('Enter both scores before locking.'); return; }
+  const m = MATCHES.find(x => x.id === mid);
+  if(!confirm('Lock prediction: ' + m.team1 + ' ' + s1 + ' - ' + s2 + ' ' + m.team2 + '?\n\nThis cannot be changed!')) return;
+  db.ref('wc2026/predictions/' + currentPlayer + '/m' + mid).set({ s1: parseInt(s1), s2: parseInt(s2), locked: true, lockedAt: Date.now() });
+};
+window.removePlayer = function(name) { if(confirm('Remove ' + name + '?')) { db.ref('wc2026/players/' + name).remove(); db.ref('wc2026/predictions/' + name).remove(); } };
+window.logout = function() { currentPlayer = null; localStorage.removeItem('wc2026_player'); document.getElementById('mainApp').classList.add('hidden'); document.getElementById('loginScreen').classList.remove('hidden'); updateExistingPlayers(); };
+window.copyLink = function() { const inp = document.getElementById('shareLink'); navigator.clipboard.writeText(inp.value).then(() => { const btn = inp.nextElementSibling; btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy', 2000); }); };
 
-function attachEvents(){
-  // Prediction inputs
-  document.querySelectorAll('.pred-input').forEach(inp=>{
-    inp.addEventListener('change',e=>{
-      const mid = e.target.dataset.match;
-      const side = e.target.dataset.side;
-      const player = document.getElementById('playerSelect')?.value || state.currentPlayer || state.players[0];
-      if(!player) return;
-      if(!state.predictions[player]) state.predictions[player]={};
-      if(!state.predictions[player][mid]) state.predictions[player][mid]={};
-      state.predictions[player][mid][side] = e.target.value;
-      state.currentPlayer = player;
-      save();
+function attachEvents() {
+  document.querySelectorAll('.pred-input:not([disabled])').forEach(inp => {
+    inp.addEventListener('change', e => {
+      const mid = e.target.dataset.match, side = e.target.dataset.side, other = side === 's1' ? 's2' : 's1';
+      const otherVal = document.querySelector('[data-match="' + mid + '"][data-side="' + other + '"]')?.value;
+      const update = { locked: false };
+      update[side] = e.target.value !== '' ? parseInt(e.target.value) : '';
+      if(otherVal !== '' && otherVal !== undefined) update[other] = parseInt(otherVal);
+      db.ref('wc2026/predictions/' + currentPlayer + '/m' + mid).update(update);
     });
   });
-
-  // Actual inputs
-  document.querySelectorAll('.actual-input').forEach(inp=>{
-    inp.addEventListener('change',e=>{
-      const mid = e.target.dataset.match;
-      const side = e.target.dataset.side;
-      if(!state.actuals[mid]) state.actuals[mid]={};
-      state.actuals[mid][side] = e.target.value;
-      save();
-      render();
+  document.querySelectorAll('.actual-input').forEach(inp => {
+    inp.addEventListener('change', e => {
+      const update = {}; update[e.target.dataset.side] = e.target.value !== '' ? parseInt(e.target.value) : null;
+      db.ref('wc2026/actuals/m' + e.target.dataset.match).update(update);
     });
   });
-
-  // Player select
-  const ps = document.getElementById('playerSelect');
-  if(ps) ps.addEventListener('change',e=>{state.currentPlayer=e.target.value;save();render();});
-
-  // Add player
-  const addBtn = document.getElementById('addPlayerBtn');
-  if(addBtn) addBtn.addEventListener('click',()=>{
-    const inp = document.getElementById('newPlayer');
-    const name = inp.value.trim();
-    if(name && !state.players.includes(name)){
-      state.players.push(name);
-      if(!state.currentPlayer) state.currentPlayer = name;
-      save();render();
-    }
-  });
-  const newP = document.getElementById('newPlayer');
-  if(newP) newP.addEventListener('keydown',e=>{if(e.key==='Enter'){document.getElementById('addPlayerBtn')?.click();}});
-
-  // Remove player
-  document.querySelectorAll('.player-chip .remove').forEach(btn=>{
-    btn.addEventListener('click',e=>{
-      const name = e.target.dataset.player;
-      state.players = state.players.filter(p=>p!==name);
-      delete state.predictions[name];
-      if(state.currentPlayer===name) state.currentPlayer = state.players[0]||null;
-      save();render();
-    });
-  });
-
-  // Group filter
   const gf = document.getElementById('groupFilter');
-  if(gf) gf.addEventListener('click',e=>{
+  if(gf) gf.addEventListener('click', e => {
     if(!e.target.classList.contains('group-btn')) return;
-    gf.querySelectorAll('.group-btn').forEach(b=>b.classList.remove('active'));
+    gf.querySelectorAll('.group-btn').forEach(b => b.classList.remove('active'));
     e.target.classList.add('active');
     const g = e.target.dataset.group;
-    document.querySelectorAll('.match-card').forEach(mc=>{
-      mc.style.display = (g==='all'||mc.dataset.group===g)?'':'none';
-    });
-  });
-
-  // Export
-  const expBtn = document.getElementById('exportBtn');
-  if(expBtn) expBtn.addEventListener('click',()=>{
-    const blob = new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
-    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='wc2026-predictions.json';a.click();
-  });
-
-  // Import
-  const impBtn = document.getElementById('importBtn');
-  if(impBtn) impBtn.addEventListener('click',()=>document.getElementById('importFile')?.click());
-  const impFile = document.getElementById('importFile');
-  if(impFile) impFile.addEventListener('change',e=>{
-    const f=e.target.files[0];if(!f)return;
-    const r=new FileReader();
-    r.onload=ev=>{try{state=JSON.parse(ev.target.result);save();render();}catch(err){alert('Invalid file');}};
-    r.readAsText(f);
-  });
-
-  // Reset
-  const resBtn = document.getElementById('resetBtn');
-  if(resBtn) resBtn.addEventListener('click',()=>{
-    if(confirm('Reset all data? This cannot be undone.')){
-      state={players:[],predictions:{},actuals:{},currentPlayer:null};
-      save();render();
-    }
+    document.querySelectorAll('.match-card').forEach(mc => { mc.style.display = g === 'all' || mc.dataset.group === g ? '' : 'none'; });
   });
 }
 
-// Initial render
-if(!state.currentPlayer && state.players.length) state.currentPlayer = state.players[0];
+setInterval(() => { if(currentTab === 'live') render(); }, 30000);
 render();
 </script>
 </body>
