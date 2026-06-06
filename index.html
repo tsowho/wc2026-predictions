@@ -259,7 +259,11 @@ function updateExistingPlayers() {
     '</div>';
 }
 
-function loginAs(name) {
+function loginAs(name, skipAuth) {
+  if(!skipAuth && name === ADMIN) {
+    const pw = prompt('Enter admin password:');
+    if(pw !== '2026*') { alert('Wrong password.'); return; }
+  }
   currentPlayer = name;
   localStorage.setItem('wc2026_player', name);
   document.getElementById('loginScreen').classList.add('hidden');
@@ -270,8 +274,12 @@ function loginAs(name) {
 document.getElementById('loginBtn').addEventListener('click', () => {
   const name = document.getElementById('loginName').value.trim();
   if(!name) return;
+  if(name === ADMIN) {
+    const pw = prompt('Enter admin password:');
+    if(pw !== '2026*') { alert('Wrong password.'); return; }
+  }
   db.ref('wc2026/players/' + name).set(true);
-  loginAs(name);
+  loginAs(name, true);
 });
 document.getElementById('loginName').addEventListener('keydown', e => { if(e.key === 'Enter') document.getElementById('loginBtn').click(); });
 
