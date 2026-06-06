@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>World Cup 2026 Prediction Tracker</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#f5f5f0;--card:#fff;--text:#1a1a1a;--muted:#666;--hint:#999;--border:#e0e0e0;--accent:#1d9e75;--accent2:#0f6e56;--gold:#BA7517;--silver:#888;--bronze:#a0522d;--danger:#e24b4a;--blue:#378add;--purple:#7f77dd;--input-bg:#fff;--hover:#f0f0ea;--shadow:0 1px 3px rgba(0,0,0,0.08)}
+@media(prefers-color-scheme:dark){:root{--bg:#1a1a1a;--card:#252525;--text:#e8e8e8;--muted:#aaa;--hint:#777;--border:#333;--input-bg:#2a2a2a;--hover:#303030;--shadow:0 1px 3px rgba(0,0,0,0.3)}}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.container{max-width:900px;margin:0 auto;padding:16px}
+header{text-align:center;padding:24px 0 16px;border-bottom:1px solid var(--border);margin-bottom:20px}
+header h1{font-size:24px;font-weight:600;margin-bottom:4px}
+header p{color:var(--muted);font-size:14px}
+.tabs{display:flex;gap:4px;margin-bottom:20px;overflow-x:auto;padding-bottom:4px}
+.tab{padding:8px 16px;border-radius:8px;border:none;background:transparent;color:var(--muted);cursor:pointer;font-size:14px;font-weight:500;white-space:nowrap;transition:all .15s}
+.tab:hover{background:var(--hover)}
+.tab.active{background:var(--accent);color:#fff}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:20px}
+.stat-card{background:var(--card);border-radius:10px;padding:14px;box-shadow:var(--shadow)}
+.stat-card .label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.stat-card .value{font-size:22px;font-weight:600;margin-top:2px}
+.card{background:var(--card);border-radius:12px;padding:16px;box-shadow:var(--shadow);margin-bottom:16px}
+.card h2{font-size:16px;font-weight:600;margin-bottom:12px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;padding:8px 10px;color:var(--muted);font-weight:500;font-size:12px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
+td{padding:8px 10px;border-bottom:1px solid var(--border)}
+tr:last-child td{border-bottom:none}
+.rank-1{color:var(--gold);font-weight:700}
+.rank-2{color:var(--silver);font-weight:700}
+.rank-3{color:var(--bronze);font-weight:700}
+input[type="number"]{width:48px;text-align:center;padding:6px;border:1px solid var(--border);border-radius:6px;font-size:16px;font-weight:600;background:var(--input-bg);color:var(--text)}
+input[type="number"]:focus{outline:none;border-color:var(--accent)}
+input[type="text"]{padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:var(--input-bg);color:var(--text);width:100%}
+input[type="text"]:focus{outline:none;border-color:var(--accent)}
+select{padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:var(--input-bg);color:var(--text)}
+select:focus{outline:none;border-color:var(--accent)}
+button{padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:var(--card);color:var(--text);cursor:pointer;font-size:14px;font-weight:500;transition:all .15s}
+button:hover{background:var(--hover)}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{background:var(--accent2)}
+.btn-danger{color:var(--danger);border-color:var(--danger)}
+.btn-sm{padding:4px 10px;font-size:12px}
+.match-card{background:var(--card);border-radius:10px;padding:14px;box-shadow:var(--shadow);margin-bottom:10px}
+.match-header{font-size:11px;color:var(--hint);margin-bottom:8px;display:flex;justify-content:space-between}
+.match-teams{display:flex;align-items:center;justify-content:center;gap:12px}
+.match-teams .team{font-size:14px;font-weight:500;min-width:100px}
+.match-teams .team:first-child{text-align:right}
+.match-vs{color:var(--hint);font-size:12px}
+.match-score{display:flex;align-items:center;gap:6px}
+.result-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.result-exact{background:#e1f5ee;color:#0f6e56}
+.result-correct{background:#faeeda;color:#854f0b}
+.result-wrong{background:#fcebeb;color:#a32d2d}
+@media(prefers-color-scheme:dark){.result-exact{background:#085041;color:#9fe1cb}.result-correct{background:#412402;color:#fac775}.result-wrong{background:#501313;color:#f09595}}
+.player-form{display:flex;gap:8px;margin-bottom:16px}
+.player-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.player-chip{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--hover);border-radius:20px;font-size:13px}
+.player-chip .remove{cursor:pointer;color:var(--danger);font-weight:700;font-size:14px}
+.group-filter{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:16px}
+.group-btn{padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;font-size:12px;font-weight:600}
+.group-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.hidden{display:none}
+.empty{text-align:center;padding:40px;color:var(--muted)}
+.flex-between{display:flex;justify-content:space-between;align-items:center}
+.mb-8{margin-bottom:8px}
+.mb-12{margin-bottom:12px}
+.mb-16{margin-bottom:16px}
+.actual-score-row{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border)}
+.actual-label{font-size:11px;color:var(--hint)}
+.points-display{font-weight:700;font-size:14px;color:var(--accent)}
+.countdown{font-size:12px;color:var(--accent);font-weight:500}
+.export-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+<h1>World Cup 2026 Prediction Tracker</h1>
+<p>June 11 - July 19 | USA, Mexico, Canada</p>
+</header>
+
+<div class="tabs" id="tabs">
+<button class="tab active" data-tab="dashboard">Dashboard</button>
+<button class="tab" data-tab="predict">Predict</button>
+<button class="tab" data-tab="results">Results</button>
+<button class="tab" data-tab="leaderboard">Leaderboard</button>
+<button class="tab" data-tab="players">Players</button>
+</div>
+
+<div id="content"></div>
+</div>
+
+<script>
+const MATCHES = [
+{id:1,group:"A",team1:"Mexico",team2:"South Africa",date:"2026-06-11",time:"15:00",venue:"Estadio Azteca, Mexico City"},
+{id:2,group:"A",team1:"South Korea",team2:"Czechia",date:"2026-06-11",time:"22:00",venue:"Estadio Akron, Guadalajara"},
+{id:3,group:"A",team1:"Czechia",team2:"South Africa",date:"2026-06-18",time:"12:00",venue:"Mercedes-Benz Stadium, Atlanta"},
+{id:4,group:"A",team1:"Mexico",team2:"South Korea",date:"2026-06-18",time:"21:00",venue:"Estadio Akron, Guadalajara"},
+{id:5,group:"A",team1:"Czechia",team2:"Mexico",date:"2026-06-24",time:"21:00",venue:"Estadio Azteca, Mexico City"},
+{id:6,group:"A",team1:"South Africa",team2:"South Korea",date:"2026-06-24",time:"21:00",venue:"Estadio BBVA, Monterrey"},
+{id:7,group:"B",team1:"Canada",team2:"Bosnia-Herzegovina",date:"2026-06-12",time:"15:00",venue:"BMO Field, Toronto"},
+{id:8,group:"B",team1:"Qatar",team2:"Switzerland",date:"2026-06-13",time:"15:00",venue:"Levi's Stadium, San Francisco"},
+{id:9,group:"B",team1:"Switzerland",team2:"Bosnia-Herzegovina",date:"2026-06-18",time:"15:00",venue:"SoFi Stadium, Los Angeles"},
+{id:10,group:"B",team1:"Canada",team2:"Qatar",date:"2026-06-18",time:"18:00",venue:"BC Place, Vancouver"},
+{id:11,group:"B",team1:"Switzerland",team2:"Canada",date:"2026-06-24",time:"15:00",venue:"BC Place, Vancouver"},
+{id:12,group:"B",team1:"Bosnia-Herzegovina",team2:"Qatar",date:"2026-06-24",time:"15:00",venue:"Lumen Field, Seattle"},
+{id:13,group:"C",team1:"Brazil",team2:"Morocco",date:"2026-06-13",time:"18:00",venue:"MetLife Stadium, New York/New Jersey"},
+{id:14,group:"C",team1:"Haiti",team2:"Scotland",date:"2026-06-13",time:"21:00",venue:"Gillette Stadium, Boston"},
+{id:15,group:"C",team1:"Scotland",team2:"Morocco",date:"2026-06-19",time:"18:00",venue:"Gillette Stadium, Boston"},
+{id:16,group:"C",team1:"Brazil",team2:"Haiti",date:"2026-06-19",time:"21:00",venue:"Lincoln Financial Field, Philadelphia"},
+{id:17,group:"C",team1:"Scotland",team2:"Brazil",date:"2026-06-24",time:"18:00",venue:"Hard Rock Stadium, Miami"},
+{id:18,group:"C",team1:"Morocco",team2:"Haiti",date:"2026-06-24",time:"18:00",venue:"Mercedes-Benz Stadium, Atlanta"},
+{id:19,group:"D",team1:"USA",team2:"Paraguay",date:"2026-06-12",time:"21:00",venue:"SoFi Stadium, Los Angeles"},
+{id:20,group:"D",team1:"Australia",team2:"Turkey",date:"2026-06-13",time:"00:00",venue:"BC Place, Vancouver"},
+{id:21,group:"D",team1:"USA",team2:"Australia",date:"2026-06-19",time:"15:00",venue:"Lumen Field, Seattle"},
+{id:22,group:"D",team1:"Turkey",team2:"Paraguay",date:"2026-06-19",time:"00:00",venue:"Levi's Stadium, San Francisco"},
+{id:23,group:"D",team1:"Turkey",team2:"USA",date:"2026-06-25",time:"22:00",venue:"SoFi Stadium, Los Angeles"},
+{id:24,group:"D",team1:"Paraguay",team2:"Australia",date:"2026-06-25",time:"22:00",venue:"Levi's Stadium, San Francisco"},
+{id:25,group:"E",team1:"Germany",team2:"Curacao",date:"2026-06-14",time:"13:00",venue:"NRG Stadium, Houston"},
+{id:26,group:"E",team1:"Ivory Coast",team2:"Ecuador",date:"2026-06-14",time:"19:00",venue:"Lincoln Financial Field, Philadelphia"},
+{id:27,group:"E",team1:"Germany",team2:"Ivory Coast",date:"2026-06-20",time:"16:00",venue:"BMO Field, Toronto"},
+{id:28,group:"E",team1:"Ecuador",team2:"Curacao",date:"2026-06-20",time:"20:00",venue:"Arrowhead Stadium, Kansas City"},
+{id:29,group:"E",team1:"Ecuador",team2:"Germany",date:"2026-06-25",time:"16:00",venue:"MetLife Stadium, New York/New Jersey"},
+{id:30,group:"E",team1:"Curacao",team2:"Ivory Coast",date:"2026-06-25",time:"16:00",venue:"Lincoln Financial Field, Philadelphia"},
+{id:31,group:"F",team1:"Netherlands",team2:"Japan",date:"2026-06-14",time:"16:00",venue:"AT&T Stadium, Dallas"},
+{id:32,group:"F",team1:"Sweden",team2:"Tunisia",date:"2026-06-14",time:"22:00",venue:"Estadio BBVA, Monterrey"},
+{id:33,group:"F",team1:"Netherlands",team2:"Sweden",date:"2026-06-20",time:"13:00",venue:"NRG Stadium, Houston"},
+{id:34,group:"F",team1:"Tunisia",team2:"Japan",date:"2026-06-20",time:"00:00",venue:"Estadio BBVA, Monterrey"},
+{id:35,group:"F",team1:"Japan",team2:"Sweden",date:"2026-06-25",time:"19:00",venue:"AT&T Stadium, Dallas"},
+{id:36,group:"F",team1:"Tunisia",team2:"Netherlands",date:"2026-06-25",time:"19:00",venue:"Arrowhead Stadium, Kansas City"},
+{id:37,group:"G",team1:"Iran",team2:"New Zealand",date:"2026-06-15",time:"21:00",venue:"SoFi Stadium, Los Angeles"},
+{id:38,group:"G",team1:"Belgium",team2:"Egypt",date:"2026-06-15",time:"15:00",venue:"Lumen Field, Seattle"},
+{id:39,group:"G",team1:"Belgium",team2:"Iran",date:"2026-06-21",time:"15:00",venue:"SoFi Stadium, Los Angeles"},
+{id:40,group:"G",team1:"New Zealand",team2:"Egypt",date:"2026-06-21",time:"21:00",venue:"BC Place, Vancouver"},
+{id:41,group:"G",team1:"Egypt",team2:"Iran",date:"2026-06-26",time:"23:00",venue:"Lumen Field, Seattle"},
+{id:42,group:"G",team1:"New Zealand",team2:"Belgium",date:"2026-06-26",time:"23:00",venue:"BC Place, Vancouver"},
+{id:43,group:"H",team1:"Spain",team2:"Cape Verde",date:"2026-06-15",time:"12:00",venue:"Mercedes-Benz Stadium, Atlanta"},
+{id:44,group:"H",team1:"Saudi Arabia",team2:"Uruguay",date:"2026-06-15",time:"18:00",venue:"Hard Rock Stadium, Miami"},
+{id:45,group:"H",team1:"Spain",team2:"Saudi Arabia",date:"2026-06-21",time:"12:00",venue:"Mercedes-Benz Stadium, Atlanta"},
+{id:46,group:"H",team1:"Uruguay",team2:"Cape Verde",date:"2026-06-21",time:"18:00",venue:"Hard Rock Stadium, Miami"},
+{id:47,group:"H",team1:"Cape Verde",team2:"Saudi Arabia",date:"2026-06-26",time:"20:00",venue:"NRG Stadium, Houston"},
+{id:48,group:"H",team1:"Uruguay",team2:"Spain",date:"2026-06-26",time:"20:00",venue:"Estadio Akron, Guadalajara"},
+{id:49,group:"I",team1:"France",team2:"Senegal",date:"2026-06-16",time:"15:00",venue:"MetLife Stadium, New York/New Jersey"},
+{id:50,group:"I",team1:"Iraq",team2:"Norway",date:"2026-06-16",time:"18:00",venue:"Gillette Stadium, Boston"},
+{id:51,group:"I",team1:"France",team2:"Iraq",date:"2026-06-22",time:"17:00",venue:"Lincoln Financial Field, Philadelphia"},
+{id:52,group:"I",team1:"Norway",team2:"Senegal",date:"2026-06-22",time:"20:00",venue:"MetLife Stadium, New York/New Jersey"},
+{id:53,group:"I",team1:"Norway",team2:"France",date:"2026-06-26",time:"15:00",venue:"Gillette Stadium, Boston"},
+{id:54,group:"I",team1:"Senegal",team2:"Iraq",date:"2026-06-26",time:"15:00",venue:"BMO Field, Toronto"},
+{id:55,group:"J",team1:"Argentina",team2:"Algeria",date:"2026-06-16",time:"21:00",venue:"Arrowhead Stadium, Kansas City"},
+{id:56,group:"J",team1:"Austria",team2:"Jordan",date:"2026-06-16",time:"00:00",venue:"Levi's Stadium, San Francisco"},
+{id:57,group:"J",team1:"Argentina",team2:"Austria",date:"2026-06-22",time:"13:00",venue:"AT&T Stadium, Dallas"},
+{id:58,group:"J",team1:"Jordan",team2:"Algeria",date:"2026-06-22",time:"23:00",venue:"Levi's Stadium, San Francisco"},
+{id:59,group:"J",team1:"Algeria",team2:"Austria",date:"2026-06-27",time:"22:00",venue:"Arrowhead Stadium, Kansas City"},
+{id:60,group:"J",team1:"Jordan",team2:"Argentina",date:"2026-06-27",time:"22:00",venue:"AT&T Stadium, Dallas"},
+{id:61,group:"K",team1:"Portugal",team2:"DR Congo",date:"2026-06-17",time:"13:00",venue:"NRG Stadium, Houston"},
+{id:62,group:"K",team1:"Uzbekistan",team2:"Colombia",date:"2026-06-17",time:"22:00",venue:"Estadio Azteca, Mexico City"},
+{id:63,group:"K",team1:"Portugal",team2:"Uzbekistan",date:"2026-06-23",time:"13:00",venue:"NRG Stadium, Houston"},
+{id:64,group:"K",team1:"Colombia",team2:"DR Congo",date:"2026-06-23",time:"22:00",venue:"Estadio Akron, Guadalajara"},
+{id:65,group:"K",team1:"Colombia",team2:"Portugal",date:"2026-06-27",time:"19:30",venue:"Hard Rock Stadium, Miami"},
+{id:66,group:"K",team1:"DR Congo",team2:"Uzbekistan",date:"2026-06-27",time:"19:30",venue:"Mercedes-Benz Stadium, Atlanta"},
+{id:67,group:"L",team1:"England",team2:"Croatia",date:"2026-06-17",time:"16:00",venue:"AT&T Stadium, Dallas"},
+{id:68,group:"L",team1:"Ghana",team2:"Panama",date:"2026-06-17",time:"19:00",venue:"BMO Field, Toronto"},
+{id:69,group:"L",team1:"England",team2:"Ghana",date:"2026-06-23",time:"16:00",venue:"Gillette Stadium, Boston"},
+{id:70,group:"L",team1:"Panama",team2:"Croatia",date:"2026-06-23",time:"19:00",venue:"BMO Field, Toronto"},
+{id:71,group:"L",team1:"Panama",team2:"England",date:"2026-06-27",time:"17:00",venue:"MetLife Stadium, New York/New Jersey"},
+{id:72,group:"L",team1:"Croatia",team2:"Ghana",date:"2026-06-27",time:"17:00",venue:"Lincoln Financial Field, Philadelphia"}
+];
+
+const GROUPS = ["A","B","C","D","E","F","G","H","I","J","K","L"];
+
+// State
+let state = load();
+function load(){
+  try{const s=localStorage.getItem('wc2026');return s?JSON.parse(s):{players:[],predictions:{},actuals:{},currentPlayer:null};}
+  catch(e){return {players:[],predictions:{},actuals:{},currentPlayer:null};}
+}
+function save(){localStorage.setItem('wc2026',JSON.stringify(state));}
+
+// Tab routing
+let currentTab = 'dashboard';
+document.getElementById('tabs').addEventListener('click',e=>{
+  if(!e.target.classList.contains('tab'))return;
+  currentTab = e.target.dataset.tab;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  e.target.classList.add('active');
+  render();
+});
+
+function render(){
+  const c = document.getElementById('content');
+  switch(currentTab){
+    case 'dashboard': c.innerHTML = renderDashboard(); break;
+    case 'predict': c.innerHTML = renderPredict(); break;
+    case 'results': c.innerHTML = renderResults(); break;
+    case 'leaderboard': c.innerHTML = renderLeaderboard(); break;
+    case 'players': c.innerHTML = renderPlayers(); break;
+  }
+  attachEvents();
+}
+
+function getCountdown(dateStr,timeStr){
+  const d = new Date(dateStr+'T'+timeStr+':00');
+  const now = new Date();
+  const diff = d - now;
+  if(diff<=0) return 'Started';
+  const days = Math.floor(diff/86400000);
+  const hrs = Math.floor((diff%86400000)/3600000);
+  if(days>0) return days+'d '+hrs+'h';
+  const mins = Math.floor((diff%3600000)/60000);
+  return hrs+'h '+mins+'m';
+}
+
+function calcPoints(pred,actual){
+  if(!pred||!actual||actual.s1===''||actual.s2==='') return null;
+  const ps1=parseInt(pred.s1),ps2=parseInt(pred.s2);
+  const as1=parseInt(actual.s1),as2=parseInt(actual.s2);
+  if(isNaN(ps1)||isNaN(ps2)||isNaN(as1)||isNaN(as2)) return null;
+  if(ps1===as1&&ps2===as2) return {pts:3,type:'exact'};
+  const pRes=Math.sign(ps1-ps2), aRes=Math.sign(as1-as2);
+  if(pRes===aRes) return {pts:1,type:'correct'};
+  return {pts:0,type:'wrong'};
+}
+
+function getLeaderboardData(){
+  return state.players.map(p=>{
+    let total=0,exact=0,correct=0,wrong=0,predicted=0;
+    MATCHES.forEach(m=>{
+      const pred = state.predictions[p]?.[m.id];
+      const actual = state.actuals[m.id];
+      if(!pred) return;
+      const r = calcPoints(pred,actual);
+      if(r===null) return;
+      predicted++;
+      total+=r.pts;
+      if(r.type==='exact') exact++;
+      else if(r.type==='correct') correct++;
+      else wrong++;
+    });
+    return {name:p,total,exact,correct,wrong,predicted};
+  }).sort((a,b)=>b.total-a.total||b.exact-a.exact);
+}
+
+function renderDashboard(){
+  const lb = getLeaderboardData();
+  const leader = lb[0];
+  const played = Object.keys(state.actuals).length;
+  const nextMatch = MATCHES.find(m=>!state.actuals[m.id]);
+
+  let html = '<div class="stats-row">';
+  html += `<div class="stat-card"><div class="label">Players</div><div class="value">${state.players.length}</div></div>`;
+  html += `<div class="stat-card"><div class="label">Matches played</div><div class="value">${played} / ${MATCHES.length}</div></div>`;
+  html += `<div class="stat-card"><div class="label">Leader</div><div class="value">${leader?leader.name:'-'}</div></div>`;
+  html += `<div class="stat-card"><div class="label">Top score</div><div class="value">${leader?leader.total+' pts':'-'}</div></div>`;
+  html += '</div>';
+
+  if(state.players.length===0){
+    html += '<div class="card"><div class="empty">Add players in the Players tab to get started!</div></div>';
+    return html;
+  }
+
+  // Mini leaderboard
+  if(lb.length>0){
+    html += '<div class="card"><h2>Leaderboard</h2><table><tr><th>#</th><th>Player</th><th style="text-align:right">Exact</th><th style="text-align:right">Correct</th><th style="text-align:right">Points</th></tr>';
+    lb.forEach((p,i)=>{
+      const rc = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'';
+      html += `<tr><td class="${rc}">${i+1}</td><td>${p.name}</td><td style="text-align:right">${p.exact}</td><td style="text-align:right">${p.correct}</td><td style="text-align:right;font-weight:600">${p.total}</td></tr>`;
+    });
+    html += '</table></div>';
+  }
+
+  // Next match
+  if(nextMatch){
+    html += `<div class="card"><h2>Next match</h2>`;
+    html += `<div class="match-header"><span>Group ${nextMatch.group}</span><span class="countdown">${getCountdown(nextMatch.date,nextMatch.time)}</span></div>`;
+    html += `<div class="match-teams"><span class="team">${nextMatch.team1}</span><span class="match-vs">vs</span><span class="team">${nextMatch.team2}</span></div>`;
+    html += `<div style="text-align:center;margin-top:8px;font-size:12px;color:var(--hint)">${nextMatch.venue}<br>${formatDate(nextMatch.date)} ${nextMatch.time} ET</div>`;
+    html += '</div>';
+  }
+
+  return html;
+}
+
+function renderPredict(){
+  let html = '';
+  if(state.players.length===0) return '<div class="card"><div class="empty">Add players first in the Players tab.</div></div>';
+
+  // Player selector
+  html += '<div class="flex-between mb-12"><div>';
+  html += '<select id="playerSelect" style="min-width:150px">';
+  state.players.forEach(p=>{
+    html += `<option value="${p}" ${p===state.currentPlayer?'selected':''}>${p}</option>`;
+  });
+  html += '</select></div>';
+  html += '<div class="group-filter" id="groupFilter">';
+  html += '<button class="group-btn active" data-group="all">All</button>';
+  GROUPS.forEach(g=>html+=`<button class="group-btn" data-group="${g}">${g}</button>`);
+  html += '</div></div>';
+
+  // Matches
+  MATCHES.forEach(m=>{
+    const pred = state.predictions[state.currentPlayer||state.players[0]]?.[m.id] || {};
+    const actual = state.actuals[m.id];
+    const hasActual = actual && actual.s1!=='' && actual.s2!=='';
+    const result = calcPoints(pred, actual);
+    const cd = getCountdown(m.date, m.time);
+
+    html += `<div class="match-card" data-group="${m.group}">`;
+    html += `<div class="match-header"><span>Group ${m.group} | ${formatDate(m.date)} ${m.time} ET</span>`;
+    html += `<span>${m.venue}</span></div>`;
+    html += `<div class="match-teams">`;
+    html += `<span class="team">${m.team1}</span>`;
+    html += `<div class="match-score">`;
+    html += `<input type="number" min="0" max="20" value="${pred.s1??''}" data-match="${m.id}" data-side="s1" class="pred-input" ${hasActual?'':''}/>`;
+    html += `<span class="match-vs">-</span>`;
+    html += `<input type="number" min="0" max="20" value="${pred.s2??''}" data-match="${m.id}" data-side="s2" class="pred-input" ${hasActual?'':''}/>`;
+    html += `</div>`;
+    html += `<span class="team">${m.team2}</span>`;
+    html += `</div>`;
+    if(result!==null){
+      const cls = result.type==='exact'?'result-exact':result.type==='correct'?'result-correct':'result-wrong';
+      const label = result.type==='exact'?'Exact! +3':result.type==='correct'?'Correct result +1':'Wrong 0';
+      html += `<div style="text-align:center;margin-top:8px"><span class="result-badge ${cls}">${label}</span></div>`;
+    }
+    html += '</div>';
+  });
+
+  return html;
+}
+
+function renderResults(){
+  let html = '<div class="card"><h2>Enter actual results</h2><p style="font-size:13px;color:var(--muted);margin-bottom:16px">Enter the real match scores after each game finishes.</p></div>';
+
+  html += '<div class="group-filter mb-12" id="groupFilter">';
+  html += '<button class="group-btn active" data-group="all">All</button>';
+  GROUPS.forEach(g=>html+=`<button class="group-btn" data-group="${g}">${g}</button>`);
+  html += '</div>';
+
+  MATCHES.forEach(m=>{
+    const actual = state.actuals[m.id] || {};
+    html += `<div class="match-card" data-group="${m.group}">`;
+    html += `<div class="match-header"><span>Group ${m.group} | ${formatDate(m.date)}</span><span>${m.venue}</span></div>`;
+    html += `<div class="match-teams">`;
+    html += `<span class="team">${m.team1}</span>`;
+    html += `<div class="match-score">`;
+    html += `<input type="number" min="0" max="20" value="${actual.s1??''}" data-match="${m.id}" data-side="s1" class="actual-input"/>`;
+    html += `<span class="match-vs">-</span>`;
+    html += `<input type="number" min="0" max="20" value="${actual.s2??''}" data-match="${m.id}" data-side="s2" class="actual-input"/>`;
+    html += `</div>`;
+    html += `<span class="team">${m.team2}</span>`;
+    html += `</div>`;
+
+    // Show everyone's predictions for this match if actual exists
+    if(actual.s1!==undefined && actual.s1!==''){
+      html += '<div style="margin-top:10px;border-top:1px dashed var(--border);padding-top:8px">';
+      html += '<div style="font-size:11px;color:var(--hint);margin-bottom:6px">Predictions:</div>';
+      state.players.forEach(p=>{
+        const pred = state.predictions[p]?.[m.id];
+        if(!pred) return;
+        const r = calcPoints(pred,actual);
+        const cls = r?r.type==='exact'?'result-exact':r.type==='correct'?'result-correct':'result-wrong':'';
+        const pts = r?r.pts:'?';
+        html += `<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:2px 0">`;
+        html += `<span>${p}: ${pred.s1}-${pred.s2}</span>`;
+        if(r) html += `<span class="result-badge ${cls}">+${pts}</span>`;
+        html += `</div>`;
+      });
+      html += '</div>';
+    }
+    html += '</div>';
+  });
+
+  return html;
+}
+
+function renderLeaderboard(){
+  const lb = getLeaderboardData();
+  if(lb.length===0) return '<div class="card"><div class="empty">No players yet.</div></div>';
+
+  let html = '<div class="card"><h2>Full leaderboard</h2>';
+  html += '<table><tr><th>#</th><th>Player</th><th style="text-align:right">Exact (3pts)</th><th style="text-align:right">Correct (1pt)</th><th style="text-align:right">Wrong</th><th style="text-align:right">Predicted</th><th style="text-align:right">Points</th></tr>';
+  lb.forEach((p,i)=>{
+    const rc = i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':'';
+    html += `<tr><td class="${rc}">${i+1}</td><td style="font-weight:500">${p.name}</td><td style="text-align:right">${p.exact}</td><td style="text-align:right">${p.correct}</td><td style="text-align:right">${p.wrong}</td><td style="text-align:right">${p.predicted}</td><td style="text-align:right;font-weight:700;font-size:16px">${p.total}</td></tr>`;
+  });
+  html += '</table></div>';
+
+  // Per-player stats
+  lb.forEach(p=>{
+    const pct = p.predicted>0 ? Math.round(((p.exact+p.correct)/p.predicted)*100) : 0;
+    html += `<div class="card"><h2>${p.name}</h2>`;
+    html += `<div class="stats-row">`;
+    html += `<div class="stat-card"><div class="label">Accuracy</div><div class="value">${pct}%</div></div>`;
+    html += `<div class="stat-card"><div class="label">Points</div><div class="value">${p.total}</div></div>`;
+    html += `<div class="stat-card"><div class="label">Exact scores</div><div class="value">${p.exact}</div></div>`;
+    html += `</div></div>`;
+  });
+
+  return html;
+}
+
+function renderPlayers(){
+  let html = '<div class="card"><h2>Manage players</h2>';
+  html += '<div class="player-form"><input type="text" id="newPlayer" placeholder="Enter player name" /><button class="btn-primary" id="addPlayerBtn">Add</button></div>';
+  html += '<div class="player-list">';
+  state.players.forEach(p=>{
+    html += `<div class="player-chip"><span>${p}</span><span class="remove" data-player="${p}">&times;</span></div>`;
+  });
+  html += '</div></div>';
+
+  // Export / Import
+  html += '<div class="card"><h2>Data management</h2>';
+  html += '<div class="export-bar">';
+  html += '<button id="exportBtn" class="btn-sm">Export data</button>';
+  html += '<button id="importBtn" class="btn-sm">Import data</button>';
+  html += '<button id="resetBtn" class="btn-sm btn-danger">Reset all</button>';
+  html += '</div>';
+  html += '<input type="file" id="importFile" accept=".json" class="hidden"/>';
+  html += '</div>';
+
+  return html;
+}
+
+function formatDate(ds){
+  const d=new Date(ds+'T12:00:00');
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+
+function attachEvents(){
+  // Prediction inputs
+  document.querySelectorAll('.pred-input').forEach(inp=>{
+    inp.addEventListener('change',e=>{
+      const mid = e.target.dataset.match;
+      const side = e.target.dataset.side;
+      const player = document.getElementById('playerSelect')?.value || state.currentPlayer || state.players[0];
+      if(!player) return;
+      if(!state.predictions[player]) state.predictions[player]={};
+      if(!state.predictions[player][mid]) state.predictions[player][mid]={};
+      state.predictions[player][mid][side] = e.target.value;
+      state.currentPlayer = player;
+      save();
+    });
+  });
+
+  // Actual inputs
+  document.querySelectorAll('.actual-input').forEach(inp=>{
+    inp.addEventListener('change',e=>{
+      const mid = e.target.dataset.match;
+      const side = e.target.dataset.side;
+      if(!state.actuals[mid]) state.actuals[mid]={};
+      state.actuals[mid][side] = e.target.value;
+      save();
+      render();
+    });
+  });
+
+  // Player select
+  const ps = document.getElementById('playerSelect');
+  if(ps) ps.addEventListener('change',e=>{state.currentPlayer=e.target.value;save();render();});
+
+  // Add player
+  const addBtn = document.getElementById('addPlayerBtn');
+  if(addBtn) addBtn.addEventListener('click',()=>{
+    const inp = document.getElementById('newPlayer');
+    const name = inp.value.trim();
+    if(name && !state.players.includes(name)){
+      state.players.push(name);
+      if(!state.currentPlayer) state.currentPlayer = name;
+      save();render();
+    }
+  });
+  const newP = document.getElementById('newPlayer');
+  if(newP) newP.addEventListener('keydown',e=>{if(e.key==='Enter'){document.getElementById('addPlayerBtn')?.click();}});
+
+  // Remove player
+  document.querySelectorAll('.player-chip .remove').forEach(btn=>{
+    btn.addEventListener('click',e=>{
+      const name = e.target.dataset.player;
+      state.players = state.players.filter(p=>p!==name);
+      delete state.predictions[name];
+      if(state.currentPlayer===name) state.currentPlayer = state.players[0]||null;
+      save();render();
+    });
+  });
+
+  // Group filter
+  const gf = document.getElementById('groupFilter');
+  if(gf) gf.addEventListener('click',e=>{
+    if(!e.target.classList.contains('group-btn')) return;
+    gf.querySelectorAll('.group-btn').forEach(b=>b.classList.remove('active'));
+    e.target.classList.add('active');
+    const g = e.target.dataset.group;
+    document.querySelectorAll('.match-card').forEach(mc=>{
+      mc.style.display = (g==='all'||mc.dataset.group===g)?'':'none';
+    });
+  });
+
+  // Export
+  const expBtn = document.getElementById('exportBtn');
+  if(expBtn) expBtn.addEventListener('click',()=>{
+    const blob = new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='wc2026-predictions.json';a.click();
+  });
+
+  // Import
+  const impBtn = document.getElementById('importBtn');
+  if(impBtn) impBtn.addEventListener('click',()=>document.getElementById('importFile')?.click());
+  const impFile = document.getElementById('importFile');
+  if(impFile) impFile.addEventListener('change',e=>{
+    const f=e.target.files[0];if(!f)return;
+    const r=new FileReader();
+    r.onload=ev=>{try{state=JSON.parse(ev.target.result);save();render();}catch(err){alert('Invalid file');}};
+    r.readAsText(f);
+  });
+
+  // Reset
+  const resBtn = document.getElementById('resetBtn');
+  if(resBtn) resBtn.addEventListener('click',()=>{
+    if(confirm('Reset all data? This cannot be undone.')){
+      state={players:[],predictions:{},actuals:{},currentPlayer:null};
+      save();render();
+    }
+  });
+}
+
+// Initial render
+if(!state.currentPlayer && state.players.length) state.currentPlayer = state.players[0];
+render();
+</script>
+</body>
+</html>
