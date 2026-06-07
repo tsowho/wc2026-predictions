@@ -111,9 +111,18 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .reaction-btn:hover{transform:scale(1.15);background:var(--hover)}
 .reaction-btn.active{border-color:var(--accent);background:var(--hover)}
 .reaction-count{font-size:10px;margin-left:2px;color:var(--muted)}
+.wc-bg{position:fixed;top:0;left:0;width:100%;height:100%;overflow:hidden;pointer-events:none;z-index:0;opacity:0.07}
+@media(prefers-color-scheme:light){.wc-bg{opacity:0.05}}
+.wc-bg-track{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;animation:scrollBg 60s linear infinite}
+.wc-bg-item{text-align:center;padding:20px 16px;width:25%}
+.wc-bg-year{font-size:36px;font-weight:700;letter-spacing:3px}
+.wc-bg-team{font-size:14px;margin-top:4px;font-weight:500}
+@keyframes scrollBg{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}
+.container{position:relative;z-index:1}
 </style>
 </head>
 <body>
+<div class="wc-bg"><div class="wc-bg-track" id="wcBgTrack"></div></div>
 <div class="container">
 <header>
 <h1>World Cup 2026 Prediction Tracker</h1>
@@ -858,6 +867,44 @@ function attachEvents() {
 
 setInterval(() => { if(currentTab === 'live') render(); }, 30000);
 render();
+
+// World Cup winners background with flag colors
+(function() {
+  const winners = [
+    {y:'1930',t:'Uruguay',c1:'#0038A8',c2:'#FFFFFF'},
+    {y:'1934',t:'Italy',c1:'#008C45',c2:'#CD212A'},
+    {y:'1938',t:'Italy',c1:'#008C45',c2:'#CD212A'},
+    {y:'1950',t:'Uruguay',c1:'#0038A8',c2:'#FFFFFF'},
+    {y:'1954',t:'Germany',c1:'#DD0000',c2:'#FFCC00'},
+    {y:'1958',t:'Brazil',c1:'#009C3B',c2:'#FFDF00'},
+    {y:'1962',t:'Brazil',c1:'#009C3B',c2:'#FFDF00'},
+    {y:'1966',t:'England',c1:'#CF081F',c2:'#FFFFFF'},
+    {y:'1970',t:'Brazil',c1:'#009C3B',c2:'#FFDF00'},
+    {y:'1974',t:'Germany',c1:'#DD0000',c2:'#FFCC00'},
+    {y:'1978',t:'Argentina',c1:'#74ACDF',c2:'#FFFFFF'},
+    {y:'1982',t:'Italy',c1:'#008C45',c2:'#CD212A'},
+    {y:'1986',t:'Argentina',c1:'#74ACDF',c2:'#FFFFFF'},
+    {y:'1990',t:'Germany',c1:'#DD0000',c2:'#FFCC00'},
+    {y:'1994',t:'Brazil',c1:'#009C3B',c2:'#FFDF00'},
+    {y:'1998',t:'France',c1:'#002395',c2:'#ED2939'},
+    {y:'2002',t:'Brazil',c1:'#009C3B',c2:'#FFDF00'},
+    {y:'2006',t:'Italy',c1:'#008C45',c2:'#CD212A'},
+    {y:'2010',t:'Spain',c1:'#AA151B',c2:'#F1BF00'},
+    {y:'2014',t:'Germany',c1:'#DD0000',c2:'#FFCC00'},
+    {y:'2018',t:'France',c1:'#002395',c2:'#ED2939'},
+    {y:'2022',t:'Argentina',c1:'#74ACDF',c2:'#FFFFFF'}
+  ];
+  const track = document.getElementById('wcBgTrack');
+  function buildItems() {
+    return winners.map(w =>
+      '<div class="wc-bg-item">' +
+        '<div class="wc-bg-year" style="background:linear-gradient(135deg,' + w.c1 + ',' + w.c2 + ');-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">' + w.y + '</div>' +
+        '<div class="wc-bg-team" style="color:' + w.c1 + '">' + w.t + '</div>' +
+      '</div>'
+    ).join('');
+  }
+  track.innerHTML = buildItems() + buildItems();
+})();
 </script>
 </body>
 </html>
