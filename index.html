@@ -111,12 +111,13 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .reaction-btn:hover{transform:scale(1.15);background:var(--hover)}
 .reaction-btn.active{border-color:var(--accent);background:var(--hover)}
 .reaction-count{font-size:10px;margin-left:2px;color:var(--muted)}
-.wc-bg{position:fixed;top:0;left:0;width:100%;height:100%;overflow:hidden;pointer-events:none;z-index:0;opacity:0.15}
-@media(prefers-color-scheme:light){.wc-bg{opacity:0.1}}
+.wc-bg{position:fixed;top:0;left:0;width:100%;height:100%;overflow:hidden;pointer-events:none;z-index:0;opacity:0.25}
+@media(prefers-color-scheme:light){.wc-bg{opacity:0.15}}
 .wc-bg-track{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;animation:scrollBg 60s linear infinite}
-.wc-bg-item{text-align:center;padding:20px 16px;width:25%}
-.wc-bg-year{font-size:36px;font-weight:700;letter-spacing:3px}
-.wc-bg-team{font-size:16px;margin-top:4px;font-weight:500}
+.wc-bg-item{text-align:center;padding:28px 16px;width:25%}
+.wc-bg-year{font-size:52px;font-weight:700;letter-spacing:4px}
+.wc-bg-team{font-size:20px;margin-top:6px;font-weight:500}
+@media(max-width:600px){.wc-bg-item{width:50%;padding:24px 12px}.wc-bg-year{font-size:44px}.wc-bg-team{font-size:18px}}
 @keyframes scrollBg{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}
 .container{position:relative;z-index:1}
 </style>
@@ -880,7 +881,7 @@ render();
     {y:'1962',t:'Brazil',f:'🇧🇷',c1:'#009C3B',c2:'#FFDF00'},
     {y:'1966',t:'England',f:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',c1:'#FFFFFF',c2:'#CF081F'},
     {y:'1970',t:'Brazil',f:'🇧🇷',c1:'#009C3B',c2:'#FFDF00'},
-    {y:'1974',t:'Germany',f:'🇩🇪',c1:'#DD0000',c2:'#FFCC00'},
+    {y:'1974',t:'Germany',f:'🇩🇪',c1:'#FFCC00',c2:'#DD0000'},
     {y:'1978',t:'Argentina',f:'🇦🇷',c1:'#74ACDF',c2:'#FFFFFF'},
     {y:'1982',t:'Italy',f:'🇮🇹',c1:'#008C45',c2:'#CD212A'},
     {y:'1986',t:'Argentina',f:'🇦🇷',c1:'#74ACDF',c2:'#FFFFFF'},
