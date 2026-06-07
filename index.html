@@ -749,13 +749,18 @@ function renderPlayers() {
   players.forEach(p => {
     const jt = joinTimes[p] ? new Date(joinTimes[p]).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
     if(p === ADMIN && !isAdmin) return; // Hide admin from other players
-    h += '<div class="player-chip">' + chessIcon(p) + '<span>' + p + '</span>' + chessLabel(p) + (p === ADMIN && isAdmin ? '<span class="admin-badge">admin</span>' : '') + (isAdmin && jt ? '<span style="font-size:10px;color:var(--hint);margin-left:6px">joined ' + jt + '</span>' : '') + (isAdmin && p !== ADMIN ? '<span class="remove" onclick="removePlayer(\'' + p.replace(/'/g, "\\'") + '\')">&times;</span>' : '') + '</div>';
+    h += '<div class="player-chip">' + chessIcon(p) + '<span>' + p + '</span>' + chessLabel(p) + (p === ADMIN && isAdmin ? '<span class="admin-badge">admin</span>' : '') + (isAdmin && jt ? '<span style="font-size:10px;color:var(--hint);margin-left:6px">joined ' + jt + '</span>' : '') + (isAdmin && p !== ADMIN ? '<span style="font-size:11px;color:var(--blue);cursor:pointer;margin-left:6px" onclick="resetPlayerPassword(\'' + p.replace(/'/g, "\\'") + '\')">reset pw</span><span class="remove" onclick="removePlayer(\'' + p.replace(/'/g, "\\'") + '\')">&times;</span>' : '') + '</div>';
   });
   h += '</div></div>';
   h += '<div class="card"><h2>Share this link</h2><p style="font-size:14px;color:var(--muted);margin-bottom:12px">Send this to your friends so they can join and predict:</p>';
   h += '<div style="display:flex;gap:8px"><input type="text" value="https://tsowho.github.io/wc2026-predictions" id="shareLink" readonly style="font-size:13px"/>';
   h += '<button class="btn-primary btn-sm" onclick="copyLink()">Copy</button></div></div>';
-  h += '<div class="card"><h2>Your account</h2><p style="font-size:14px;color:var(--muted);margin-bottom:12px">Logged in as ' + chessIcon(currentPlayer) + '<strong>' + currentPlayer + '</strong> ' + chessLabel(currentPlayer) + '</p><button class="btn-sm" onclick="logout()">Switch player</button></div>';
+  h += '<div class="card"><h2>Your account</h2><p style="font-size:14px;color:var(--muted);margin-bottom:12px">Logged in as ' + chessIcon(currentPlayer) + '<strong>' + currentPlayer + '</strong> ' + chessLabel(currentPlayer) + '</p>';
+  h += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
+  h += '<button class="btn-sm" onclick="logout()">Switch player</button>';
+  if(currentPlayer !== ADMIN) h += '<button class="btn-sm" onclick="changeName()">Change name</button>';
+  h += '<button class="btn-sm" onclick="changePassword()">Change password</button>';
+  h += '</div></div>';
   return h;
 }
 
@@ -767,7 +772,60 @@ window.lockPrediction = function(mid) {
   if(!confirm('Lock prediction: ' + m.team1 + ' ' + s1 + ' - ' + s2 + ' ' + m.team2 + '?\n\nThis cannot be changed!')) return;
   db.ref('wc2026/predictions/' + currentPlayer + '/m' + mid).set({ s1: parseInt(s1), s2: parseInt(s2), locked: true, lockedAt: Date.now() });
 };
-window.removePlayer = function(name) { if(confirm('Remove ' + name + '?')) { db.ref('wc2026/players/' + name).remove(); db.ref('wc2026/predictions/' + name).remove(); } };
+window.removePlayer = function(name) { if(confirm('Remove ' + name + '?')) { db.ref('wc2026/players/' + name).remove(); db.ref('wc2026/predictions/' + name).remove(); db.ref('wc2026/passwords/' + name).remove(); db.ref('wc2026/joinTimes/' + name).remove(); } };
+
+window.resetPlayerPassword = function(name) {
+  const newPw = prompt('Set new password for ' + name + ':');
+  if(!newPw) return;
+  db.ref('wc2026/passwords/' + name).set(newPw);
+  alert('Password for ' + name + ' has been reset.');
+};
+
+window.changeName = function() {
+  const newName = prompt('Enter your new name:');
+  if(!newName || !newName.trim()) return;
+  const trimmed = newName.trim();
+  if(trimmed === currentPlayer) return;
+  db.ref('wc2026/passwords/' + trimmed).once('value').then(snap => {
+    if(snap.val()) { alert('That name is already taken.'); return; }
+    // Copy data to new name
+    const old = currentPlayer;
+    Promise.all([
+      db.ref('wc2026/passwords/' + old).once('value'),
+      db.ref('wc2026/predictions/' + old).once('value'),
+      db.ref('wc2026/joinTimes/' + old).once('value')
+    ]).then(([pwSnap, predSnap, jtSnap]) => {
+      const updates = {};
+      updates['wc2026/players/' + trimmed] = true;
+      updates['wc2026/players/' + old] = null;
+      updates['wc2026/passwords/' + trimmed] = pwSnap.val();
+      updates['wc2026/passwords/' + old] = null;
+      updates['wc2026/predictions/' + trimmed] = predSnap.val();
+      updates['wc2026/predictions/' + old] = null;
+      updates['wc2026/joinTimes/' + trimmed] = jtSnap.val();
+      updates['wc2026/joinTimes/' + old] = null;
+      db.ref().update(updates).then(() => {
+        currentPlayer = trimmed;
+        localStorage.setItem('wc2026_player', trimmed);
+        render();
+        alert('Name changed to ' + trimmed + '!');
+      });
+    });
+  });
+};
+
+window.changePassword = function() {
+  db.ref('wc2026/passwords/' + currentPlayer).once('value').then(snap => {
+    const current = prompt('Enter your current password:');
+    if(current !== snap.val()) { alert('Wrong password.'); return; }
+    const newPw = prompt('Enter new password:');
+    if(!newPw) return;
+    const confirm2 = prompt('Confirm new password:');
+    if(newPw !== confirm2) { alert('Passwords don\'t match.'); return; }
+    db.ref('wc2026/passwords/' + currentPlayer).set(newPw);
+    alert('Password changed!');
+  });
+};
 window.logout = function() { currentPlayer = null; localStorage.removeItem('wc2026_player'); document.getElementById('mainApp').classList.add('hidden'); document.getElementById('loginScreen').classList.remove('hidden'); updateExistingPlayers(); };
 window.copyLink = function() { const inp = document.getElementById('shareLink'); navigator.clipboard.writeText(inp.value).then(() => { const btn = inp.nextElementSibling; btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy', 2000); }); };
 
