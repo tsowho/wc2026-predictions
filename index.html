@@ -81,6 +81,16 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .pred-item .name{font-weight:500}
 .countdown{font-size:12px;color:var(--accent);font-weight:500}
 .admin-badge{font-size:10px;padding:1px 6px;border-radius:3px;background:var(--purple);color:#fff;margin-left:4px}
+.chess-piece{font-size:16px;margin-right:3px;vertical-align:middle}
+.chess-rank-label{font-size:10px;padding:1px 6px;border-radius:3px;margin-left:4px;font-weight:600}
+.rank-king{background:#7f77dd;color:#fff}
+.rank-queen{background:linear-gradient(135deg,#BA7517,#D4A843);color:#fff}
+.rank-rook{background:linear-gradient(135deg,#888,#aaa);color:#fff}
+.rank-bishop{background:linear-gradient(135deg,#a0522d,#c47040);color:#fff}
+.rank-knight{background:linear-gradient(135deg,#378add,#5ba0e8);color:#fff}
+.rank-pawn{background:var(--hover);color:var(--muted)}
+.promotion-anim{animation:promoteGlow 1.5s ease-in-out 3}
+@keyframes promoteGlow{0%,100%{transform:scale(1)}50%{transform:scale(1.3);filter:brightness(1.4)}}
 .streak-badge{display:inline-flex;align-items:center;gap:2px;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:#FAECE7;color:#993C1D}
 @media(prefers-color-scheme:dark){.streak-badge{background:#4A1B0C;color:#F0997B}}
 .achievement{display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:500;margin:2px}
@@ -260,7 +270,7 @@ function updateExistingPlayers() {
   if(!players.length) { el.innerHTML = ''; return; }
   el.innerHTML = '<p style="font-size:13px;color:var(--muted);margin-bottom:8px">Or pick your name:</p>' +
     '<div class="player-list" style="justify-content:center">' +
-    players.map(p => '<button class="player-chip" onclick="loginAs(\'' + p.replace(/'/g, "\\'") + '\')" style="cursor:pointer;border:none">' + p + '</button>').join('') +
+    players.map(p => '<button class="player-chip" onclick="loginAs(\'' + p.replace(/'/g, "\\'") + '\')" style="cursor:pointer;border:none">' + chessIcon(p) + p + '</button>').join('') +
     '</div>';
 }
 
@@ -299,6 +309,7 @@ document.getElementById('loginBtn').addEventListener('click', () => {
     if(pw !== pw2) { alert('Passwords don\'t match. Try again.'); return; }
     db.ref('wc2026/passwords/' + name).set(pw);
     db.ref('wc2026/players/' + name).set(true);
+    db.ref('wc2026/joinTimes/' + name).set(Date.now());
     completeLogin(name);
   });
 });
@@ -514,6 +525,45 @@ window.addReaction = function(matchId, emoji) {
 let reactions = {};
 db.ref('wc2026/reactions').on('value', snap => { reactions = snap.val() || {}; if(currentPlayer) render(); });
 
+// Join timestamps
+let joinTimes = {};
+db.ref('wc2026/joinTimes').on('value', snap => { joinTimes = snap.val() || {}; });
+
+// Chess rank system — based on leaderboard position
+const CHESS_RANKS = [
+  { piece: '&#9812;', name: 'King',   cls: 'rank-king' },   // Admin only
+  { piece: '&#9813;', name: 'Queen',  cls: 'rank-queen' },  // 1st
+  { piece: '&#9814;', name: 'Rook',   cls: 'rank-rook' },   // 2nd-3rd
+  { piece: '&#9815;', name: 'Bishop', cls: 'rank-bishop' },  // 4th-5th
+  { piece: '&#9816;', name: 'Knight', cls: 'rank-knight' },  // 6th-7th
+  { piece: '&#9817;', name: 'Pawn',   cls: 'rank-pawn' }     // 8th+
+];
+
+let prevRanks = {};
+function getChessRank(playerName) {
+  if(playerName === ADMIN) return CHESS_RANKS[0]; // King
+  const lb = getLeaderboard();
+  const idx = lb.findIndex(p => p.name === playerName);
+  if(idx < 0) return CHESS_RANKS[5]; // Pawn for unranked
+  if(idx === 0) return CHESS_RANKS[1]; // Queen
+  if(idx <= 2) return CHESS_RANKS[2]; // Rook
+  if(idx <= 4) return CHESS_RANKS[3]; // Bishop
+  if(idx <= 6) return CHESS_RANKS[4]; // Knight
+  return CHESS_RANKS[5]; // Pawn
+}
+
+function chessIcon(playerName) {
+  const rank = getChessRank(playerName);
+  const wasPromoted = prevRanks[playerName] && prevRanks[playerName] !== rank.name && CHESS_RANKS.findIndex(r => r.name === rank.name) < CHESS_RANKS.findIndex(r => r.name === prevRanks[playerName]);
+  prevRanks[playerName] = rank.name;
+  return '<span class="chess-piece' + (wasPromoted ? ' promotion-anim' : '') + '" title="' + rank.name + '">' + rank.piece + '</span>';
+}
+
+function chessLabel(playerName) {
+  const rank = getChessRank(playerName);
+  return '<span class="chess-rank-label ' + rank.cls + '">' + rank.name + '</span>';
+}
+
 function renderDashboard() {
   const lb = getLeaderboard(), leader = lb[0], played = Object.keys(state.actuals || {}).length, players = Object.keys(state.players || {});
   let h = '<div class="stats-row">';
@@ -521,11 +571,11 @@ function renderDashboard() {
   h += '<div class="stat-card"><div class="label">Matches played</div><div class="value">' + played + ' / ' + MATCHES.length + '</div></div>';
   h += '<div class="stat-card"><div class="label">Leader</div><div class="value">' + (leader && leader.total > 0 ? leader.name : '-') + '</div></div>';
   h += '<div class="stat-card"><div class="label">Top score</div><div class="value">' + (leader && leader.total > 0 ? leader.total + ' pts' : '-') + '</div></div></div>';
-  h += '<div style="text-align:center;margin-bottom:16px;font-size:13px;color:var(--muted)">Logged in as <strong>' + currentPlayer + '</strong> <button class="btn-sm" onclick="logout()" style="margin-left:8px">Switch</button></div>';
+  h += '<div style="text-align:center;margin-bottom:16px;font-size:13px;color:var(--muted)">Logged in as ' + chessIcon(currentPlayer) + '<strong>' + currentPlayer + '</strong> ' + chessLabel(currentPlayer) + ' <button class="btn-sm" onclick="logout()" style="margin-left:8px">Switch</button></div>';
   if(!players.length) return h + '<div class="card"><div class="empty">Share the link to get friends to join!</div></div>';
   if(lb.length) {
     h += '<div class="card"><h2>Leaderboard</h2><table><tr><th>#</th><th>Player</th><th style="text-align:right">Exact</th><th style="text-align:right">Correct</th><th style="text-align:right">Points</th></tr>';
-    lb.forEach((p, i) => { h += '<tr><td class="' + (i < 3 ? 'rank-' + (i + 1) : '') + '">' + (i + 1) + '</td><td>' + p.name + '</td><td style="text-align:right">' + p.exact + '</td><td style="text-align:right">' + p.correct + '</td><td style="text-align:right;font-weight:600">' + p.total + '</td></tr>'; });
+    lb.forEach((p, i) => { h += '<tr><td class="' + (i < 3 ? 'rank-' + (i + 1) : '') + '">' + (i + 1) + '</td><td>' + chessIcon(p.name) + p.name + '</td><td style="text-align:right">' + p.exact + '</td><td style="text-align:right">' + p.correct + '</td><td style="text-align:right;font-weight:600">' + p.total + '</td></tr>'; });
     h += '</table></div>';
   }
   const nm = MATCHES.find(m => !state.actuals?.['m' + m.id]);
@@ -570,18 +620,18 @@ function liveCard(m, players) {
   h += '<div style="margin-top:10px;border-top:1px dashed var(--border);padding-top:8px"><div style="font-size:11px;color:var(--hint);margin-bottom:6px">Everyone\'s predictions:</div><div class="pred-grid">';
   players.forEach(p => {
     const pred = state.predictions?.[p]?.['m' + m.id];
-    if(!pred || !pred.locked) { h += '<div class="pred-item"><span class="name">' + p + '</span><span style="color:var(--hint)">-</span></div>'; return; }
+    if(!pred || !pred.locked) { h += '<div class="pred-item"><span class="name">' + chessIcon(p) + p + '</span><span style="color:var(--hint)">-</span></div>'; return; }
     if(started || actual) {
       const r = calcPoints(pred, actual);
       const s = r ? (r.type === 'exact' ? 'color:#0f6e56;font-weight:700' : r.type === 'correct' ? 'color:#854f0b;font-weight:600' : 'color:var(--danger)') : '';
       const isMvp = p === mvp;
       const isExact = r && r.type === 'exact';
       const nameClass = isExact ? ' gold-glow' : '';
-      h += '<div class="pred-item"><span class="name' + nameClass + '">' + p + (isMvp ? '<span class="mvp-crown" title="Match MVP">&#128081;</span>' : '') + '</span><span style="' + s + '">' + pred.s1 + '-' + pred.s2 + (isExact ? ' &#127919;' : '') + '</span></div>';
+      h += '<div class="pred-item"><span class="name' + nameClass + '">' + chessIcon(p) + p + (isMvp ? '<span class="mvp-crown" title="Match MVP">&#128081;</span>' : '') + '</span><span style="' + s + '">' + pred.s1 + '-' + pred.s2 + (isExact ? ' &#127919;' : '') + '</span></div>';
       // Fire confetti for exact predictions
       if(isExact && p === currentPlayer && !confettiFired['m' + m.id]) { confettiFired['m' + m.id] = true; setTimeout(fireConfetti, 500); }
     } else {
-      h += '<div class="pred-item"><span class="name">' + p + '</span><span style="color:var(--accent)">Locked</span></div>';
+      h += '<div class="pred-item"><span class="name">' + chessIcon(p) + p + '</span><span style="color:var(--accent)">Locked</span></div>';
     }
   });
   h += '</div>';
@@ -602,7 +652,7 @@ function liveCard(m, players) {
 }
 
 function renderPredict() {
-  let h = '<div class="flex-between" style="margin-bottom:16px"><div style="font-size:14px">Predicting as <strong>' + currentPlayer + '</strong></div>';
+  let h = '<div class="flex-between" style="margin-bottom:16px"><div style="font-size:14px">Predicting as ' + chessIcon(currentPlayer) + '<strong>' + currentPlayer + '</strong> ' + chessLabel(currentPlayer) + '</div>';
   h += '<div class="group-filter" id="groupFilter"><button class="group-btn active" data-group="all">All</button>';
   GROUPS.forEach(g => h += '<button class="group-btn" data-group="' + g + '">' + g + '</button>');
   h += '</div></div>';
@@ -666,7 +716,7 @@ function renderLeaderboard() {
     const achs = getAchievements(p.name);
     h += '<tr><td class="' + (i < 3 ? 'rank-' + (i + 1) : '') + '">' + (i + 1) + '</td>';
     h += '<td>' + posArrow(posChanges[p.name] || 0) + '</td>';
-    h += '<td style="' + (p.name === currentPlayer ? 'font-weight:600' : '') + '">' + p.name + (p.name === currentPlayer ? ' (you)' : '') + (streak ? ' ' + streak : '') + (achs ? '<br>' + achs : '') + '</td>';
+    h += '<td style="' + (p.name === currentPlayer ? 'font-weight:600' : '') + '">' + chessIcon(p.name) + p.name + ' ' + chessLabel(p.name) + (p.name === currentPlayer ? ' (you)' : '') + (streak ? ' ' + streak : '') + (achs ? '<br>' + achs : '') + '</td>';
     h += '<td style="text-align:right">' + p.exact + '</td><td style="text-align:right">' + p.correct + '</td><td style="text-align:right">' + p.wrong + '</td>';
     h += '<td style="text-align:right;font-weight:700;font-size:16px">' + p.total + '</td></tr>';
   });
@@ -675,7 +725,7 @@ function renderLeaderboard() {
     const pct = p.predicted > 0 ? Math.round(((p.exact + p.correct) / p.predicted) * 100) : 0;
     const streak = getStreak(p.name);
     const achs = getAchievements(p.name);
-    h += '<div class="card"><h2>' + p.name + (p.name === currentPlayer ? ' (you)' : '') + '</h2>';
+    h += '<div class="card"><h2>' + chessIcon(p.name) + p.name + ' ' + chessLabel(p.name) + (p.name === currentPlayer ? ' (you)' : '') + '</h2>';
     if(achs) h += '<div style="margin-bottom:12px">' + achs + '</div>';
     h += '<div class="stats-row">';
     h += '<div class="stat-card"><div class="label">Accuracy</div><div class="value">' + pct + '%</div></div>';
@@ -690,12 +740,15 @@ function renderLeaderboard() {
 function renderPlayers() {
   const players = Object.keys(state.players || {}), isAdmin = currentPlayer === ADMIN;
   let h = '<div class="card"><h2>Players (' + players.length + ')</h2><div class="player-list">';
-  players.forEach(p => { h += '<div class="player-chip"><span>' + p + '</span>' + (p === ADMIN ? '<span class="admin-badge">admin</span>' : '') + (isAdmin && p !== ADMIN ? '<span class="remove" onclick="removePlayer(\'' + p.replace(/'/g, "\\'") + '\')">&times;</span>' : '') + '</div>'; });
+  players.forEach(p => {
+    const jt = joinTimes[p] ? new Date(joinTimes[p]).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+    h += '<div class="player-chip">' + chessIcon(p) + '<span>' + p + '</span>' + chessLabel(p) + (p === ADMIN ? '<span class="admin-badge">admin</span>' : '') + (isAdmin && jt ? '<span style="font-size:10px;color:var(--hint);margin-left:6px">joined ' + jt + '</span>' : '') + (isAdmin && p !== ADMIN ? '<span class="remove" onclick="removePlayer(\'' + p.replace(/'/g, "\\'") + '\')">&times;</span>' : '') + '</div>';
+  });
   h += '</div></div>';
   h += '<div class="card"><h2>Share this link</h2><p style="font-size:14px;color:var(--muted);margin-bottom:12px">Send this to your friends so they can join and predict:</p>';
   h += '<div style="display:flex;gap:8px"><input type="text" value="https://tsowho.github.io/wc2026-predictions" id="shareLink" readonly style="font-size:13px"/>';
   h += '<button class="btn-primary btn-sm" onclick="copyLink()">Copy</button></div></div>';
-  h += '<div class="card"><h2>Your account</h2><p style="font-size:14px;color:var(--muted);margin-bottom:12px">Logged in as <strong>' + currentPlayer + '</strong></p><button class="btn-sm" onclick="logout()">Switch player</button></div>';
+  h += '<div class="card"><h2>Your account</h2><p style="font-size:14px;color:var(--muted);margin-bottom:12px">Logged in as ' + chessIcon(currentPlayer) + '<strong>' + currentPlayer + '</strong> ' + chessLabel(currentPlayer) + '</p><button class="btn-sm" onclick="logout()">Switch player</button></div>';
   return h;
 }
 
