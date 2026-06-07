@@ -266,7 +266,7 @@ function updateSyncStatus() {
 function updateExistingPlayers() {
   const el = document.getElementById('existingPlayers');
   if(!el) return;
-  const players = Object.keys(state.players);
+  const players = Object.keys(state.players).filter(p => p !== ADMIN);
   if(!players.length) { el.innerHTML = ''; return; }
   el.innerHTML = '<p style="font-size:13px;color:var(--muted);margin-bottom:8px">Or pick your name:</p>' +
     '<div class="player-list" style="justify-content:center">' +
@@ -361,8 +361,9 @@ function calcPoints(pred, actual) {
   return { pts: 0, type: 'wrong' };
 }
 
-function getLeaderboard() {
-  return Object.keys(state.players || {}).map(p => {
+function getLeaderboard(includeAdmin) {
+  const showAdmin = includeAdmin || currentPlayer === ADMIN;
+  return Object.keys(state.players || {}).filter(p => showAdmin || p !== ADMIN).map(p => {
     let total = 0, exact = 0, correct = 0, wrong = 0, predicted = 0;
     MATCHES.forEach(m => {
       const pred = state.predictions?.[p]?.['m' + m.id];
@@ -543,8 +544,9 @@ let prevRanks = {};
 function getChessRank(playerName) {
   if(playerName === ADMIN) return CHESS_RANKS[0]; // King
   const lb = getLeaderboard();
-  const idx = lb.findIndex(p => p.name === playerName);
-  if(idx < 0) return CHESS_RANKS[5]; // Pawn for unranked
+  const entry = lb.find(p => p.name === playerName);
+  if(!entry || entry.total === 0) return CHESS_RANKS[5]; // Pawn until you earn points
+  const idx = lb.indexOf(entry);
   if(idx === 0) return CHESS_RANKS[1]; // Queen
   if(idx <= 2) return CHESS_RANKS[2]; // Rook
   if(idx <= 4) return CHESS_RANKS[3]; // Bishop
@@ -591,7 +593,7 @@ function renderDashboard() {
 }
 
 function renderLive() {
-  const now = new Date(), players = Object.keys(state.players || {});
+  const now = new Date(), players = Object.keys(state.players || {}).filter(p => currentPlayer === ADMIN || p !== ADMIN);
   const live = MATCHES.filter(m => { const t = getMatchTime(m); return now >= t && now <= new Date(t.getTime() + 7200000); });
   const todayAll = MATCHES.filter(m => { const t = getMatchTime(m); return t.toDateString() === now.toDateString(); });
   const upcoming = todayAll.filter(m => !live.includes(m));
@@ -691,11 +693,11 @@ function renderResults() {
     h += '</div><span class="team">' + m.team2 + '</span></div>';
     if(hasA) {
       h += '<div style="margin-top:10px;border-top:1px dashed var(--border);padding-top:8px"><div style="font-size:11px;color:var(--hint);margin-bottom:6px">Predictions:</div>';
-      Object.keys(state.players || {}).forEach(p => {
+      Object.keys(state.players || {}).filter(p => currentPlayer === ADMIN || p !== ADMIN).forEach(p => {
         const pred = state.predictions?.[p]?.['m' + m.id];
         if(!pred || !pred.locked) return;
         const r = calcPoints(pred, actual), cls = r ? (r.type === 'exact' ? 'result-exact' : r.type === 'correct' ? 'result-correct' : 'result-wrong') : '';
-        h += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:2px 0"><span>' + p + ': ' + pred.s1 + '-' + pred.s2 + '</span>';
+        h += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:2px 0"><span>' + chessIcon(p) + p + ': ' + pred.s1 + '-' + pred.s2 + '</span>';
         if(r) h += '<span class="result-badge ' + cls + '">+' + r.pts + '</span>';
         h += '</div>';
       });
@@ -742,7 +744,8 @@ function renderPlayers() {
   let h = '<div class="card"><h2>Players (' + players.length + ')</h2><div class="player-list">';
   players.forEach(p => {
     const jt = joinTimes[p] ? new Date(joinTimes[p]).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
-    h += '<div class="player-chip">' + chessIcon(p) + '<span>' + p + '</span>' + chessLabel(p) + (p === ADMIN ? '<span class="admin-badge">admin</span>' : '') + (isAdmin && jt ? '<span style="font-size:10px;color:var(--hint);margin-left:6px">joined ' + jt + '</span>' : '') + (isAdmin && p !== ADMIN ? '<span class="remove" onclick="removePlayer(\'' + p.replace(/'/g, "\\'") + '\')">&times;</span>' : '') + '</div>';
+    if(p === ADMIN && !isAdmin) return; // Hide admin from other players
+    h += '<div class="player-chip">' + chessIcon(p) + '<span>' + p + '</span>' + chessLabel(p) + (p === ADMIN && isAdmin ? '<span class="admin-badge">admin</span>' : '') + (isAdmin && jt ? '<span style="font-size:10px;color:var(--hint);margin-left:6px">joined ' + jt + '</span>' : '') + (isAdmin && p !== ADMIN ? '<span class="remove" onclick="removePlayer(\'' + p.replace(/'/g, "\\'") + '\')">&times;</span>' : '') + '</div>';
   });
   h += '</div></div>';
   h += '<div class="card"><h2>Share this link</h2><p style="font-size:14px;color:var(--muted);margin-bottom:12px">Send this to your friends so they can join and predict:</p>';
