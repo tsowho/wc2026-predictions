@@ -117,7 +117,6 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .wc-bg-item{text-align:center;padding:20px 16px;width:25%}
 .wc-bg-year{font-size:36px;font-weight:700;letter-spacing:3px}
 .wc-bg-team{font-size:16px;margin-top:4px;font-weight:500}
-.wc-bg-flag{font-size:28px;display:block;margin-bottom:4px}
 @keyframes scrollBg{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}
 .container{position:relative;z-index:1}
 </style>
@@ -879,7 +878,7 @@ render();
     {y:'1954',t:'Germany',f:'🇩🇪',c1:'#FFCC00',c2:'#DD0000'},
     {y:'1958',t:'Brazil',f:'🇧🇷',c1:'#009C3B',c2:'#FFDF00'},
     {y:'1962',t:'Brazil',f:'🇧🇷',c1:'#009C3B',c2:'#FFDF00'},
-    {y:'1966',t:'England',f:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',c1:'#CF081F',c2:'#FFFFFF'},
+    {y:'1966',t:'England',f:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',c1:'#FFFFFF',c2:'#CF081F'},
     {y:'1970',t:'Brazil',f:'🇧🇷',c1:'#009C3B',c2:'#FFDF00'},
     {y:'1974',t:'Germany',f:'🇩🇪',c1:'#DD0000',c2:'#FFCC00'},
     {y:'1978',t:'Argentina',f:'🇦🇷',c1:'#74ACDF',c2:'#FFFFFF'},
@@ -900,7 +899,6 @@ render();
     return winners.map(w =>
       '<div class="wc-bg-item">' +
         '<div class="wc-bg-year" style="background:linear-gradient(135deg,' + w.c1 + ',' + w.c2 + ');-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">' + w.y + '</div>' +
-        '<span class="wc-bg-flag">' + w.f + '</span>' +
         '<div class="wc-bg-team" style="color:' + w.c1 + '">' + w.t + '</div>' +
       '</div>'
     ).join('');
