@@ -235,6 +235,11 @@ let currentPlayer = localStorage.getItem('wc2026_player') || null;
 let currentTab = 'dashboard';
 let isOnline = false;
 
+// Migrate: ensure admin has a password in Firebase
+db.ref('wc2026/passwords/' + ADMIN).once('value').then(snap => {
+  if(!snap.val()) db.ref('wc2026/passwords/' + ADMIN).set('2026*');
+});
+
 const stateRef = db.ref('wc2026');
 stateRef.child('players').on('value', snap => { state.players = snap.val() || {}; updateExistingPlayers(); if(currentPlayer) render(); });
 stateRef.child('predictions').on('value', snap => { state.predictions = snap.val() || {}; if(currentPlayer) render(); });
@@ -259,11 +264,7 @@ function updateExistingPlayers() {
     '</div>';
 }
 
-function loginAs(name, skipAuth) {
-  if(!skipAuth && name === ADMIN) {
-    const pw = prompt('Enter admin password:');
-    if(pw !== '2026*') { alert('Wrong password.'); return; }
-  }
+function completeLogin(name) {
   currentPlayer = name;
   localStorage.setItem('wc2026_player', name);
   document.getElementById('loginScreen').classList.add('hidden');
@@ -271,15 +272,35 @@ function loginAs(name, skipAuth) {
   render();
 }
 
+function loginAs(name) {
+  // Returning player — check password
+  db.ref('wc2026/passwords/' + name).once('value').then(snap => {
+    const stored = snap.val();
+    if(!stored) { alert('Player not found.'); return; }
+    const pw = prompt('Enter your password:');
+    if(pw !== stored) { alert('Wrong password.'); return; }
+    completeLogin(name);
+  });
+}
+
 document.getElementById('loginBtn').addEventListener('click', () => {
   const name = document.getElementById('loginName').value.trim();
   if(!name) return;
-  if(name === ADMIN) {
-    const pw = prompt('Enter admin password:');
-    if(pw !== '2026*') { alert('Wrong password.'); return; }
-  }
-  db.ref('wc2026/players/' + name).set(true);
-  loginAs(name, true);
+  // Check if player already exists
+  db.ref('wc2026/passwords/' + name).once('value').then(snap => {
+    if(snap.val()) {
+      alert('That name is taken. Pick your name from the list below instead.');
+      return;
+    }
+    // New player — set a password
+    const pw = prompt('Set a password for your account:');
+    if(!pw) return;
+    const pw2 = prompt('Confirm your password:');
+    if(pw !== pw2) { alert('Passwords don\'t match. Try again.'); return; }
+    db.ref('wc2026/passwords/' + name).set(pw);
+    db.ref('wc2026/players/' + name).set(true);
+    completeLogin(name);
+  });
 });
 document.getElementById('loginName').addEventListener('keydown', e => { if(e.key === 'Enter') document.getElementById('loginBtn').click(); });
 
