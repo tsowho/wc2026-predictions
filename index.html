@@ -299,7 +299,10 @@ document.getElementById('loginBtn').addEventListener('click', () => {
   // Check if player already exists
   db.ref('wc2026/passwords/' + name).once('value').then(snap => {
     if(snap.val()) {
-      alert('That name is taken. Pick your name from the list below instead.');
+      // Existing player — ask for password
+      const pw = prompt('Enter your password:');
+      if(pw !== snap.val()) { alert('Wrong password.'); return; }
+      completeLogin(name);
       return;
     }
     // New player — set a password
