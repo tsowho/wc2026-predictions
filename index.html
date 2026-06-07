@@ -545,15 +545,16 @@ const CHESS_RANKS = [
 
 let prevRanks = {};
 function getChessRank(playerName) {
-  if(playerName === ADMIN) return CHESS_RANKS[0]; // King
-  const lb = getLeaderboard();
+  if(playerName === ADMIN) return CHESS_RANKS[0]; // King (admin)
+  const lb = getLeaderboard(true);
   const entry = lb.find(p => p.name === playerName);
   if(!entry || entry.total === 0) return CHESS_RANKS[5]; // Pawn until you earn points
   const idx = lb.indexOf(entry);
-  if(idx === 0) return CHESS_RANKS[1]; // Queen
-  if(idx <= 2) return CHESS_RANKS[2]; // Rook
-  if(idx <= 4) return CHESS_RANKS[3]; // Bishop
-  if(idx <= 6) return CHESS_RANKS[4]; // Knight
+  if(idx === 0) return CHESS_RANKS[0]; // King — 1st place
+  if(idx === 1) return CHESS_RANKS[1]; // Queen — 2nd
+  if(idx <= 3) return CHESS_RANKS[2]; // Rook — 3rd-4th
+  if(idx <= 5) return CHESS_RANKS[3]; // Bishop — 5th-6th
+  if(idx <= 7) return CHESS_RANKS[4]; // Knight — 7th-8th
   return CHESS_RANKS[5]; // Pawn
 }
 
