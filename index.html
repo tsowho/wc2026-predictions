@@ -150,6 +150,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 <button class="tab" data-tab="predict">Predict</button>
 <button class="tab" data-tab="results">Results</button>
 <button class="tab" data-tab="leaderboard">Leaderboard</button>
+<button class="tab" data-tab="news">News</button>
 <button class="tab" data-tab="players">Players</button>
 </div>
 <div id="content"></div>
@@ -249,8 +250,20 @@ const MATCHES = [
 
 const GROUPS = ["A","B","C","D","E","F","G","H","I","J","K","L"];
 const ADMIN = "Baba";
+const TEAMS = [...new Set(MATCHES.flatMap(m => [m.team1, m.team2]))].sort();
+const BONUS_CATS = [
+  {id:'winner', label:'Tournament winner', type:'team'},
+  {id:'golden_boot', label:'Golden Boot (top scorer)', type:'text'},
+  {id:'most_goals', label:'Most goals in a single match', type:'match'},
+  {id:'best_group', label:'Best group stage team', type:'team'},
+  {id:'finalist1', label:'Finalist #1', type:'team'},
+  {id:'finalist2', label:'Finalist #2', type:'team'}
+];
+const BONUS_PTS = 5;
 
 let state = { players: {}, predictions: {}, actuals: {} };
+let bonusPredictions = {};
+let bonusActuals = {};
 let currentPlayer = localStorage.getItem('wc2026_player') || null;
 let currentTab = 'dashboard';
 let isOnline = false;
@@ -264,6 +277,8 @@ const stateRef = db.ref('wc2026');
 stateRef.child('players').on('value', snap => { state.players = snap.val() || {}; updateExistingPlayers(); if(currentPlayer) render(); });
 stateRef.child('predictions').on('value', snap => { state.predictions = snap.val() || {}; if(currentPlayer) render(); });
 stateRef.child('actuals').on('value', snap => { state.actuals = snap.val() || {}; if(currentPlayer) render(); });
+stateRef.child('bonus').on('value', snap => { bonusPredictions = snap.val() || {}; if(currentPlayer) render(); });
+stateRef.child('bonusActuals').on('value', snap => { bonusActuals = snap.val() || {}; if(currentPlayer) render(); });
 db.ref('.info/connected').on('value', snap => { isOnline = snap.val() === true; updateSyncStatus(); });
 
 function updateSyncStatus() {
@@ -341,6 +356,60 @@ document.getElementById('tabs').addEventListener('click', e => {
   render();
 });
 
+let newsCache = null;
+let newsLastFetch = 0;
+function renderNews() {
+  let h = '<div class="card"><h2>World Cup 2026 News</h2><p style="font-size:13px;color:var(--muted);margin-bottom:12px">Live headlines from Google News. Auto-refreshes every 5 minutes.</p>';
+  h += '<div id="newsContainer">';
+  if(newsCache && newsCache.length) {
+    newsCache.forEach(item => {
+      const ago = timeAgo(new Date(item.pubDate));
+      h += '<div style="padding:12px 0;border-bottom:1px solid var(--border)">';
+      h += '<a href="' + item.link + '" target="_blank" rel="noopener" style="font-size:15px;font-weight:500;color:var(--accent);text-decoration:none">' + item.title + '</a>';
+      h += '<div style="font-size:12px;color:var(--muted);margin-top:4px">' + (item.author || 'Unknown source') + ' &middot; ' + ago + '</div>';
+      h += '</div>';
+    });
+  } else {
+    h += '<div class="empty">Loading news...</div>';
+  }
+  h += '</div></div>';
+  fetchNews();
+  return h;
+}
+function fetchNews() {
+  const now = Date.now();
+  if(newsCache && now - newsLastFetch < 300000) return; // 5 min cache
+  fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://news.google.com/rss/search?q=FIFA+World+Cup+2026&hl=en-US&gl=US&ceid=US:en'))
+    .then(r => r.json()).then(data => {
+      if(data.items) {
+        newsCache = data.items.slice(0, 12);
+        newsLastFetch = Date.now();
+        if(currentTab === 'news') {
+          const c = document.getElementById('newsContainer');
+          if(c) {
+            let nh = '';
+            newsCache.forEach(item => {
+              const ago = timeAgo(new Date(item.pubDate));
+              nh += '<div style="padding:12px 0;border-bottom:1px solid var(--border)">';
+              nh += '<a href="' + item.link + '" target="_blank" rel="noopener" style="font-size:15px;font-weight:500;color:var(--accent);text-decoration:none">' + item.title + '</a>';
+              nh += '<div style="font-size:12px;color:var(--muted);margin-top:4px">' + (item.author || 'Unknown source') + ' &middot; ' + ago + '</div>';
+              nh += '</div>';
+            });
+            c.innerHTML = nh;
+          }
+        }
+      }
+    }).catch(() => {});
+}
+function timeAgo(date) {
+  const s = Math.floor((Date.now() - date) / 1000);
+  if(s < 60) return 'just now';
+  if(s < 3600) return Math.floor(s / 60) + 'm ago';
+  if(s < 86400) return Math.floor(s / 3600) + 'h ago';
+  return Math.floor(s / 86400) + 'd ago';
+}
+setInterval(() => { if(currentTab === 'news') fetchNews(); }, 300000);
+
 function render() {
   const c = document.getElementById('content');
   switch(currentTab) {
@@ -349,6 +418,7 @@ function render() {
     case 'predict': c.innerHTML = renderPredict(); break;
     case 'results': c.innerHTML = renderResults(); break;
     case 'leaderboard': c.innerHTML = renderLeaderboard(); break;
+    case 'news': c.innerHTML = renderNews(); break;
     case 'players': c.innerHTML = renderPlayers(); break;
   }
   attachEvents();
@@ -386,7 +456,16 @@ function getLeaderboard(includeAdmin) {
       predicted++; total += r.pts;
       if(r.type === 'exact') exact++; else if(r.type === 'correct') correct++; else wrong++;
     });
-    return { name: p, total, exact, correct, wrong, predicted };
+    // Bonus points
+    let bonusPts = 0;
+    const pb = bonusPredictions[p];
+    if(pb && pb._locked) {
+      BONUS_CATS.forEach(cat => {
+        if(bonusActuals[cat.id] !== undefined && bonusActuals[cat.id] !== '' && pb[cat.id] && pb[cat.id] === bonusActuals[cat.id]) bonusPts += BONUS_PTS;
+      });
+    }
+    total += bonusPts;
+    return { name: p, total, exact, correct, wrong, predicted, bonusPts };
   }).sort((a, b) => b.total - a.total || b.exact - a.exact);
 }
 
@@ -673,6 +752,34 @@ function renderPredict() {
   GROUPS.forEach(g => h += '<button class="group-btn" data-group="' + g + '">' + g + '</button>');
   h += '</div></div>';
   h += '<div class="card" style="padding:10px 16px;margin-bottom:16px"><p style="font-size:13px;color:var(--muted)">Enter your predicted score and click <strong>Lock</strong> to submit. Locked predictions cannot be changed. Predictions are hidden from others until the match starts.</p></div>';
+  // Bonus predictions section
+  const myBonus = bonusPredictions[currentPlayer] || {};
+  const bonusLocked = myBonus._locked;
+  h += '<div class="card" style="margin-bottom:16px"><h2>Bonus Predictions <span style="font-size:13px;color:var(--muted);font-weight:400">(+' + BONUS_PTS + ' pts each)</span></h2>';
+  if(bonusLocked) h += '<div style="margin-bottom:10px"><span class="locked-badge">Locked</span></div>';
+  BONUS_CATS.forEach(cat => {
+    const val = myBonus[cat.id] || '';
+    h += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap"><label style="min-width:200px;font-size:14px">' + cat.label + '</label>';
+    if(cat.type === 'team') {
+      h += '<select class="bonus-input" data-cat="' + cat.id + '"' + (bonusLocked ? ' disabled' : '') + '><option value="">-- Select --</option>';
+      TEAMS.forEach(t => h += '<option value="' + t + '"' + (val === t ? ' selected' : '') + '>' + t + '</option>');
+      h += '</select>';
+    } else if(cat.type === 'match') {
+      h += '<select class="bonus-input" data-cat="' + cat.id + '"' + (bonusLocked ? ' disabled' : '') + '><option value="">-- Select --</option>';
+      MATCHES.forEach(m => { const lbl = m.team1 + ' vs ' + m.team2; h += '<option value="m' + m.id + '"' + (val === 'm' + m.id ? ' selected' : '') + '>' + lbl + '</option>'; });
+      h += '</select>';
+    } else {
+      h += '<input type="text" class="bonus-input" data-cat="' + cat.id + '" value="' + (val || '') + '" placeholder="Type your prediction"' + (bonusLocked ? ' disabled' : '') + ' style="max-width:250px"/>';
+    }
+    // Show result if actuals exist
+    if(bonusActuals[cat.id] !== undefined && bonusActuals[cat.id] !== '' && bonusLocked) {
+      const correct = val && val === bonusActuals[cat.id];
+      h += '<span class="result-badge ' + (correct ? 'result-exact' : 'result-wrong') + '">' + (correct ? '+' + BONUS_PTS : '0') + '</span>';
+    }
+    h += '</div>';
+  });
+  if(!bonusLocked) h += '<button class="btn-primary" onclick="lockBonus()">Lock Bonus Predictions</button>';
+  h += '</div>';
   MATCHES.forEach(m => {
     const pred = state.predictions?.[currentPlayer]?.['m' + m.id] || {}, locked = pred.locked, started = isMatchStarted(m), result = calcPoints(pred, state.actuals?.['m' + m.id]);
     h += '<div class="match-card" data-group="' + m.group + '"><div class="match-header"><span>Group ' + m.group + ' | ' + fmtDate(m.date) + ' ' + m.time + ' ET</span>';
@@ -719,6 +826,43 @@ function renderResults() {
     }
     h += '</div>';
   });
+  // Bonus actuals section (admin sets results, everyone sees them)
+  h += '<div class="card" style="margin-top:20px"><h2>Bonus Predictions Results</h2>';
+  if(isAdmin) h += '<p style="font-size:13px;color:var(--muted);margin-bottom:12px">Set the actual results for bonus categories.</p>';
+  BONUS_CATS.forEach(cat => {
+    const actual = bonusActuals[cat.id] || '';
+    h += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap"><label style="min-width:200px;font-size:14px;font-weight:500">' + cat.label + '</label>';
+    if(isAdmin) {
+      if(cat.type === 'team') {
+        h += '<select class="bonus-actual-input" data-cat="' + cat.id + '"><option value="">-- Select --</option>';
+        TEAMS.forEach(t => h += '<option value="' + t + '"' + (actual === t ? ' selected' : '') + '>' + t + '</option>');
+        h += '</select>';
+      } else if(cat.type === 'match') {
+        h += '<select class="bonus-actual-input" data-cat="' + cat.id + '"><option value="">-- Select --</option>';
+        MATCHES.forEach(m => { const lbl = m.team1 + ' vs ' + m.team2; h += '<option value="m' + m.id + '"' + (actual === 'm' + m.id ? ' selected' : '') + '>' + lbl + '</option>'; });
+        h += '</select>';
+      } else {
+        h += '<input type="text" class="bonus-actual-input" data-cat="' + cat.id + '" value="' + (actual || '') + '" placeholder="Enter actual result" style="max-width:250px"/>';
+      }
+    } else {
+      h += '<span style="font-weight:600">' + (actual || '<span style="color:var(--hint)">TBD</span>') + '</span>';
+    }
+    h += '</div>';
+    // Show all players' predictions for this category
+    if(actual) {
+      h += '<div style="margin-left:210px;margin-bottom:12px;font-size:13px">';
+      Object.keys(bonusPredictions).filter(p => p !== '_' && (currentPlayer === ADMIN || p !== ADMIN)).forEach(p => {
+        const pb = bonusPredictions[p];
+        if(!pb || !pb._locked || !pb[cat.id]) return;
+        const correct = pb[cat.id] === actual;
+        let display = pb[cat.id];
+        if(cat.type === 'match') { const mm = MATCHES.find(x => 'm' + x.id === pb[cat.id]); if(mm) display = mm.team1 + ' vs ' + mm.team2; }
+        h += '<div style="display:flex;justify-content:space-between;max-width:400px"><span>' + p + ': ' + display + '</span><span class="result-badge ' + (correct ? 'result-exact' : 'result-wrong') + '">' + (correct ? '+' + BONUS_PTS : '0') + '</span></div>';
+      });
+      h += '</div>';
+    }
+  });
+  h += '</div>';
   return h;
 }
 
@@ -726,14 +870,14 @@ function renderLeaderboard() {
   const lb = getLeaderboard();
   if(!lb.length) return '<div class="card"><div class="empty">No players yet.</div></div>';
   const posChanges = getPositionChanges();
-  let h = '<div class="card"><h2>Full leaderboard</h2><table><tr><th>#</th><th></th><th>Player</th><th style="text-align:right">Exact (3pts)</th><th style="text-align:right">Correct (1pt)</th><th style="text-align:right">Wrong</th><th style="text-align:right">Points</th></tr>';
+  let h = '<div class="card"><h2>Full leaderboard</h2><table><tr><th>#</th><th></th><th>Player</th><th style="text-align:right">Exact (3)</th><th style="text-align:right">Correct (1)</th><th style="text-align:right">Wrong</th><th style="text-align:right">Bonus</th><th style="text-align:right">Points</th></tr>';
   lb.forEach((p, i) => {
     const streak = streakBadge(p.name);
     const achs = getAchievements(p.name);
     h += '<tr><td class="' + (i < 3 ? 'rank-' + (i + 1) : '') + '">' + (i + 1) + '</td>';
     h += '<td>' + posArrow(posChanges[p.name] || 0) + '</td>';
     h += '<td style="' + (p.name === currentPlayer ? 'font-weight:600' : '') + '">' + chessIcon(p.name) + p.name + ' ' + chessLabel(p.name) + (p.name === currentPlayer ? ' (you)' : '') + (streak ? ' ' + streak : '') + (achs ? '<br>' + achs : '') + '</td>';
-    h += '<td style="text-align:right">' + p.exact + '</td><td style="text-align:right">' + p.correct + '</td><td style="text-align:right">' + p.wrong + '</td>';
+    h += '<td style="text-align:right">' + p.exact + '</td><td style="text-align:right">' + p.correct + '</td><td style="text-align:right">' + p.wrong + '</td><td style="text-align:right">' + (p.bonusPts || 0) + '</td>';
     h += '<td style="text-align:right;font-weight:700;font-size:16px">' + p.total + '</td></tr>';
   });
   h += '</table></div>';
@@ -774,6 +918,15 @@ function renderPlayers() {
   return h;
 }
 
+window.lockBonus = function() {
+  const myBonus = {};
+  document.querySelectorAll('.bonus-input').forEach(el => { if(el.value) myBonus[el.dataset.cat] = el.value; });
+  const filled = BONUS_CATS.filter(c => myBonus[c.id]);
+  if(filled.length === 0) { alert('Fill in at least one bonus prediction before locking.'); return; }
+  if(!confirm('Lock ' + filled.length + ' bonus prediction(s)? This cannot be changed!')) return;
+  myBonus._locked = true;
+  db.ref('wc2026/bonus/' + currentPlayer).set(myBonus);
+};
 window.lockPrediction = function(mid) {
   const s1 = document.querySelector('[data-match="' + mid + '"][data-side="s1"]')?.value;
   const s2 = document.querySelector('[data-match="' + mid + '"][data-side="s2"]')?.value;
@@ -782,7 +935,7 @@ window.lockPrediction = function(mid) {
   if(!confirm('Lock prediction: ' + m.team1 + ' ' + s1 + ' - ' + s2 + ' ' + m.team2 + '?\n\nThis cannot be changed!')) return;
   db.ref('wc2026/predictions/' + currentPlayer + '/m' + mid).set({ s1: parseInt(s1), s2: parseInt(s2), locked: true, lockedAt: Date.now() });
 };
-window.removePlayer = function(name) { if(confirm('Remove ' + name + '?')) { db.ref('wc2026/players/' + name).remove(); db.ref('wc2026/predictions/' + name).remove(); db.ref('wc2026/passwords/' + name).remove(); db.ref('wc2026/joinTimes/' + name).remove(); } };
+window.removePlayer = function(name) { if(confirm('Remove ' + name + '?')) { db.ref('wc2026/players/' + name).remove(); db.ref('wc2026/predictions/' + name).remove(); db.ref('wc2026/passwords/' + name).remove(); db.ref('wc2026/joinTimes/' + name).remove(); db.ref('wc2026/bonus/' + name).remove(); } };
 
 window.resetPlayerPassword = function(name) {
   const newPw = prompt('Set new password for ' + name + ':');
@@ -803,8 +956,9 @@ window.changeName = function() {
     Promise.all([
       db.ref('wc2026/passwords/' + old).once('value'),
       db.ref('wc2026/predictions/' + old).once('value'),
-      db.ref('wc2026/joinTimes/' + old).once('value')
-    ]).then(([pwSnap, predSnap, jtSnap]) => {
+      db.ref('wc2026/joinTimes/' + old).once('value'),
+      db.ref('wc2026/bonus/' + old).once('value')
+    ]).then(([pwSnap, predSnap, jtSnap, bonusSnap]) => {
       const updates = {};
       updates['wc2026/players/' + trimmed] = true;
       updates['wc2026/players/' + old] = null;
@@ -814,6 +968,7 @@ window.changeName = function() {
       updates['wc2026/predictions/' + old] = null;
       updates['wc2026/joinTimes/' + trimmed] = jtSnap.val();
       updates['wc2026/joinTimes/' + old] = null;
+      if(bonusSnap.val()) { updates['wc2026/bonus/' + trimmed] = bonusSnap.val(); updates['wc2026/bonus/' + old] = null; }
       db.ref().update(updates).then(() => {
         currentPlayer = trimmed;
         localStorage.setItem('wc2026_player', trimmed);
@@ -854,6 +1009,22 @@ function attachEvents() {
     inp.addEventListener('change', e => {
       const update = {}; update[e.target.dataset.side] = e.target.value !== '' ? parseInt(e.target.value) : null;
       db.ref('wc2026/actuals/m' + e.target.dataset.match).update(update);
+    });
+  });
+  // Bonus prediction inputs (save on change, not locked yet)
+  document.querySelectorAll('.bonus-input:not([disabled])').forEach(inp => {
+    inp.addEventListener('change', e => {
+      const cat = e.target.dataset.cat, val = e.target.value;
+      if(val) db.ref('wc2026/bonus/' + currentPlayer + '/' + cat).set(val);
+      else db.ref('wc2026/bonus/' + currentPlayer + '/' + cat).remove();
+    });
+  });
+  // Bonus actual inputs (admin only)
+  document.querySelectorAll('.bonus-actual-input').forEach(inp => {
+    inp.addEventListener('change', e => {
+      const cat = e.target.dataset.cat, val = e.target.value;
+      if(val) db.ref('wc2026/bonusActuals/' + cat).set(val);
+      else db.ref('wc2026/bonusActuals/' + cat).remove();
     });
   });
   const gf = document.getElementById('groupFilter');
