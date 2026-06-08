@@ -183,14 +183,13 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .hero-trash{background:rgba(0,0,0,0.3);padding:6px 16px;font-size:12px;text-align:center;font-style:italic;opacity:0.8;border-top:1px solid rgba(255,255,255,0.05);animation:trashFade 6s ease-in-out infinite}
 @keyframes trashFade{0%,100%{opacity:0.5}50%{opacity:1}}
 
-/* Bouncing ball */
-.hero-ball-x{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;animation:ballX 7.3s linear infinite alternate}
-.hero-ball-y{animation:ballY 4.7s linear infinite alternate}
-.hero-ball{width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff 0%,#e8e8e8 40%,#bbb 100%);box-shadow:0 0 12px rgba(255,255,255,0.4),inset -3px -3px 6px rgba(0,0,0,0.15);position:relative}
-.hero-ball::before{content:'';position:absolute;top:2px;left:5px;width:8px;height:5px;background:rgba(255,255,255,0.7);border-radius:50%;transform:rotate(-20deg)}
-.hero-ball::after{content:'';position:absolute;top:4px;left:3px;width:16px;height:14px;border:1.5px solid rgba(0,0,0,0.12);border-radius:50%;clip-path:polygon(30% 0,70% 0,80% 50%,70% 100%,30% 100%,20% 50%)}
-@keyframes ballX{0%{transform:translateX(10px)}100%{transform:translateX(calc(100% - 32px))}}
-@keyframes ballY{0%{transform:translateY(10px)}100%{transform:translateY(calc(100% - 32px))}}
+/* Bouncing soccer ball */
+.hero-ball-x{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:3;animation:ballX 6.7s linear infinite alternate}
+.hero-ball-y{width:100%;height:100%;animation:ballY 4.3s linear infinite alternate}
+.hero-ball{font-size:28px;filter:drop-shadow(0 0 8px rgba(255,255,255,0.5));animation:ballSpin 2s linear infinite;width:28px;height:28px;line-height:28px}
+@keyframes ballX{0%{transform:translateX(5px)}100%{transform:translateX(calc(100% - 36px))}}
+@keyframes ballY{0%{transform:translateY(5px)}100%{transform:translateY(calc(100% - 36px))}}
+@keyframes ballSpin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
 
 /* Floating particles */
 .hero-particles{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden}
@@ -1230,7 +1229,7 @@ function renderHero() {
   trashMsgs = getTrashTalk();
   const trash = trashMsgs[trashIdx % trashMsgs.length] || '';
 
-  const bounceBall = '<div class="hero-ball-x"><div class="hero-ball-y"><div class="hero-ball"></div></div></div>';
+  const bounceBall = '<div class="hero-ball-x"><div class="hero-ball-y"><div class="hero-ball">&#9917;</div></div></div>';
 
   el.innerHTML = '<div class="hero-particles">' + particles + '</div>' + bounceBall +
     '<div class="hero-ticker"><div class="hero-ticker-inner">' + tickerHtml + '</div></div>' +
