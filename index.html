@@ -120,6 +120,89 @@ button:disabled{opacity:.5;cursor:not-allowed}
 @media(max-width:600px){.wc-bg-item{width:50%;padding:24px 12px}.wc-bg-year{font-size:44px}.wc-bg-team{font-size:18px}}
 @keyframes scrollBg{0%{transform:translateY(0)}100%{transform:translateY(-50%)}}
 .container{position:relative;z-index:1}
+
+/* === HERO DASHBOARD === */
+.hero{background:linear-gradient(135deg,#0a2e1f,#1a1a2e,#0a1e3a);border-radius:16px;padding:0;margin-bottom:20px;overflow:hidden;position:relative;color:#fff;box-shadow:0 4px 20px rgba(0,0,0,0.3)}
+.hero *{color:#fff}
+/* Ticker bar */
+.hero-ticker{background:rgba(0,0,0,0.4);padding:6px 0;overflow:hidden;position:relative;border-bottom:1px solid rgba(255,255,255,0.1)}
+.hero-ticker-inner{display:flex;gap:32px;animation:tickerScroll 25s linear infinite;white-space:nowrap;padding:0 16px}
+.hero-ticker-item{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:500;flex-shrink:0}
+.ticker-dot{width:6px;height:6px;border-radius:50%;background:#1d9e75;flex-shrink:0}
+.ticker-live{background:#e24b4a;animation:pulse 1.5s infinite}
+@keyframes tickerScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* Hero body */
+.hero-body{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:0;min-height:160px}
+@media(max-width:700px){.hero-body{grid-template-columns:1fr;min-height:auto}}
+
+/* Left: Your stats */
+.hero-stats{padding:20px;display:flex;flex-direction:column;justify-content:center;gap:8px;border-right:1px solid rgba(255,255,255,0.08)}
+@media(max-width:700px){.hero-stats{border-right:none;border-bottom:1px solid rgba(255,255,255,0.08);padding:16px}}
+.hero-stats .hero-chess{font-size:42px;animation:chessBounce 3s ease-in-out infinite}
+@keyframes chessBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.hero-stats .hero-name{font-size:16px;font-weight:700}
+.hero-stats .hero-rank-label{font-size:11px;opacity:0.7;text-transform:uppercase;letter-spacing:1px}
+.hero-stat-row{display:flex;gap:16px;margin-top:4px}
+.hero-stat-num{font-size:22px;font-weight:700}
+.hero-stat-label{font-size:10px;opacity:0.6;text-transform:uppercase;letter-spacing:0.5px}
+
+/* Center: Next match countdown */
+.hero-center{padding:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative}
+.hero-next-label{font-size:10px;text-transform:uppercase;letter-spacing:2px;opacity:0.5;margin-bottom:8px}
+.hero-next-teams{font-size:20px;font-weight:700;margin-bottom:4px}
+.hero-next-meta{font-size:11px;opacity:0.6;margin-bottom:12px}
+.hero-countdown{display:flex;gap:8px}
+.hero-cd-box{text-align:center;background:rgba(255,255,255,0.1);border-radius:8px;padding:8px 12px;min-width:52px;backdrop-filter:blur(4px)}
+.hero-cd-num{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums}
+.hero-cd-unit{font-size:9px;text-transform:uppercase;letter-spacing:1px;opacity:0.6}
+.hero-live-now{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+.hero-live-pulse{width:10px;height:10px;border-radius:50%;background:#e24b4a;animation:livePulse 1.2s ease-in-out infinite}
+@keyframes livePulse{0%,100%{box-shadow:0 0 0 0 rgba(226,75,74,0.6)}50%{box-shadow:0 0 0 10px rgba(226,75,74,0)}}
+
+/* Right: Mini podium */
+.hero-podium{padding:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-left:1px solid rgba(255,255,255,0.08)}
+@media(max-width:700px){.hero-podium{border-left:none;border-top:1px solid rgba(255,255,255,0.08);padding:16px}}
+.hero-podium-title{font-size:10px;text-transform:uppercase;letter-spacing:2px;opacity:0.5;margin-bottom:10px}
+.podium-row{display:flex;align-items:flex-end;gap:6px;margin-bottom:4px}
+.podium-spot{text-align:center;border-radius:8px 8px 0 0;display:flex;flex-direction:column;align-items:center;padding:6px 10px}
+.podium-1{background:linear-gradient(180deg,rgba(186,117,23,0.4),rgba(186,117,23,0.15));min-height:80px;justify-content:flex-end}
+.podium-2{background:linear-gradient(180deg,rgba(136,136,136,0.4),rgba(136,136,136,0.15));min-height:60px;justify-content:flex-end}
+.podium-3{background:linear-gradient(180deg,rgba(160,82,45,0.4),rgba(160,82,45,0.15));min-height:45px;justify-content:flex-end}
+.podium-piece{font-size:22px;animation:chessBounce 3s ease-in-out infinite}
+.podium-name{font-size:11px;font-weight:600;white-space:nowrap}
+.podium-pts{font-size:10px;opacity:0.6}
+
+/* Progress bar */
+.hero-progress{background:rgba(0,0,0,0.4);padding:8px 16px;display:flex;align-items:center;gap:12px;font-size:11px;border-top:1px solid rgba(255,255,255,0.08)}
+.hero-progress-bar{flex:1;height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden}
+.hero-progress-fill{height:100%;background:linear-gradient(90deg,#1d9e75,#BA7517);border-radius:3px;transition:width 1s ease}
+.hero-progress-label{opacity:0.6;white-space:nowrap}
+
+/* Trash talk */
+.hero-trash{background:rgba(0,0,0,0.3);padding:6px 16px;font-size:12px;text-align:center;font-style:italic;opacity:0.8;border-top:1px solid rgba(255,255,255,0.05);animation:trashFade 6s ease-in-out infinite}
+@keyframes trashFade{0%,100%{opacity:0.5}50%{opacity:1}}
+
+/* Juggling character */
+.juggler-wrap{position:absolute;bottom:50px;right:20px;width:60px;height:80px;opacity:0.6}
+@media(max-width:700px){.juggler-wrap{display:none}}
+.juggler-body{position:absolute;bottom:0;left:50%;transform:translateX(-50%);font-size:36px;animation:jugglerBob 1.2s ease-in-out infinite}
+@keyframes jugglerBob{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-4px)}}
+.juggler-ball{position:absolute;left:50%;bottom:60px;width:14px;height:14px;background:radial-gradient(circle at 40% 35%,#fff,#ccc);border-radius:50%;border:1.5px solid rgba(0,0,0,0.2);transform:translateX(-50%);animation:ballJuggle 1.2s ease-in-out infinite}
+.juggler-ball::after{content:'';position:absolute;top:3px;left:3px;width:5px;height:3px;background:rgba(255,255,255,0.8);border-radius:50%}
+@keyframes ballJuggle{0%{bottom:60px;left:45%}25%{bottom:85px;left:55%}50%{bottom:60px;left:55%}75%{bottom:85px;left:45%}100%{bottom:60px;left:45%}}
+.juggler-shadow{position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);width:24px;height:6px;background:rgba(0,0,0,0.2);border-radius:50%;animation:shadowPulse 1.2s ease-in-out infinite}
+@keyframes shadowPulse{0%,100%{transform:translateX(-50%) scaleX(1)}50%{transform:translateX(-50%) scaleX(0.7)}}
+.juggler-leg-l,.juggler-leg-r{position:absolute;bottom:2px;width:2px;height:14px;background:rgba(255,255,255,0.5);border-radius:1px}
+.juggler-leg-l{left:22px;animation:legKickL 1.2s ease-in-out infinite;transform-origin:top}
+.juggler-leg-r{left:34px;animation:legKickR 1.2s ease-in-out infinite;transform-origin:top}
+@keyframes legKickL{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(15deg)}}
+@keyframes legKickR{0%,100%{transform:rotate(5deg)}50%{transform:rotate(-15deg)}}
+
+/* Floating particles */
+.hero-particles{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden}
+.hero-particle{position:absolute;width:4px;height:4px;background:rgba(255,255,255,0.15);border-radius:50%;animation:particleFloat 8s linear infinite}
+@keyframes particleFloat{0%{transform:translateY(100%) scale(0);opacity:0}20%{opacity:1;transform:translateY(60%) scale(1)}100%{transform:translateY(-20%) scale(0);opacity:0}}
 </style>
 </head>
 <body>
@@ -144,6 +227,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 </div>
 
 <div id="mainApp" class="hidden">
+<div id="heroDashboard" class="hero"></div>
 <div class="tabs" id="tabs">
 <button class="tab active" data-tab="dashboard">Dashboard</button>
 <button class="tab" data-tab="live">Live</button>
@@ -754,9 +838,13 @@ function renderPredict() {
   h += '<div class="card" style="padding:10px 16px;margin-bottom:16px"><p style="font-size:13px;color:var(--muted)">Enter your predicted score and click <strong>Lock</strong> to submit. Locked predictions cannot be changed. Predictions are hidden from others until the match starts.</p></div>';
   // Bonus predictions section
   const myBonus = bonusPredictions[currentPlayer] || {};
-  const bonusLocked = myBonus._locked;
+  const bonusDeadline = new Date('2026-06-27T23:59:59-04:00'); // Last group stage day ET
+  const bonusClosed = new Date() > bonusDeadline;
+  const bonusLocked = myBonus._locked || bonusClosed;
   h += '<div class="card" style="margin-bottom:16px"><h2>Bonus Predictions <span style="font-size:13px;color:var(--muted);font-weight:400">(+' + BONUS_PTS + ' pts each)</span></h2>';
-  if(bonusLocked) h += '<div style="margin-bottom:10px"><span class="locked-badge">Locked</span></div>';
+  h += '<p style="font-size:13px;color:var(--danger);margin-bottom:10px">Closes after Group Stage (June 27) — get your bonus predictions in!</p>';
+  if(bonusClosed && !myBonus._locked) h += '<div style="margin-bottom:10px"><span class="result-badge result-wrong">Bonus predictions closed</span></div>';
+  else if(bonusLocked) h += '<div style="margin-bottom:10px"><span class="locked-badge">Locked</span></div>';
   BONUS_CATS.forEach(cat => {
     const val = myBonus[cat.id] || '';
     h += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap"><label style="min-width:200px;font-size:14px">' + cat.label + '</label>';
@@ -779,6 +867,8 @@ function renderPredict() {
     h += '</div>';
   });
   if(!bonusLocked) h += '<button class="btn-primary" onclick="lockBonus()">Lock Bonus Predictions</button>';
+  else if(!bonusClosed && myBonus._locked) {} // already locked, nothing extra
+  else if(bonusClosed && !myBonus._locked) h += '<p style="font-size:13px;color:var(--muted);margin-top:8px">You missed the deadline. No bonus points will be awarded.</p>';
   h += '</div>';
   MATCHES.forEach(m => {
     const pred = state.predictions?.[currentPlayer]?.['m' + m.id] || {}, locked = pred.locked, started = isMatchStarted(m), result = calcPoints(pred, state.actuals?.['m' + m.id]);
@@ -1036,6 +1126,163 @@ function attachEvents() {
     document.querySelectorAll('.match-card').forEach(mc => { mc.style.display = g === 'all' || mc.dataset.group === g ? '' : 'none'; });
   });
 }
+
+// === HERO DASHBOARD ===
+function getTrashTalk() {
+  const lb = getLeaderboard(true);
+  const msgs = [];
+  const leader = lb[0];
+  if(leader && leader.total > 0) msgs.push(chessIcon(leader.name) + ' ' + leader.name + ' sits on the throne with ' + leader.total + ' pts!');
+  lb.forEach(p => {
+    const s = getStreak(p.name);
+    if(s >= 3) msgs.push(p.name + ' is on a ' + s + '-match hot streak!');
+    const ls = getLoseStreak(p.name);
+    if(ls >= 3) msgs.push(p.name + ' can\'t catch a break... ' + ls + ' wrong in a row!');
+  });
+  const noLock = Object.keys(state.players || {}).filter(p => {
+    const preds = state.predictions?.[p];
+    if(!preds) return true;
+    return !Object.values(preds).some(v => v.locked);
+  });
+  noLock.forEach(p => msgs.push(p + ' hasn\'t locked a single prediction yet!'));
+  if(lb.length >= 2 && lb[0].total > 0 && lb[0].total === lb[1].total) msgs.push('It\'s a tie at the top! ' + lb[0].name + ' vs ' + lb[1].name + ' — who blinks first?');
+  const played = Object.keys(state.actuals || {}).length;
+  if(played === 0) msgs.push('The tournament hasn\'t started yet — lock your predictions now!');
+  if(msgs.length === 0) msgs.push('Who will be crowned the prediction King?');
+  return msgs;
+}
+
+let trashIdx = 0;
+let trashMsgs = [];
+
+function renderHero() {
+  const el = document.getElementById('heroDashboard');
+  if(!el || !currentPlayer) return;
+  const lb = getLeaderboard(true);
+  const me = lb.find(p => p.name === currentPlayer) || { total: 0, exact: 0, correct: 0, predicted: 0 };
+  const myPos = lb.indexOf(me) + 1;
+  const rank = getChessRank(currentPlayer);
+  const played = Object.keys(state.actuals || {}).length;
+  const pct = MATCHES.length > 0 ? Math.round((played / MATCHES.length) * 100) : 0;
+  const now = new Date();
+
+  // Find live and next match
+  const liveMatches = MATCHES.filter(m => { const t = getMatchTime(m); return now >= t && now <= new Date(t.getTime() + 7200000) && !state.actuals?.['m' + m.id]; });
+  const nextMatch = MATCHES.find(m => !state.actuals?.['m' + m.id] && !liveMatches.includes(m) && getMatchTime(m) > now);
+
+  // Ticker items
+  let tickerItems = [];
+  // Recent results
+  const results = MATCHES.filter(m => state.actuals?.['m' + m.id]).slice(-6);
+  results.forEach(m => {
+    const a = state.actuals['m' + m.id];
+    tickerItems.push('<span class="hero-ticker-item"><span class="ticker-dot"></span>' + m.team1 + ' ' + a.s1 + '-' + a.s2 + ' ' + m.team2 + '</span>');
+  });
+  if(liveMatches.length) {
+    liveMatches.forEach(m => {
+      tickerItems.push('<span class="hero-ticker-item"><span class="ticker-dot ticker-live"></span>LIVE: ' + m.team1 + ' vs ' + m.team2 + '</span>');
+    });
+  }
+  // Top players
+  lb.slice(0, 3).forEach((p, i) => {
+    const medals = ['&#9733;', '&#9734;', '&#9672;'];
+    tickerItems.push('<span class="hero-ticker-item"><span class="ticker-dot" style="background:' + ['#BA7517','#888','#a0522d'][i] + '"></span>' + medals[i] + ' ' + p.name + ' ' + p.total + 'pts</span>');
+  });
+  if(tickerItems.length === 0) tickerItems.push('<span class="hero-ticker-item"><span class="ticker-dot"></span>World Cup 2026 — Predictions open!</span>');
+  const tickerHtml = tickerItems.join('') + tickerItems.join(''); // double for seamless scroll
+
+  // Particles
+  let particles = '';
+  for(let i = 0; i < 12; i++) {
+    const left = Math.random() * 100, delay = Math.random() * 8, size = 2 + Math.random() * 4;
+    particles += '<div class="hero-particle" style="left:' + left + '%;animation-delay:' + delay + 's;width:' + size + 'px;height:' + size + 'px"></div>';
+  }
+
+  // Center: countdown or live
+  let centerHtml = '';
+  if(liveMatches.length) {
+    const lm = liveMatches[0];
+    centerHtml = '<div class="hero-next-label">Match in progress</div>';
+    centerHtml += '<div class="hero-next-teams">' + lm.team1 + ' vs ' + lm.team2 + '</div>';
+    centerHtml += '<div class="hero-next-meta">Group ' + lm.group + ' | ' + lm.venue + '</div>';
+    centerHtml += '<div class="hero-live-now"><span class="hero-live-pulse"></span> LIVE NOW</div>';
+  } else if(nextMatch) {
+    const diff = getMatchTime(nextMatch) - now;
+    const d = Math.floor(diff / 86400000), h = Math.floor((diff % 86400000) / 3600000), min = Math.floor((diff % 3600000) / 60000), s = Math.floor((diff % 60000) / 1000);
+    centerHtml = '<div class="hero-next-label">Next match</div>';
+    centerHtml += '<div class="hero-next-teams">' + nextMatch.team1 + ' vs ' + nextMatch.team2 + '</div>';
+    centerHtml += '<div class="hero-next-meta">Group ' + nextMatch.group + ' | ' + fmtDate(nextMatch.date) + ' ' + nextMatch.time + ' ET</div>';
+    centerHtml += '<div class="hero-countdown">';
+    if(d > 0) centerHtml += '<div class="hero-cd-box"><div class="hero-cd-num" id="cdDays">' + d + '</div><div class="hero-cd-unit">days</div></div>';
+    centerHtml += '<div class="hero-cd-box"><div class="hero-cd-num" id="cdHrs">' + h + '</div><div class="hero-cd-unit">hrs</div></div>';
+    centerHtml += '<div class="hero-cd-box"><div class="hero-cd-num" id="cdMin">' + min + '</div><div class="hero-cd-unit">min</div></div>';
+    centerHtml += '<div class="hero-cd-box"><div class="hero-cd-num" id="cdSec">' + s + '</div><div class="hero-cd-unit">sec</div></div>';
+    centerHtml += '</div>';
+  } else {
+    centerHtml = '<div class="hero-next-label">Tournament</div><div class="hero-next-teams">Complete!</div>';
+  }
+
+  // Podium
+  let podiumHtml = '<div class="hero-podium-title">Leaderboard</div><div class="podium-row">';
+  const podiumOrder = [1, 0, 2]; // 2nd, 1st, 3rd visual order
+  podiumOrder.forEach(i => {
+    const p = lb[i];
+    if(!p || p.total === 0) { podiumHtml += '<div class="podium-spot podium-' + (i + 1) + '"><div class="podium-piece">-</div><div class="podium-name">-</div></div>'; return; }
+    const r = getChessRank(p.name);
+    podiumHtml += '<div class="podium-spot podium-' + (i + 1) + '"><div class="podium-piece">' + r.piece + '</div><div class="podium-name">' + p.name + '</div><div class="podium-pts">' + p.total + ' pts</div></div>';
+  });
+  podiumHtml += '</div>';
+
+  // Trash talk
+  trashMsgs = getTrashTalk();
+  const trash = trashMsgs[trashIdx % trashMsgs.length] || '';
+
+  const juggler = '<div class="juggler-wrap"><div class="juggler-ball"></div><div class="juggler-body">&#127939;</div><div class="juggler-shadow"></div></div>';
+
+  el.innerHTML = '<div class="hero-particles">' + particles + '</div>' + juggler +
+    '<div class="hero-ticker"><div class="hero-ticker-inner">' + tickerHtml + '</div></div>' +
+    '<div class="hero-body">' +
+      '<div class="hero-stats">' +
+        '<div style="display:flex;align-items:center;gap:12px"><span class="hero-chess">' + rank.piece + '</span><div><div class="hero-name">' + currentPlayer + '</div><div class="hero-rank-label">' + rank.name + (myPos > 0 && me.total > 0 ? ' — #' + myPos : '') + '</div></div></div>' +
+        '<div class="hero-stat-row"><div><div class="hero-stat-num">' + me.total + '</div><div class="hero-stat-label">Points</div></div><div><div class="hero-stat-num">' + me.exact + '</div><div class="hero-stat-label">Exact</div></div><div><div class="hero-stat-num">' + me.predicted + '</div><div class="hero-stat-label">Predicted</div></div></div>' +
+      '</div>' +
+      '<div class="hero-center">' + centerHtml + '</div>' +
+      '<div class="hero-podium">' + podiumHtml + '</div>' +
+    '</div>' +
+    '<div class="hero-progress"><span class="hero-progress-label">Tournament</span><div class="hero-progress-bar"><div class="hero-progress-fill" style="width:' + pct + '%"></div></div><span class="hero-progress-label">' + played + '/' + MATCHES.length + '</span></div>' +
+    '<div class="hero-trash" id="heroTrash">' + trash + '</div>';
+}
+
+// Live countdown ticker
+setInterval(() => {
+  const cdDays = document.getElementById('cdDays');
+  const cdHrs = document.getElementById('cdHrs');
+  const cdMin = document.getElementById('cdMin');
+  const cdSec = document.getElementById('cdSec');
+  if(!cdSec) return;
+  const now = new Date();
+  const liveMatches = MATCHES.filter(m => { const t = getMatchTime(m); return now >= t && now <= new Date(t.getTime() + 7200000) && !state.actuals?.['m' + m.id]; });
+  const nextMatch = MATCHES.find(m => !state.actuals?.['m' + m.id] && !liveMatches.includes(m) && getMatchTime(m) > now);
+  if(!nextMatch) return;
+  const diff = getMatchTime(nextMatch) - now;
+  if(diff <= 0) { renderHero(); return; }
+  const d = Math.floor(diff / 86400000), h = Math.floor((diff % 86400000) / 3600000), min = Math.floor((diff % 3600000) / 60000), s = Math.floor((diff % 60000) / 1000);
+  if(cdDays) cdDays.textContent = d;
+  if(cdHrs) cdHrs.textContent = h;
+  if(cdMin) cdMin.textContent = min;
+  cdSec.textContent = s;
+}, 1000);
+
+// Rotate trash talk every 6 seconds
+setInterval(() => {
+  trashIdx++;
+  const el = document.getElementById('heroTrash');
+  if(el && trashMsgs.length) el.innerHTML = trashMsgs[trashIdx % trashMsgs.length];
+}, 6000);
+
+// Patch render to also update hero
+const _origRender = render;
+render = function() { renderHero(); _origRender(); };
 
 setInterval(() => { if(currentTab === 'live') render(); }, 30000);
 render();
