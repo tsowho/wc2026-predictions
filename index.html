@@ -951,7 +951,11 @@ function liveCard(m, players) {
 function renderPredict() {
   let h = '<div class="flex-between" style="margin-bottom:16px"><div style="font-size:14px">Predicting as ' + chessIcon(currentPlayer) + '<strong>' + currentPlayer + '</strong> ' + chessLabel(currentPlayer) + '</div>';
   h += '<div class="group-filter" id="groupFilter"><button class="group-btn active" data-group="all">All</button>';
-  GROUPS.forEach(g => h += '<button class="group-btn" data-group="' + g + '">' + g + '</button>');
+  GROUPS.forEach(function(g) {
+    var teams = MATCHES.filter(function(m){return m.group===g}).map(function(m){return m.team1});
+    teams = teams.filter(function(t,i){return teams.indexOf(t)===i}).slice(0,4);
+    h += '<button class="group-btn" data-group="' + g + '" title="' + teams.join(', ') + '">' + g + '</button>';
+  });
   h += '</div></div>';
   h += '<div class="card" style="padding:10px 16px;margin-bottom:16px"><p style="font-size:13px;color:var(--muted)">Enter your predicted score and click <strong>Lock</strong> to submit. Locked predictions cannot be changed. Predictions are hidden from others until the match starts.</p></div>';
   // Bonus predictions section
@@ -959,7 +963,12 @@ function renderPredict() {
   const bonusDeadline = new Date('2026-06-27T23:59:59-04:00'); // Last group stage day ET
   const bonusClosed = new Date() > bonusDeadline;
   const bonusLocked = myBonus._locked || bonusClosed;
-  h += '<div class="card" style="margin-bottom:16px"><h2>Bonus Predictions <span style="font-size:13px;color:var(--muted);font-weight:400">(+' + BONUS_PTS + ' pts each)</span></h2>';
+  var bonusFilled = BONUS_CATS.filter(function(c){ return myBonus[c.id]; }).length;
+  var bonusSummary = bonusLocked ? 'Locked (' + bonusFilled + '/' + BONUS_CATS.length + ')' : bonusClosed ? 'Closed' : bonusFilled + '/' + BONUS_CATS.length + ' filled';
+  h += '<div class="card" style="margin-bottom:16px"><div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding:4px 0" onclick="var bd=document.getElementById(\'bonusBody\');var ar=document.getElementById(\'bonusArrow\');if(bd.style.display===\'none\'){bd.style.display=\'block\';ar.textContent=\'\u25B2\'}else{bd.style.display=\'none\';ar.textContent=\'\u25BC\'}">' +
+    '<h2 style="margin:0">Bonus Predictions <span style="font-size:13px;color:var(--muted);font-weight:400">(+' + BONUS_PTS + ' pts each)</span></h2>' +
+    '<div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;color:var(--muted)">' + bonusSummary + '</span><span id="bonusArrow" style="font-size:14px;color:var(--muted)">\u25BC</span></div></div>';
+  h += '<div id="bonusBody" style="display:none;margin-top:10px">';
   h += '<p style="font-size:13px;color:var(--danger);margin-bottom:10px">Closes after Group Stage (June 27) — get your bonus predictions in!</p>';
   if(bonusClosed && !myBonus._locked) h += '<div style="margin-bottom:10px"><span class="result-badge result-wrong">Bonus predictions closed</span></div>';
   else if(bonusLocked) h += '<div style="margin-bottom:10px"><span class="locked-badge">Locked</span></div>';
@@ -987,8 +996,10 @@ function renderPredict() {
   if(!bonusLocked) h += '<button class="btn-primary" onclick="lockBonus()">Lock Bonus Predictions</button>';
   else if(!bonusClosed && myBonus._locked) {} // already locked, nothing extra
   else if(bonusClosed && !myBonus._locked) h += '<p style="font-size:13px;color:var(--muted);margin-top:8px">You missed the deadline. No bonus points will be awarded.</p>';
-  h += '</div>';
+  h += '</div></div>';
   MATCHES.forEach(m => {
+    // Hide matches that already have results entered
+    if(state.actuals?.['m' + m.id]) return;
     const pred = state.predictions?.[currentPlayer]?.['m' + m.id] || {}, locked = pred.locked, started = isMatchStarted(m), result = calcPoints(pred, state.actuals?.['m' + m.id]);
     h += '<div class="match-card" data-group="' + m.group + '"><div class="match-header"><span>Group ' + m.group + ' | ' + fmtDate(m.date) + ' ' + m.time + ' ET</span>';
     h += locked ? '<span class="locked-badge">Locked</span>' : started ? '<span style="font-size:11px;color:var(--danger)">Match started</span>' : '<span class="countdown">' + getCountdown(m) + '</span>';
