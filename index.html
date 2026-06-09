@@ -308,6 +308,8 @@ button:disabled{opacity:.5;cursor:not-allowed}
 <button class="tab" data-tab="results">Results</button>
 <button class="tab" data-tab="leaderboard">Leaderboard</button>
 <button class="tab" data-tab="news">News</button>
+<button class="tab" data-tab="knockout">Knockout</button>
+<button class="tab" data-tab="chat">Chat</button>
 <button class="tab" data-tab="players">Players</button>
 </div>
 <div id="content"></div>
@@ -441,6 +443,8 @@ stateRef.child('actuals').on('value', snap => { state.actuals = snap.val() || {}
 stateRef.child('bonus').on('value', snap => { bonusPredictions = snap.val() || {}; if(currentPlayer) render(); });
 stateRef.child('bonusActuals').on('value', snap => { bonusActuals = snap.val() || {}; if(currentPlayer) render(); });
 stateRef.child('loginDates').on('value', snap => { loginDates = snap.val() || {}; if(currentPlayer) render(); });
+let chatMessages = [];
+stateRef.child('chat').orderByChild('ts').limitToLast(100).on('value', snap => { chatMessages = []; snap.forEach(s => { chatMessages.push(Object.assign({key: s.key}, s.val())); }); if(currentPlayer && currentTab === 'chat') render(); });
 db.ref('.info/connected').on('value', snap => { isOnline = snap.val() === true; updateSyncStatus(); });
 
 function updateSyncStatus() {
@@ -617,6 +621,8 @@ function render() {
     case 'results': c.innerHTML = renderResults(); break;
     case 'leaderboard': c.innerHTML = renderLeaderboard(); break;
     case 'news': c.innerHTML = renderNews(); break;
+    case 'knockout': c.innerHTML = renderKnockout(); break;
+    case 'chat': c.innerHTML = renderChat(); break;
     case 'players': c.innerHTML = renderPlayers(); break;
   }
   attachEvents();
@@ -663,6 +669,11 @@ function getLeaderboard(includeAdmin) {
       });
     }
     total += bonusPts;
+    // Knockout stage points
+    let koPts = 0;
+    const playerKo = koPredictions[p];
+    if(playerKo) { KO_SLOTS.forEach(function(slot) { var pred = playerKo[slot.id]; var actual = koActuals[slot.id]; if(pred && pred.locked && actual) { var r = calcPoints(pred, actual); if(r) koPts += r.pts; } }); }
+    total += koPts;
     // Login streak points (only added after tournament ends)
     const si = getStreakInfo(p);
     const streakPts = si.tournamentOver ? si.streak : 0;
@@ -950,11 +961,11 @@ function liveCard(m, players) {
 
 function renderPredict() {
   let h = '<div class="flex-between" style="margin-bottom:16px"><div style="font-size:14px">Predicting as ' + chessIcon(currentPlayer) + '<strong>' + currentPlayer + '</strong> ' + chessLabel(currentPlayer) + '</div>';
-  h += '<div class="group-filter" id="groupFilter"><button class="group-btn active" data-group="all">All</button>';
+  h += '<div class="group-filter" id="groupFilter"><button class="group-btn" data-group="all">All</button>';
   GROUPS.forEach(function(g) {
     var teams = MATCHES.filter(function(m){return m.group===g}).map(function(m){return m.team1});
     teams = teams.filter(function(t,i){return teams.indexOf(t)===i}).slice(0,4);
-    h += '<button class="group-btn" data-group="' + g + '" title="' + teams.join(', ') + '">' + g + '</button>';
+    h += '<button class="group-btn' + (g === 'A' ? ' active' : '') + '" data-group="' + g + '" title="' + teams.join(', ') + '">' + g + '</button>';
   });
   h += '</div></div>';
   h += '<div class="card" style="padding:10px 16px;margin-bottom:16px"><p style="font-size:13px;color:var(--muted)">Enter your predicted score and click <strong>Lock</strong> to submit. Locked predictions cannot be changed. Predictions are hidden from others until the match starts.</p></div>';
@@ -1001,7 +1012,7 @@ function renderPredict() {
     // Hide matches that already have results entered
     if(state.actuals?.['m' + m.id]) return;
     const pred = state.predictions?.[currentPlayer]?.['m' + m.id] || {}, locked = pred.locked, started = isMatchStarted(m), result = calcPoints(pred, state.actuals?.['m' + m.id]);
-    h += '<div class="match-card" data-group="' + m.group + '"><div class="match-header"><span>Group ' + m.group + ' | ' + fmtDate(m.date) + ' ' + m.time + ' ET</span>';
+    h += '<div class="match-card" data-group="' + m.group + '"' + (m.group !== 'A' ? ' style="display:none"' : '') + '><div class="match-header"><span>Group ' + m.group + ' | ' + fmtDate(m.date) + ' ' + m.time + ' ET</span>';
     h += locked ? '<span class="locked-badge">Locked</span>' : started ? '<span style="font-size:11px;color:var(--danger)">Match started</span>' : '<span class="countdown">' + getCountdown(m) + '</span>';
     h += '</div><div class="match-teams"><span class="team">' + m.team1 + '</span><div class="match-score">';
     h += '<input type="number" min="0" max="20" value="' + (pred.s1 ?? '') + '" data-match="' + m.id + '" data-side="s1" class="pred-input"' + (locked || started ? ' disabled' : '') + '/>';
@@ -1249,6 +1260,18 @@ function attachEvents() {
       else db.ref('wc2026/bonusActuals/' + cat).remove();
     });
   });
+  // KO round filter
+  var krf = document.getElementById('koRoundFilter');
+  if(krf) krf.addEventListener('click', function(e) {
+    if(!e.target.classList.contains('group-btn')) return;
+    krf.querySelectorAll('.group-btn').forEach(function(b) { b.classList.remove('active'); });
+    e.target.classList.add('active');
+    var r = e.target.dataset.round;
+    document.querySelectorAll('.ko-round-section').forEach(function(s) { s.style.display = r === 'all' || s.dataset.koround === r ? '' : 'none'; });
+  });
+  // Chat input enter key
+  var chatIn = document.getElementById('chatInput');
+  if(chatIn) { chatIn.addEventListener('keydown', function(e) { if(e.key === 'Enter') sendChat(); }); setTimeout(function(){ var cm = document.getElementById('chatMessages'); if(cm) cm.scrollTop = cm.scrollHeight; }, 50); }
   const gf = document.getElementById('groupFilter');
   if(gf) gf.addEventListener('click', e => {
     if(!e.target.classList.contains('group-btn')) return;
@@ -1258,6 +1281,223 @@ function attachEvents() {
     document.querySelectorAll('.match-card').forEach(mc => { mc.style.display = g === 'all' || mc.dataset.group === g ? '' : 'none'; });
   });
 }
+
+
+
+// === KNOCKOUT STAGE ===
+const KO_ROUNDS = [
+  { id: 'r32', name: 'Round of 32', matches: 16 },
+  { id: 'r16', name: 'Round of 16', matches: 8 },
+  { id: 'qf', name: 'Quarter-Finals', matches: 4 },
+  { id: 'sf', name: 'Semi-Finals', matches: 2 },
+  { id: '3rd', name: '3rd Place', matches: 1 },
+  { id: 'final', name: 'Final', matches: 1 }
+];
+
+// R32 matchups based on FIFA format: group winners vs third-place, runners-up vs runners-up
+const KO_SLOTS = [];
+// Round of 32 (16 matches)
+for(var ki = 1; ki <= 16; ki++) KO_SLOTS.push({ id: 'r32_' + ki, round: 'r32', num: ki, team1: 'TBD', team2: 'TBD', date: '', time: '' });
+// Round of 16
+for(var ki = 1; ki <= 8; ki++) KO_SLOTS.push({ id: 'r16_' + ki, round: 'r16', num: ki, team1: 'TBD', team2: 'TBD', date: '', time: '' });
+// QF
+for(var ki = 1; ki <= 4; ki++) KO_SLOTS.push({ id: 'qf_' + ki, round: 'qf', num: ki, team1: 'TBD', team2: 'TBD', date: '', time: '' });
+// SF
+for(var ki = 1; ki <= 2; ki++) KO_SLOTS.push({ id: 'sf_' + ki, round: 'sf', num: ki, team1: 'TBD', team2: 'TBD', date: '', time: '' });
+// 3rd place + Final
+KO_SLOTS.push({ id: '3rd_1', round: '3rd', num: 1, team1: 'TBD', team2: 'TBD', date: '', time: '' });
+KO_SLOTS.push({ id: 'final_1', round: 'final', num: 1, team1: 'TBD', team2: 'TBD', date: '', time: '' });
+
+let koTeams = {};
+let koPredictions = {};
+let koActuals = {};
+
+stateRef.child('knockout/teams').on('value', snap => { koTeams = snap.val() || {}; if(currentPlayer) render(); });
+stateRef.child('knockout/predictions').on('value', snap => { koPredictions = snap.val() || {}; if(currentPlayer) render(); });
+stateRef.child('knockout/actuals').on('value', snap => { koActuals = snap.val() || {}; if(currentPlayer) render(); });
+
+function getKoMatch(id) {
+  var slot = KO_SLOTS.find(function(s) { return s.id === id; });
+  if(!slot) return null;
+  var teams = koTeams[id] || {};
+  return { id: id, round: slot.round, num: slot.num, team1: teams.team1 || 'TBD', team2: teams.team2 || 'TBD', date: teams.date || '', time: teams.time || '' };
+}
+
+function renderKnockout() {
+  var isAdmin = currentPlayer === ADMIN;
+  var now = new Date();
+  var h = '<div class="card" style="margin-bottom:16px"><h2>Knockout Stage</h2>';
+  h += '<p style="font-size:13px;color:var(--muted)">Teams and dates will be set by admin as the group stage finishes. Predict scores once matchups are confirmed!</p>';
+  if(isAdmin) h += '<p style="font-size:12px;color:var(--accent);margin-top:6px">Admin: click team names to set matchups.</p>';
+  h += '</div>';
+
+  // Round filter
+  h += '<div class="group-filter" id="koRoundFilter" style="margin-bottom:16px"><button class="group-btn active" data-round="all">All</button>';
+  KO_ROUNDS.forEach(function(r) { h += '<button class="group-btn" data-round="' + r.id + '">' + r.name + '</button>'; });
+  h += '</div>';
+
+  KO_ROUNDS.forEach(function(round) {
+    h += '<div class="ko-round-section" data-koround="' + round.id + '"><h3 style="margin:16px 0 8px;font-size:15px;color:var(--accent)">' + round.name + '</h3>';
+    var matches = KO_SLOTS.filter(function(s) { return s.round === round.id; });
+    matches.forEach(function(slot) {
+      var m = getKoMatch(slot.id);
+      var hasBothTeams = m.team1 !== 'TBD' && m.team2 !== 'TBD';
+      var actual = koActuals[slot.id] || {};
+      var hasResult = actual.s1 !== undefined && actual.s1 !== '';
+      var pred = koPredictions[currentPlayer] ? koPredictions[currentPlayer][slot.id] : null;
+      var predObj = pred || {};
+      var locked = predObj.locked;
+      var matchStarted = m.date && m.time ? new Date() >= new Date(m.date + 'T' + m.time + ':00-04:00') : false;
+
+      h += '<div class="match-card" data-koround="' + round.id + '">';
+      h += '<div class="match-header"><span>' + round.name + ' #' + slot.num + (m.date ? ' | ' + fmtDate(m.date) + ' ' + m.time + ' ET' : '') + '</span>';
+      if(locked) h += '<span class="locked-badge">Locked</span>';
+      else if(hasResult) h += '<span class="result-badge result-exact">Final</span>';
+      else if(!hasBothTeams) h += '<span style="font-size:11px;color:var(--muted)">Awaiting teams</span>';
+      else if(matchStarted) h += '<span style="font-size:11px;color:var(--danger)">Started</span>';
+      h += '</div>';
+
+      h += '<div class="match-teams">';
+      if(isAdmin && !hasResult) {
+        h += '<span class="team" style="cursor:pointer;text-decoration:underline dotted" onclick="setKoTeam(\'' + slot.id + '\',1)">' + m.team1 + '</span>';
+      } else {
+        h += '<span class="team">' + m.team1 + '</span>';
+      }
+      h += '<div class="match-score">';
+
+      if(hasResult) {
+        h += '<span style="font-size:18px;font-weight:700">' + actual.s1 + ' - ' + actual.s2 + '</span>';
+      } else if(hasBothTeams) {
+        var canPredict = !locked && !matchStarted && !hasResult;
+        h += '<input type="number" min="0" max="20" value="' + (predObj.s1 != null ? predObj.s1 : '') + '" data-ko="' + slot.id + '" data-side="s1" class="ko-input"' + (!canPredict ? ' disabled' : '') + '/>';
+        h += '<span class="match-vs">-</span>';
+        h += '<input type="number" min="0" max="20" value="' + (predObj.s2 != null ? predObj.s2 : '') + '" data-ko="' + slot.id + '" data-side="s2" class="ko-input"' + (!canPredict ? ' disabled' : '') + '/>';
+        if(canPredict) h += '<button class="btn-lock" onclick="lockKoPrediction(\'' + slot.id + '\')">Lock</button>';
+      } else {
+        h += '<span class="match-vs">vs</span>';
+      }
+
+      h += '</div>';
+      if(isAdmin && !hasResult) {
+        h += '<span class="team" style="cursor:pointer;text-decoration:underline dotted" onclick="setKoTeam(\'' + slot.id + '\',2)">' + m.team2 + '</span>';
+      } else {
+        h += '<span class="team">' + m.team2 + '</span>';
+      }
+      h += '</div>';
+
+      // Show result points if both prediction and actual exist
+      if(hasResult && pred && pred.locked) {
+        var r = calcPoints(pred, actual);
+        if(r) {
+          var cls = r.type === 'exact' ? 'result-exact' : r.type === 'correct' ? 'result-correct' : 'result-wrong';
+          var lbl = r.type === 'exact' ? 'Exact! +3' : r.type === 'correct' ? 'Correct result +1' : 'Wrong 0';
+          h += '<div style="text-align:center;margin-top:8px"><span class="result-badge ' + cls + '">' + lbl + '</span></div>';
+        }
+      }
+
+      // Admin: enter actual result
+      if(isAdmin && hasBothTeams) {
+        h += '<div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);display:flex;align-items:center;gap:8px;justify-content:center">';
+        h += '<span style="font-size:11px;color:var(--muted)">Result:</span>';
+        h += '<input type="number" min="0" max="20" value="' + (actual.s1 != null ? actual.s1 : '') + '" data-koactual="' + slot.id + '" data-side="s1" class="ko-actual-input" style="width:50px"/>';
+        h += '<span>-</span>';
+        h += '<input type="number" min="0" max="20" value="' + (actual.s2 != null ? actual.s2 : '') + '" data-koactual="' + slot.id + '" data-side="s2" class="ko-actual-input" style="width:50px"/>';
+        h += '<button class="btn-primary" style="padding:4px 10px;font-size:11px" onclick="saveKoResult(\'' + slot.id + '\')">Save</button>';
+        h += '</div>';
+      }
+
+      h += '</div>';
+    });
+    h += '</div>';
+  });
+  return h;
+}
+
+// Knockout actions
+window.setKoTeam = function(slotId, side) {
+  var current = (koTeams[slotId] || {})['team' + side] || '';
+  var team = prompt('Enter team name for ' + (side === 1 ? 'Home' : 'Away') + ':', current === 'TBD' ? '' : current);
+  if(team === null) return;
+  team = team.trim();
+  if(!team) return;
+  db.ref('wc2026/knockout/teams/' + slotId + '/team' + side).set(team);
+};
+
+window.lockKoPrediction = function(slotId) {
+  var s1El = document.querySelector('[data-ko="' + slotId + '"][data-side="s1"]');
+  var s2El = document.querySelector('[data-ko="' + slotId + '"][data-side="s2"]');
+  if(!s1El || !s2El) return;
+  var s1 = s1El.value, s2 = s2El.value;
+  if(s1 === '' || s2 === '') { alert('Enter both scores before locking.'); return; }
+  if(!confirm('Lock prediction ' + s1 + '-' + s2 + '? Cannot be changed!')) return;
+  db.ref('wc2026/knockout/predictions/' + currentPlayer + '/' + slotId).set({ s1: parseInt(s1), s2: parseInt(s2), locked: true });
+};
+
+window.saveKoResult = function(slotId) {
+  var s1El = document.querySelector('[data-koactual="' + slotId + '"][data-side="s1"]');
+  var s2El = document.querySelector('[data-koactual="' + slotId + '"][data-side="s2"]');
+  if(!s1El || !s2El) return;
+  var s1 = s1El.value, s2 = s2El.value;
+  if(s1 === '' || s2 === '') { alert('Enter both scores.'); return; }
+  db.ref('wc2026/knockout/actuals/' + slotId).set({ s1: parseInt(s1), s2: parseInt(s2) });
+};
+
+// Admin can also set date/time for KO matches
+window.setKoDateTime = function(slotId) {
+  var current = koTeams[slotId] || {};
+  var date = prompt('Date (YYYY-MM-DD):', current.date || '');
+  if(date === null) return;
+  var time = prompt('Time ET (HH:MM):', current.time || '');
+  if(time === null) return;
+  var updates = {};
+  if(date) updates['wc2026/knockout/teams/' + slotId + '/date'] = date;
+  if(time) updates['wc2026/knockout/teams/' + slotId + '/time'] = time;
+  if(Object.keys(updates).length) db.ref().update(updates);
+};
+
+// === CHAT SECTION ===
+function renderChat() {
+  let h = '<div class="card" style="margin-bottom:16px"><h2>Chat</h2><p style="font-size:13px;color:var(--muted)">Talk trash, share tips, celebrate wins. Be nice!</p></div>';
+  h += '<div class="card" style="padding:0;overflow:hidden">';
+  h += '<div id="chatMessages" style="height:400px;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:8px">';
+  if(chatMessages.length === 0) {
+    h += '<div class="empty" style="padding:40px">No messages yet. Start the conversation!</div>';
+  } else {
+    chatMessages.forEach(function(msg) {
+      var isMe = msg.name === currentPlayer;
+      var isAdmin = msg.name === ADMIN;
+      var time = new Date(msg.ts);
+      var timeStr = time.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'America/New_York' });
+      var rank = getChessRank(msg.name);
+      h += '<div style="display:flex;align-items:flex-start;gap:8px;' + (isMe ? 'flex-direction:row-reverse;text-align:right' : '') + '">';
+      h += '<div style="flex-shrink:0;width:32px;height:32px;border-radius:50%;background:' + (isMe ? 'var(--accent)' : 'var(--border)') + ';display:flex;align-items:center;justify-content:center;font-size:16px">' + rank.piece + '</div>';
+      h += '<div style="max-width:75%;padding:8px 12px;border-radius:12px;background:' + (isMe ? 'var(--accent)' : 'rgba(var(--accent-rgb,52,152,219),0.1)') + ';' + (isMe ? 'color:#fff;border-bottom-right-radius:4px' : 'border-bottom-left-radius:4px') + '">';
+      h += '<div style="font-size:11px;font-weight:600;margin-bottom:2px;' + (isMe ? 'color:rgba(255,255,255,0.8)' : 'color:var(--accent)') + '">' + msg.name + '</div>';
+      h += '<div style="font-size:14px;word-break:break-word">' + escapeHtml(msg.text) + '</div>';
+      h += '<div style="font-size:10px;margin-top:3px;' + (isMe ? 'color:rgba(255,255,255,0.5)' : 'color:var(--muted)') + '">' + timeStr + '</div>';
+      h += '</div></div>';
+    });
+  }
+  h += '</div>';
+  h += '<div style="display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--border);background:var(--card)">';
+  h += '<input type="text" id="chatInput" placeholder="Type a message..." style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px" maxlength="300" />';
+  h += '<button class="btn-primary" onclick="sendChat()" style="padding:8px 16px">Send</button>';
+  h += '</div></div>';
+  return h;
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+window.sendChat = function() {
+  var input = document.getElementById('chatInput');
+  if(!input) return;
+  var text = input.value.trim();
+  if(!text || !currentPlayer) return;
+  db.ref('wc2026/chat').push({ name: currentPlayer, text: text, ts: firebase.database.ServerValue.TIMESTAMP });
+  input.value = '';
+};
 
 // === HERO DASHBOARD ===
 function getTrashTalk() {
