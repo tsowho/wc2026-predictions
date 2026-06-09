@@ -183,6 +183,21 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .hero-trash{background:rgba(0,0,0,0.3);padding:6px 16px;font-size:12px;text-align:center;font-style:italic;opacity:0.8;border-top:1px solid rgba(255,255,255,0.05);animation:trashFade 6s ease-in-out infinite}
 @keyframes trashFade{0%,100%{opacity:0.5}50%{opacity:1}}
 
+/* Streak bar */
+.hero-streak{background:rgba(0,0,0,0.3);padding:8px 16px;display:flex;align-items:center;gap:12px;border-top:1px solid rgba(255,255,255,0.08);font-size:12px}
+.hero-streak *{color:#fff}
+.streak-fire{animation:firePulse 1.5s ease-in-out infinite;font-size:16px}
+@keyframes firePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+.streak-days-row{display:flex;gap:2px;flex-wrap:wrap;flex:1}
+.streak-sq{width:10px;height:10px;border-radius:2px;background:rgba(255,255,255,0.1)}
+.streak-sq.on{background:#1d9e75}
+.streak-sq.miss{background:#e24b4a}
+.streak-sq.today{border:1px solid #fff;background:#1d9e75}
+.streak-sq.future{background:rgba(255,255,255,0.04)}
+.streak-count{font-size:18px;font-weight:700;min-width:36px;text-align:center}
+.streak-label-sm{font-size:10px;opacity:0.6;text-transform:uppercase;letter-spacing:1px}
+.streak-badge-hero{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:rgba(29,158,117,0.25);color:#5DCAA5}
+
 /* Bouncing soccer ball */
 .hero-ball-x{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:3;animation:ballX 6.7s linear infinite alternate}
 .hero-ball-y{width:100%;height:100%;animation:ballY 4.3s linear infinite alternate}
@@ -336,10 +351,14 @@ const BONUS_CATS = [
   {id:'finalist2', label:'Finalist #2', type:'team'}
 ];
 const BONUS_PTS = 5;
+const WC_START = new Date('2026-06-11T00:00:00-04:00');
+const WC_END = new Date('2026-07-19T23:59:59-04:00');
+const WC_FINAL_DATE = '2026-07-19';
 
 let state = { players: {}, predictions: {}, actuals: {} };
 let bonusPredictions = {};
 let bonusActuals = {};
+let loginDates = {}; // { playerName: { '2026-06-11': true, '2026-06-12': true, ... } }
 let currentPlayer = localStorage.getItem('wc2026_player') || null;
 let currentTab = 'dashboard';
 let isOnline = false;
@@ -355,6 +374,7 @@ stateRef.child('predictions').on('value', snap => { state.predictions = snap.val
 stateRef.child('actuals').on('value', snap => { state.actuals = snap.val() || {}; if(currentPlayer) render(); });
 stateRef.child('bonus').on('value', snap => { bonusPredictions = snap.val() || {}; if(currentPlayer) render(); });
 stateRef.child('bonusActuals').on('value', snap => { bonusActuals = snap.val() || {}; if(currentPlayer) render(); });
+stateRef.child('loginDates').on('value', snap => { loginDates = snap.val() || {}; if(currentPlayer) render(); });
 db.ref('.info/connected').on('value', snap => { isOnline = snap.val() === true; updateSyncStatus(); });
 
 function updateSyncStatus() {
@@ -375,11 +395,46 @@ function updateExistingPlayers() {
     '</div>';
 }
 
+function getETDate() {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'America/New_York' }); // returns YYYY-MM-DD in ET
+}
+function recordLogin(name) {
+  const now = new Date();
+  if(now < WC_START || now > WC_END) return; // only track during World Cup
+  const today = getETDate();
+  db.ref('wc2026/loginDates/' + name + '/' + today).set(true);
+}
+function getStreakInfo(name) {
+  const dates = loginDates[name] || {};
+  const now = new Date();
+  if(now < WC_START) return { streak: 0, total: 0, days: [], active: false, started: false };
+  const endDate = now > WC_END ? WC_END : now;
+  // Build array of all WC days up to today
+  const allDays = [];
+  const d = new Date(WC_START);
+  while(d <= endDate) {
+    allDays.push(d.toLocaleDateString('en-CA', { timeZone: 'America/New_York' }));
+    d.setDate(d.getDate() + 1);
+  }
+  // Calculate current streak (counting backwards from today/latest)
+  let streak = 0;
+  for(let i = allDays.length - 1; i >= 0; i--) {
+    if(dates[allDays[i]]) streak++;
+    else break;
+  }
+  // Total logged days
+  const total = Object.keys(dates).length;
+  // Build day status array for display
+  const days = allDays.map(day => ({ date: day, logged: !!dates[day] }));
+  const tournamentOver = now > WC_END;
+  return { streak, total, days, active: streak > 0, started: true, tournamentOver };
+}
 function completeLogin(name) {
   currentPlayer = name;
   localStorage.setItem('wc2026_player', name);
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('mainApp').classList.remove('hidden');
+  recordLogin(name);
   render();
 }
 
@@ -422,6 +477,7 @@ document.getElementById('loginName').addEventListener('keydown', e => { if(e.key
 if(currentPlayer) {
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('mainApp').classList.remove('hidden');
+  recordLogin(currentPlayer);
 }
 
 document.getElementById('tabs').addEventListener('click', e => {
@@ -541,7 +597,11 @@ function getLeaderboard(includeAdmin) {
       });
     }
     total += bonusPts;
-    return { name: p, total, exact, correct, wrong, predicted, bonusPts };
+    // Login streak points (only added after tournament ends)
+    const si = getStreakInfo(p);
+    const streakPts = si.tournamentOver ? si.streak : 0;
+    total += streakPts;
+    return { name: p, total, exact, correct, wrong, predicted, bonusPts, streakPts, streakCurrent: si.streak };
   }).sort((a, b) => b.total - a.total || b.exact - a.exact);
 }
 
@@ -952,14 +1012,15 @@ function renderLeaderboard() {
   const lb = getLeaderboard();
   if(!lb.length) return '<div class="card"><div class="empty">No players yet.</div></div>';
   const posChanges = getPositionChanges();
-  let h = '<div class="card"><h2>Full leaderboard</h2><table><tr><th>#</th><th></th><th>Player</th><th style="text-align:right">Exact (3)</th><th style="text-align:right">Correct (1)</th><th style="text-align:right">Wrong</th><th style="text-align:right">Bonus</th><th style="text-align:right">Points</th></tr>';
+  let h = '<div class="card"><h2>Full leaderboard</h2><table><tr><th>#</th><th></th><th>Player</th><th style="text-align:right">Exact (3)</th><th style="text-align:right">Correct (1)</th><th style="text-align:right">Wrong</th><th style="text-align:right">Bonus</th><th style="text-align:right">Streak</th><th style="text-align:right">Points</th></tr>';
   lb.forEach((p, i) => {
     const streak = streakBadge(p.name);
     const achs = getAchievements(p.name);
     h += '<tr><td class="' + (i < 3 ? 'rank-' + (i + 1) : '') + '">' + (i + 1) + '</td>';
     h += '<td>' + posArrow(posChanges[p.name] || 0) + '</td>';
     h += '<td style="' + (p.name === currentPlayer ? 'font-weight:600' : '') + '">' + chessIcon(p.name) + p.name + ' ' + chessLabel(p.name) + (p.name === currentPlayer ? ' (you)' : '') + (streak ? ' ' + streak : '') + (achs ? '<br>' + achs : '') + '</td>';
-    h += '<td style="text-align:right">' + p.exact + '</td><td style="text-align:right">' + p.correct + '</td><td style="text-align:right">' + p.wrong + '</td><td style="text-align:right">' + (p.bonusPts || 0) + '</td>';
+    const streakDisplay = p.streakCurrent > 0 ? '&#128293;' + p.streakCurrent + (p.streakPts > 0 ? '' : '*') : '0';
+    h += '<td style="text-align:right">' + p.exact + '</td><td style="text-align:right">' + p.correct + '</td><td style="text-align:right">' + p.wrong + '</td><td style="text-align:right">' + (p.bonusPts || 0) + '</td><td style="text-align:right">' + streakDisplay + '</td>';
     h += '<td style="text-align:right;font-weight:700;font-size:16px">' + p.total + '</td></tr>';
   });
   h += '</table></div>';
@@ -1017,7 +1078,7 @@ window.lockPrediction = function(mid) {
   if(!confirm('Lock prediction: ' + m.team1 + ' ' + s1 + ' - ' + s2 + ' ' + m.team2 + '?\n\nThis cannot be changed!')) return;
   db.ref('wc2026/predictions/' + currentPlayer + '/m' + mid).set({ s1: parseInt(s1), s2: parseInt(s2), locked: true, lockedAt: Date.now() });
 };
-window.removePlayer = function(name) { if(confirm('Remove ' + name + '?')) { db.ref('wc2026/players/' + name).remove(); db.ref('wc2026/predictions/' + name).remove(); db.ref('wc2026/passwords/' + name).remove(); db.ref('wc2026/joinTimes/' + name).remove(); db.ref('wc2026/bonus/' + name).remove(); } };
+window.removePlayer = function(name) { if(confirm('Remove ' + name + '?')) { db.ref('wc2026/players/' + name).remove(); db.ref('wc2026/predictions/' + name).remove(); db.ref('wc2026/passwords/' + name).remove(); db.ref('wc2026/joinTimes/' + name).remove(); db.ref('wc2026/bonus/' + name).remove(); db.ref('wc2026/loginDates/' + name).remove(); } };
 
 window.resetPlayerPassword = function(name) {
   const newPw = prompt('Set new password for ' + name + ':');
@@ -1039,8 +1100,9 @@ window.changeName = function() {
       db.ref('wc2026/passwords/' + old).once('value'),
       db.ref('wc2026/predictions/' + old).once('value'),
       db.ref('wc2026/joinTimes/' + old).once('value'),
-      db.ref('wc2026/bonus/' + old).once('value')
-    ]).then(([pwSnap, predSnap, jtSnap, bonusSnap]) => {
+      db.ref('wc2026/bonus/' + old).once('value'),
+      db.ref('wc2026/loginDates/' + old).once('value')
+    ]).then(([pwSnap, predSnap, jtSnap, bonusSnap, loginSnap]) => {
       const updates = {};
       updates['wc2026/players/' + trimmed] = true;
       updates['wc2026/players/' + old] = null;
@@ -1051,6 +1113,7 @@ window.changeName = function() {
       updates['wc2026/joinTimes/' + trimmed] = jtSnap.val();
       updates['wc2026/joinTimes/' + old] = null;
       if(bonusSnap.val()) { updates['wc2026/bonus/' + trimmed] = bonusSnap.val(); updates['wc2026/bonus/' + old] = null; }
+      if(loginSnap.val()) { updates['wc2026/loginDates/' + trimmed] = loginSnap.val(); updates['wc2026/loginDates/' + old] = null; }
       db.ref().update(updates).then(() => {
         currentPlayer = trimmed;
         localStorage.setItem('wc2026_player', trimmed);
@@ -1140,12 +1203,69 @@ function getTrashTalk() {
   if(lb.length >= 2 && lb[0].total > 0 && lb[0].total === lb[1].total) msgs.push('It\'s a tie at the top! ' + lb[0].name + ' vs ' + lb[1].name + ' — who blinks first?');
   const played = Object.keys(state.actuals || {}).length;
   if(played === 0) msgs.push('The tournament hasn\'t started yet — lock your predictions now!');
+  // Login streak trash talk
+  const now = new Date();
+  if(now >= WC_START && now <= WC_END) {
+    lb.forEach(p => {
+      const si = getStreakInfo(p.name);
+      if(si.streak >= 10) msgs.push(p.name + ' has a ' + si.streak + '-day login streak! Dedicated!');
+      if(si.streak === 0 && si.days.length > 0 && si.days.some(d => d.logged)) msgs.push(p.name + ' broke their login streak! Back to zero!');
+    });
+  }
   if(msgs.length === 0) msgs.push('Who will be crowned the prediction King?');
   return msgs;
 }
 
 let trashIdx = 0;
 let trashMsgs = [];
+
+function buildStreakBar() {
+  const now = new Date();
+  const si = getStreakInfo(currentPlayer);
+  if(!si.started) {
+    // Before tournament
+    const diff = WC_START - now;
+    const d = Math.floor(diff / 86400000);
+    return '<div class="hero-streak"><span style="opacity:0.5">&#128293;</span><span style="opacity:0.6">Login streak tracking starts June 11 (' + d + ' days) — log in every day during the World Cup for bonus points!</span></div>';
+  }
+  // During or after tournament
+  let h = '<div class="hero-streak">';
+  h += '<div style="display:flex;align-items:center;gap:6px"><span class="' + (si.streak > 0 ? 'streak-fire' : '') + '">' + (si.streak > 0 ? '&#128293;' : '&#128167;') + '</span>';
+  h += '<div><div class="streak-count">' + si.streak + '</div><div class="streak-label-sm">day streak</div></div></div>';
+  // Day squares
+  h += '<div class="streak-days-row">';
+  const today = getETDate();
+  // Show all 39 tournament days
+  const allDays = [];
+  const dd = new Date(WC_START);
+  while(dd <= WC_END) {
+    allDays.push(dd.toLocaleDateString('en-CA', { timeZone: 'America/New_York' }));
+    dd.setDate(dd.getDate() + 1);
+  }
+  allDays.forEach(day => {
+    const playerDates = loginDates[currentPlayer] || {};
+    const logged = !!playerDates[day];
+    const isToday = day === today;
+    const isFuture = day > today;
+    const isPast = day < today;
+    let cls = 'streak-sq';
+    if(isToday && logged) cls += ' today';
+    else if(isToday && !logged) cls += ' today';
+    else if(isFuture) cls += ' future';
+    else if(logged) cls += ' on';
+    else if(isPast) cls += ' miss';
+    h += '<div class="' + cls + '" title="' + day + '"></div>';
+  });
+  h += '</div>';
+  // Streak pts info
+  if(si.tournamentOver) {
+    h += '<div style="text-align:right"><div class="streak-badge-hero">+' + si.streak + ' pts added</div></div>';
+  } else {
+    h += '<div style="text-align:right;min-width:70px"><div style="font-size:11px;opacity:0.7">+' + si.streak + ' pts banked</div><div style="font-size:9px;opacity:0.4">added after final</div></div>';
+  }
+  h += '</div>';
+  return h;
+}
 
 function renderHero() {
   const el = document.getElementById('heroDashboard');
@@ -1242,6 +1362,7 @@ function renderHero() {
       '<div class="hero-podium">' + podiumHtml + '</div>' +
     '</div>' +
     '<div class="hero-progress"><span class="hero-progress-label">Tournament</span><div class="hero-progress-bar"><div class="hero-progress-fill" style="width:' + pct + '%"></div></div><span class="hero-progress-label">' + played + '/' + MATCHES.length + '</span></div>' +
+    buildStreakBar() +
     '<div class="hero-trash" id="heroTrash">' + trash + '</div>';
 }
 
