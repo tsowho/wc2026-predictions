@@ -1337,9 +1337,20 @@ function buildStreakBar() {
   return h;
 }
 
+var _heroHash = '';
 function renderHero() {
   const el = document.getElementById('heroDashboard');
   if(!el || !currentPlayer) return;
+  // Only rebuild DOM when data changes - prevents CSS animation resets
+  var dataHash = JSON.stringify([
+    Object.keys(state.players || {}),
+    Object.keys(state.actuals || {}),
+    Object.keys(state.predictions || {}),
+    Object.keys(bonusPredictions || {}),
+    currentPlayer
+  ]);
+  if(dataHash === _heroHash && el.innerHTML !== '') return;
+  _heroHash = dataHash;
   const lb = getLeaderboard(true);
   const me = lb.find(p => p.name === currentPlayer) || { total: 0, exact: 0, correct: 0, predicted: 0 };
   const myPos = lb.indexOf(me) + 1;
