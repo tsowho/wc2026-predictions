@@ -22,6 +22,27 @@ header p{color:var(--muted);font-size:14px}
 .stat-card .label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
 .stat-card .value{font-size:22px;font-weight:600;margin-top:2px}
 .card{background:var(--card);border-radius:12px;padding:16px;box-shadow:var(--shadow);margin-bottom:16px}
+
+/* Glass login box */
+.login-glass{max-width:400px;margin:40px auto;text-align:center;padding:36px 32px;background:rgba(0,0,0,0.55);border-radius:16px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.08);box-shadow:0 8px 32px rgba(0,0,0,0.4)}
+.login-glass *{color:#fff}
+.login-glass h2{font-size:26px;margin:0 0 4px;font-weight:700}
+.login-glass h2 em{font-style:normal;color:#1d9e75}
+.login-glass .login-sub{color:rgba(255,255,255,0.5);font-size:13px;margin:0 0 8px}
+.login-badge{display:inline-block;background:rgba(29,158,117,0.2);color:#5dcaa5;font-size:11px;padding:3px 12px;border-radius:20px;margin-bottom:16px;font-weight:600;letter-spacing:0.5px}
+.login-countdown{display:flex;gap:8px;justify-content:center;margin:0 0 20px}
+.login-cd-box{background:rgba(255,255,255,0.08);border-radius:8px;padding:6px 10px;text-align:center;min-width:48px}
+.login-cd-num{font-size:20px;font-weight:600}
+.login-cd-unit{font-size:9px;opacity:0.4;text-transform:uppercase;letter-spacing:0.5px}
+.login-glass input[type="text"],.login-glass input[type="password"]{width:100%;padding:11px 16px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:#fff;font-size:15px;margin-bottom:10px;box-sizing:border-box;outline:none}
+.login-glass input::placeholder{color:rgba(255,255,255,0.3)}
+.login-glass .btn-join{width:100%;padding:12px;border-radius:10px;border:none;background:linear-gradient(135deg,#1d9e75,#17805f);color:#fff;font-size:15px;font-weight:600;cursor:pointer;margin-top:4px;transition:transform 0.15s}
+.login-glass .btn-join:hover{transform:scale(1.02)}
+.login-glass .btn-join:active{transform:scale(0.98)}
+.login-player-count{color:rgba(255,255,255,0.3);font-size:11px;margin-top:16px}
+.login-existing{margin-top:16px;display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.login-existing .player-chip{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:5px 14px;font-size:12px;color:rgba(255,255,255,0.7);cursor:pointer;transition:all 0.2s}
+.login-existing .player-chip:hover{background:rgba(255,255,255,0.15);color:#fff}
 .card h2{font-size:16px;font-weight:600;margin-bottom:12px}
 table{width:100%;border-collapse:collapse;font-size:14px}
 th{text-align:left;padding:8px 10px;color:var(--muted);font-weight:500;font-size:12px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
@@ -288,14 +309,18 @@ button:disabled{opacity:.5;cursor:not-allowed}
 </header>
 
 <div id="loginScreen">
-  <div class="card" style="max-width:400px;margin:40px auto;text-align:center">
-    <h2 style="margin-bottom:16px">Join the game</h2>
-    <p style="font-size:14px;color:var(--muted);margin-bottom:16px">Enter your name to start predicting</p>
-    <div class="player-form" style="justify-content:center">
-      <input type="text" id="loginName" placeholder="Your name" style="max-width:200px" />
-      <button class="btn-primary" id="loginBtn">Join</button>
+  <div class="login-glass">
+    <h2>World Cup <em>2026</em></h2>
+    <p class="login-sub">Prediction tracker</p>
+    <div class="login-badge" id="loginBadge">104 MATCHES</div>
+    <div class="login-countdown" id="loginCountdown"></div>
+    <input type="text" id="loginName" placeholder="Enter your name" />
+    <div id="loginPasswordWrap" style="display:none">
+      <input type="password" id="loginPassword" placeholder="Password" />
     </div>
-    <div id="existingPlayers" style="margin-top:16px"></div>
+    <button class="btn-join" id="loginBtn">Join the game</button>
+    <div class="login-player-count" id="loginPlayerCount"></div>
+    <div id="existingPlayers" class="login-existing"></div>
   </div>
 </div>
 
@@ -543,6 +568,40 @@ document.getElementById('loginBtn').addEventListener('click', () => {
   });
 });
 document.getElementById('loginName').addEventListener('keydown', e => { if(e.key === 'Enter') document.getElementById('loginBtn').click(); });
+
+// Login countdown timer
+function updateLoginCountdown() {
+  var el = document.getElementById('loginCountdown');
+  if(!el) return;
+  var now = new Date();
+  var target = WC_START;
+  // Find next match if tournament started
+  if(now >= WC_START) {
+    var nm = MATCHES.find(function(m) { return !state.actuals?.['m' + m.id] && getMatchTime(m) > now; });
+    if(nm) target = getMatchTime(nm);
+    else { el.innerHTML = '<div style="font-size:13px;opacity:0.5">Tournament complete!</div>'; return; }
+  }
+  var diff = target - now;
+  if(diff <= 0) { el.innerHTML = ''; return; }
+  var d = Math.floor(diff / 86400000), hr = Math.floor((diff % 86400000) / 3600000), mn = Math.floor((diff % 3600000) / 60000);
+  var label = now < WC_START ? 'Kickoff in' : 'Next match';
+  el.innerHTML = '<div style="font-size:10px;opacity:0.4;width:100%;text-align:center;margin-bottom:4px">' + label + '</div>' +
+    (d > 0 ? '<div class="login-cd-box"><div class="login-cd-num">' + d + '</div><div class="login-cd-unit">days</div></div>' : '') +
+    '<div class="login-cd-box"><div class="login-cd-num">' + hr + '</div><div class="login-cd-unit">hrs</div></div>' +
+    '<div class="login-cd-box"><div class="login-cd-num">' + mn + '</div><div class="login-cd-unit">min</div></div>';
+}
+updateLoginCountdown();
+setInterval(updateLoginCountdown, 60000);
+
+// Update player count on login screen
+function updateLoginPlayerCount() {
+  var el = document.getElementById('loginPlayerCount');
+  if(!el) return;
+  var count = Object.keys(state.players || {}).filter(function(p) { return p !== ADMIN; }).length;
+  el.textContent = count > 0 ? count + ' friend' + (count !== 1 ? 's' : '') + ' predicting' : '';
+}
+stateRef.child('players').on('value', function() { updateLoginPlayerCount(); });
+updateLoginPlayerCount();
 
 if(currentPlayer) {
   document.getElementById('loginScreen').classList.add('hidden');
