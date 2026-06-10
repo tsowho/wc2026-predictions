@@ -2630,7 +2630,13 @@ if(currentPlayer) {
 // ============================================================
 var _origRenderDashboard = renderDashboard;
 renderDashboard = function() {
-  var h = '<div style="display:flex;justify-content:flex-end;margin-bottom:10px"><span class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">' + (userTheme === 'dark' ? '&#127769; Dark' : '&#9728;&#65039; Light') + '</span></div>';
+  var teamBtn = '';
+  if(currentPlayer && !playerTeams[currentPlayer]) {
+    teamBtn = '<button class="export-btn" onclick="showTeamPicker(true)" style="margin-right:auto">&#9917; Pick your team</button>';
+  } else if(currentPlayer && playerTeams[currentPlayer]) {
+    teamBtn = '<button class="export-btn" onclick="showTeamPicker(true)" style="margin-right:auto">' + teamFlag(playerTeams[currentPlayer], 14) + ' Change team</button>';
+  }
+  var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">' + teamBtn + '<span class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">' + (userTheme === 'dark' ? '&#127769; Dark' : '&#9728;&#65039; Light') + '</span></div>';
   h += renderTodayPinned();
   h += _origRenderDashboard();
   h += renderDaySummary();
