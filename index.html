@@ -1181,14 +1181,14 @@ function renderDashboard() {
   if(!players.length) return h + '<div class="card"><div class="empty">Share the link to get friends to join!</div></div>';
   if(lb.length) {
     h += '<div class="card"><h2>Leaderboard</h2><table><tr><th>#</th><th>Player</th><th style="text-align:right">Exact</th><th style="text-align:right">Correct</th><th style="text-align:right">Points</th></tr>';
-    lb.forEach((p, i) => { h += '<tr><td class="' + (i < 3 ? 'rank-' + (i + 1) : '') + '">' + (i + 1) + '</td><td>' + chessIcon(p.name) + p.name + '</td><td style="text-align:right">' + p.exact + '</td><td style="text-align:right">' + p.correct + '</td><td style="text-align:right;font-weight:600">' + p.total + '</td></tr>'; });
+    lb.forEach((p, i) => { h += '<tr><td class="' + (i < 3 ? 'rank-' + (i + 1) : '') + '">' + (i + 1) + '</td><td>' + (playerTeams[p.name] ? teamFlag(playerTeams[p.name], 14) : '') + chessIcon(p.name) + p.name + '</td><td style="text-align:right">' + p.exact + '</td><td style="text-align:right">' + p.correct + '</td><td style="text-align:right;font-weight:600">' + p.total + '</td></tr>'; });
     h += '</table></div>';
   }
   const nm = MATCHES.find(m => !state.actuals?.['m' + m.id]);
   if(nm) {
     h += '<div class="card"><h2>Next match</h2>';
     h += '<div class="match-header"><span>Group ' + nm.group + '</span><span class="countdown">' + getCountdown(nm) + '</span></div>';
-    h += '<div class="match-teams"><span class="team">' + nm.team1 + '</span><span class="match-vs">vs</span><span class="team">' + nm.team2 + '</span></div>';
+    h += '<div class="match-teams"><span class="team">' + teamFlag(nm.team1) + nm.team1 + '</span><span class="match-vs">vs</span><span class="team">' + nm.team2 + teamFlag(nm.team2) + '</span></div>';
     h += '<div style="text-align:center;margin-top:8px;font-size:12px;color:var(--hint)">' + nm.venue + '<br>' + fmtDate(nm.date) + ' ' + nm.time + ' ET</div>';
     h += isPredLocked(currentPlayer, nm.id) ? '<div style="text-align:center;margin-top:8px"><span class="locked-badge">Your prediction is locked</span></div>' : '<div style="text-align:center;margin-top:8px"><span style="font-size:12px;color:var(--danger)">You haven\'t predicted this match yet!</span></div>';
     h += '</div>';
@@ -1220,9 +1220,9 @@ function liveCard(m, players) {
   const matchReactions = reactions['m' + m.id] || {};
   let h = '<div class="match-card"><div class="match-header"><span>Group ' + m.group + ' | ' + fmtDate(m.date) + ' ' + m.time + ' ET</span>';
   h += started && !actual ? '<span class="live-badge">LIVE</span>' : !started ? '<span class="countdown">' + getCountdown(m) + '</span>' : '';
-  h += '</div><div class="match-teams"><span class="team">' + m.team1 + '</span>';
+  h += '</div><div class="match-teams"><span class="team">' + teamFlag(m.team1) + m.team1 + '</span>';
   h += actual && actual.s1 !== undefined ? '<div class="match-score"><span style="font-size:20px;font-weight:700">' + actual.s1 + ' - ' + actual.s2 + '</span></div>' : '<span class="match-vs">vs</span>';
-  h += '<span class="team">' + m.team2 + '</span></div>';
+  h += '<span class="team">' + m.team2 + teamFlag(m.team2) + '</span></div>';
   h += '<div style="margin-top:10px;border-top:1px dashed var(--border);padding-top:8px"><div style="font-size:11px;color:var(--hint);margin-bottom:6px">Everyone\'s predictions:</div><div class="pred-grid">';
   players.forEach(p => {
     const pred = state.predictions?.[p]?.['m' + m.id];
@@ -1312,12 +1312,12 @@ function renderPredict() {
     const pred = state.predictions?.[currentPlayer]?.['m' + m.id] || {}, locked = pred.locked, started = isMatchStarted(m), result = calcPoints(pred, state.actuals?.['m' + m.id]);
     h += '<div class="match-card" data-group="' + m.group + '"' + (m.group !== 'A' ? ' style="display:none"' : '') + '><div class="match-header"><span>Group ' + m.group + ' | ' + fmtDate(m.date) + ' ' + m.time + ' ET</span>';
     h += locked ? '<span class="locked-badge">Locked</span>' : started ? '<span style="font-size:11px;color:var(--danger)">Match started</span>' : '<span class="countdown">' + getCountdown(m) + '</span>';
-    h += '</div><div class="match-teams"><span class="team">' + m.team1 + '</span><div class="match-score">';
+    h += '</div><div class="match-teams"><span class="team">' + teamFlag(m.team1) + m.team1 + '</span><div class="match-score">';
     h += '<input type="number" min="0" max="20" value="' + (pred.s1 ?? '') + '" data-match="' + m.id + '" data-side="s1" class="pred-input"' + (locked || started ? ' disabled' : '') + '/>';
     h += '<span class="match-vs">-</span>';
     h += '<input type="number" min="0" max="20" value="' + (pred.s2 ?? '') + '" data-match="' + m.id + '" data-side="s2" class="pred-input"' + (locked || started ? ' disabled' : '') + '/>';
     if(!locked && !started) h += '<button class="btn-lock" onclick="lockPrediction(' + m.id + ')">Lock</button>';
-    h += '</div><span class="team">' + m.team2 + '</span></div>';
+    h += '</div><span class="team">' + m.team2 + teamFlag(m.team2) + '</span></div>';
     if(result) { const cls = result.type === 'exact' ? 'result-exact' : result.type === 'correct' ? 'result-correct' : 'result-wrong'; const lbl = result.type === 'exact' ? 'Exact! +3' : result.type === 'correct' ? 'Correct result +1' : 'Wrong 0'; h += '<div style="text-align:center;margin-top:8px"><span class="result-badge ' + cls + '">' + lbl + '</span></div>'; }
     h += '</div>';
   });
@@ -1335,11 +1335,11 @@ function renderResults() {
   MATCHES.forEach(m => {
     const actual = state.actuals?.['m' + m.id] || {}, hasA = actual.s1 !== undefined && actual.s1 !== '';
     h += '<div class="match-card" data-group="' + m.group + '"><div class="match-header"><span>Group ' + m.group + ' | ' + fmtDate(m.date) + '</span><span>' + m.venue + '</span></div>';
-    h += '<div class="match-teams"><span class="team">' + m.team1 + '</span><div class="match-score">';
+    h += '<div class="match-teams"><span class="team">' + teamFlag(m.team1) + m.team1 + '</span><div class="match-score">';
     if(isAdmin) { h += '<input type="number" min="0" max="20" value="' + (actual.s1 ?? '') + '" data-match="' + m.id + '" data-side="s1" class="actual-input"/><span class="match-vs">-</span><input type="number" min="0" max="20" value="' + (actual.s2 ?? '') + '" data-match="' + m.id + '" data-side="s2" class="actual-input"/>'; }
     else if(hasA) h += '<span style="font-size:18px;font-weight:700">' + actual.s1 + ' - ' + actual.s2 + '</span>';
     else h += '<span class="match-vs">vs</span>';
-    h += '</div><span class="team">' + m.team2 + '</span></div>';
+    h += '</div><span class="team">' + m.team2 + teamFlag(m.team2) + '</span></div>';
     if(hasA) {
       h += '<div style="margin-top:10px;border-top:1px dashed var(--border);padding-top:8px"><div style="font-size:11px;color:var(--hint);margin-bottom:6px">Predictions:</div>';
       Object.keys(state.players || {}).filter(p => currentPlayer === ADMIN || p !== ADMIN).forEach(p => {
@@ -1432,7 +1432,7 @@ function renderPlayers() {
   players.forEach(p => {
     const jt = joinTimes[p] ? new Date(joinTimes[p]).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
     if(p === ADMIN && !isAdmin) return; // Hide admin from other players
-    h += '<div class="player-chip">' + chessIcon(p) + '<span>' + p + '</span>' + chessLabel(p) + (p === ADMIN && isAdmin ? '<span class="admin-badge">admin</span>' : '') + (isAdmin && jt ? '<span style="font-size:10px;color:var(--hint);margin-left:6px">joined ' + jt + '</span>' : '') + (isAdmin && p !== ADMIN ? '<span style="font-size:11px;color:var(--blue);cursor:pointer;margin-left:6px" onclick="resetPlayerPassword(\'' + p.replace(/'/g, "\\'") + '\')">reset pw</span><span class="remove" onclick="removePlayer(\'' + p.replace(/'/g, "\\'") + '\')">&times;</span>' : '') + '</div>';
+    h += '<div class="player-chip">' + (playerTeams[p] ? teamFlag(playerTeams[p], 14) : '') + chessIcon(p) + '<span>' + p + '</span>' + chessLabel(p) + (p === ADMIN && isAdmin ? '<span class="admin-badge">admin</span>' : '') + (isAdmin && jt ? '<span style="font-size:10px;color:var(--hint);margin-left:6px">joined ' + jt + '</span>' : '') + (isAdmin && p !== ADMIN ? '<span style="font-size:11px;color:var(--blue);cursor:pointer;margin-left:6px" onclick="resetPlayerPassword(\'' + p.replace(/'/g, "\\'") + '\')">reset pw</span><span class="remove" onclick="removePlayer(\'' + p.replace(/'/g, "\\'") + '\')">&times;</span>' : '') + '</div>';
   });
   h += '</div></div>';
   h += '<div class="card"><h2>Share this link</h2><p style="font-size:14px;color:var(--muted);margin-bottom:12px">Send this to your friends so they can join and predict:</p>';
@@ -1657,9 +1657,9 @@ function renderKnockout() {
 
       h += '<div class="match-teams">';
       if(isAdmin && !hasResult) {
-        h += '<span class="team" style="cursor:pointer;text-decoration:underline dotted" onclick="setKoTeam(\'' + slot.id + '\',1)">' + m.team1 + '</span>';
+        h += '<span class="team" style="cursor:pointer;text-decoration:underline dotted" onclick="setKoTeam(\'' + slot.id + '\',1)">' + teamFlag(m.team1) + m.team1 + '</span>';
       } else {
-        h += '<span class="team">' + m.team1 + '</span>';
+        h += '<span class="team">' + teamFlag(m.team1) + m.team1 + '</span>';
       }
       h += '<div class="match-score">';
 
@@ -1677,9 +1677,9 @@ function renderKnockout() {
 
       h += '</div>';
       if(isAdmin && !hasResult) {
-        h += '<span class="team" style="cursor:pointer;text-decoration:underline dotted" onclick="setKoTeam(\'' + slot.id + '\',2)">' + m.team2 + '</span>';
+        h += '<span class="team" style="cursor:pointer;text-decoration:underline dotted" onclick="setKoTeam(\'' + slot.id + '\',2)">' + teamFlag(m.team2) + m.team2 + '</span>';
       } else {
-        h += '<span class="team">' + m.team2 + '</span>';
+        h += '<span class="team">' + teamFlag(m.team2) + m.team2 + '</span>';
       }
       h += '</div>';
 
@@ -2706,22 +2706,3 @@ renderPredict = function() {
   var html = _origRenderPredict();
   // Add flags to team names in match cards
   Object.keys(TEAM_FLAGS).forEach(function(team) {
-    var flag = teamFlag(team, 16);
-    // Replace team names that aren't already flagged
-    html = html.split('>' + team + '<').join('>' + flag + team + '<');
-  });
-  return html;
-};
-
-// ============================================================
-// PATCH: Auto-lock predictions 5 min before kickoff
-// ============================================================
-var _origAttachEvents = attachEvents;
-if(typeof _origAttachEvents === 'function') {
-  // We'll handle auto-lock in the predict rendering
-}
-
-
-</script>
-</body>
-</html>
