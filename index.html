@@ -149,7 +149,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .hero *{color:#fff}
 /* Ticker bar */
 .hero-ticker{background:rgba(0,0,0,0.4);padding:6px 0;overflow:hidden;position:relative;border-bottom:1px solid rgba(255,255,255,0.1)}
-.hero-ticker-inner{display:flex;gap:32px;animation:tickerScroll 25s linear infinite;white-space:nowrap;padding:0 16px}
+.hero-ticker-inner{display:flex;gap:32px;white-space:nowrap;padding:0 16px}
 .hero-ticker-item{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:500;flex-shrink:0}
 .ticker-dot{width:6px;height:6px;border-radius:50%;background:#1d9e75;flex-shrink:0}
 .ticker-live{background:#e24b4a;animation:pulse 1.5s infinite}
@@ -1896,6 +1896,18 @@ function buildStreakBar() {
 }
 
 var _heroHash = '';
+
+// Dynamic ticker speed
+function setupTickerAnimation() {
+  var inner = document.querySelector('.hero-ticker-inner');
+  if(!inner) return;
+  var totalWidth = inner.scrollWidth;
+  var viewWidth = inner.parentElement?.offsetWidth || 900;
+  // Speed: ~60px per second for smooth readable scroll
+  var duration = Math.max(15, Math.round(totalWidth / 60));
+  inner.style.animation = 'tickerScroll ' + duration + 's linear infinite';
+}
+
 function renderHero() {
   const el = document.getElementById('heroDashboard');
   if(!el || !currentPlayer) return;
@@ -2702,190 +2714,6 @@ window.showProfile = function(name) {
 
 // Flags added directly in renderPredict and renderResults
 
-function renderHero() {
-  const el = document.getElementById('heroDashboard');
-  if(!el || !currentPlayer) return;
-  // Only rebuild DOM when data changes - prevents CSS animation resets
-  var dataHash = JSON.stringify([
-    Object.keys(state.players || {}),
-    Object.keys(state.actuals || {}),
-    Object.keys(state.predictions || {}),
-    Object.keys(bonusPredictions || {}),
-    currentPlayer
-  ]);
-  if(dataHash === _heroHash && el.innerHTML !== '') return;
-  _heroHash = dataHash;
-  const lb = getLeaderboard(true);
-  const me = lb.find(p => p.name === currentPlayer) || { total: 0, exact: 0, correct: 0, predicted: 0 };
-  const myPos = lb.indexOf(me) + 1;
-  const rank = getChessRank(currentPlayer);
-  const played = Object.keys(state.actuals || {}).length;
-  const pct = MATCHES.length > 0 ? Math.round((played / MATCHES.length) * 100) : 0;
-  const now = new Date();
-
-  // Find live and next match
-  const liveMatches = MATCHES.filter(m => { const t = getMatchTime(m); return now >= t && now <= new Date(t.getTime() + 7200000) && !state.actuals?.['m' + m.id]; });
-  const nextMatch = MATCHES.find(m => !state.actuals?.['m' + m.id] && !liveMatches.includes(m) && getMatchTime(m) > now);
-
-  // Ticker items
-  let tickerItems = [];
-  // Recent results
-  const results = MATCHES.filter(m => state.actuals?.['m' + m.id]).slice(-6);
-  results.forEach(m => {
-    const a = state.actuals['m' + m.id];
-    tickerItems.push('<span class="hero-ticker-item"><span class="ticker-dot"></span>' + m.team1 + ' ' + a.s1 + '-' + a.s2 + ' ' + m.team2 + '</span>');
-  });
-  if(liveMatches.length) {
-    liveMatches.forEach(m => {
-      tickerItems.push('<span class="hero-ticker-item"><span class="ticker-dot ticker-live"></span>LIVE: ' + m.team1 + ' vs ' + m.team2 + '</span>');
-    });
-  }
-  // Top players
-  lb.slice(0, 3).forEach((p, i) => {
-    const medals = ['&#9733;', '&#9734;', '&#9672;'];
-    tickerItems.push('<span class="hero-ticker-item"><span class="ticker-dot" style="background:' + ['#BA7517','#888','#a0522d'][i] + '"></span>' + medals[i] + ' ' + p.name + ' ' + p.total + 'pts</span>');
-  });
-  if(tickerItems.length === 0) tickerItems.push('<span class="hero-ticker-item"><span class="ticker-dot"></span>World Cup 2026 — Predictions open!</span>');
-  const tickerHtml = tickerItems.join('') + tickerItems.join(''); // double for seamless scroll
-
-  // Particles
-  let particles = '';
-  for(let i = 0; i < 12; i++) {
-    const left = Math.random() * 100, delay = Math.random() * 8, size = 2 + Math.random() * 4;
-    particles += '<div class="hero-particle" style="left:' + left + '%;animation-delay:' + delay + 's;width:' + size + 'px;height:' + size + 'px"></div>';
-  }
-
-  // Center: countdown or live
-  let centerHtml = '';
-  if(liveMatches.length) {
-    const lm = liveMatches[0];
-    centerHtml = '<div class="hero-next-label">Match in progress</div>';
-    centerHtml += '<div class="hero-next-teams">' + lm.team1 + ' vs ' + lm.team2 + '</div>';
-    centerHtml += '<div class="hero-next-meta">Group ' + lm.group + ' | ' + lm.venue + '</div>';
-    centerHtml += '<div class="hero-live-now"><span class="hero-live-pulse"></span> LIVE NOW</div>';
-  } else if(nextMatch) {
-    const diff = getMatchTime(nextMatch) - now;
-    const d = Math.floor(diff / 86400000), h = Math.floor((diff % 86400000) / 3600000), min = Math.floor((diff % 3600000) / 60000), s = Math.floor((diff % 60000) / 1000);
-    centerHtml = '<div class="hero-next-label">Next match</div>';
-    centerHtml += '<div class="hero-next-teams">' + nextMatch.team1 + ' vs ' + nextMatch.team2 + '</div>';
-    centerHtml += '<div class="hero-next-meta">Group ' + nextMatch.group + ' | ' + fmtDate(nextMatch.date) + ' ' + nextMatch.time + ' ET</div>';
-    centerHtml += '<div class="hero-countdown">';
-    if(d > 0) centerHtml += '<div class="hero-cd-box"><div class="hero-cd-num" id="cdDays">' + d + '</div><div class="hero-cd-unit">days</div></div>';
-    centerHtml += '<div class="hero-cd-box"><div class="hero-cd-num" id="cdHrs">' + h + '</div><div class="hero-cd-unit">hrs</div></div>';
-    centerHtml += '<div class="hero-cd-box"><div class="hero-cd-num" id="cdMin">' + min + '</div><div class="hero-cd-unit">min</div></div>';
-    centerHtml += '<div class="hero-cd-box"><div class="hero-cd-num" id="cdSec">' + s + '</div><div class="hero-cd-unit">sec</div></div>';
-    centerHtml += '</div>';
-  } else {
-    centerHtml = '<div class="hero-next-label">Tournament</div><div class="hero-next-teams">Complete!</div>';
-  }
-
-  // Podium
-  let podiumHtml = '<div class="hero-podium-title">Leaderboard</div><div class="podium-row">';
-  const podiumOrder = [1, 0, 2]; // 2nd, 1st, 3rd visual order
-  podiumOrder.forEach(i => {
-    const p = lb[i];
-    if(!p || p.total === 0) { podiumHtml += '<div class="podium-spot podium-' + (i + 1) + '"><div class="podium-piece">-</div><div class="podium-name">-</div></div>'; return; }
-    const r = getChessRank(p.name);
-    podiumHtml += '<div class="podium-spot podium-' + (i + 1) + '"><div class="podium-piece">' + r.piece + '</div><div class="podium-name">' + p.name + '</div><div class="podium-pts">' + p.total + ' pts</div></div>';
-  });
-  podiumHtml += '</div>';
-
-  // Trash talk merged into ticker
-  trashMsgs = getTrashTalk();
-  trashMsgs.forEach(function(msg) {
-    tickerItems.push('<span class="hero-ticker-item"><span class="ticker-dot" style="background:#e24b4a"></span>' + msg + '</span>');
-  });
-  var fullTickerHtml = tickerItems.join('') + tickerItems.join('');
-
-  const bounceBall = '<div class="hero-ball-x"><div class="hero-ball-y"><div class="hero-ball">&#9917;</div></div></div>';
-
-  // Burning fuse under countdown
-  var fuseHtml = '';
-  if(nextMatch && !liveMatches.length) {
-    var diff2 = getMatchTime(nextMatch) - now;
-    var burnPct = Math.max(0, Math.min(100, (1 - diff2 / (7 * 86400000)) * 100));
-    fuseHtml = '<div class="fuse-wrap"><div class="fuse-label">&#9200;</div><div class="fuse-line"><div class="fuse-burned" style="width:' + burnPct + '%"></div><div class="fuse-spark" style="left:calc(' + burnPct + '% - 4px)"><div class="fuse-sparks"><div class="fuse-spark-p" style="--sx:6px;--sy:-10px"></div><div class="fuse-spark-p" style="--sx:-4px;--sy:-12px"></div><div class="fuse-spark-p" style="--sx:3px;--sy:-8px"></div></div></div></div><div class="fuse-bomb">&#128163;</div></div>';
-  }
-
-  el.innerHTML = '<div class="pitch-center"></div><div class="pitch-box-l"></div><div class="pitch-box-r"></div>' +
-    '<div class="hero-particles">' + particles + '</div>' + bounceBall +
-    '<div class="hero-ticker"><div class="hero-ticker-inner">' + fullTickerHtml + '</div></div>' +
-    '<div class="hero-body">' +
-      '<div class="hero-stats">' +
-        '<div style="display:flex;align-items:center;gap:12px"><span class="hero-chess">' + rank.piece + '</span><div><div class="hero-name">' + currentPlayer + '</div><div class="hero-rank-label">' + rank.name + (myPos > 0 && me.total > 0 ? ' \u2014 #' + myPos : '') + '</div></div></div>' +
-        '<div class="hero-stat-row"><div><div class="hero-stat-num">' + me.total + '</div><div class="hero-stat-label">Points</div></div><div><div class="hero-stat-num">' + me.exact + '</div><div class="hero-stat-label">Exact</div></div><div><div class="hero-stat-num">' + me.predicted + '</div><div class="hero-stat-label">Predicted</div></div></div>' +
-      '</div>' +
-      '<div class="hero-center">' + centerHtml + fuseHtml + '</div>' +
-      '<div class="hero-podium">' + podiumHtml + '</div>' +
-    '</div>' +
-    '<div class="hero-progress"><span class="hero-progress-label">Tournament</span><div class="hero-progress-bar"><div class="hero-progress-fill" style="width:' + pct + '%"></div></div><span class="hero-progress-label">' + played + '/' + MATCHES.length + '</span></div>' +
-    buildStreakBar();
-}
-
-// Live countdown ticker
-setInterval(() => {
-  const cdDays = document.getElementById('cdDays');
-  const cdHrs = document.getElementById('cdHrs');
-  const cdMin = document.getElementById('cdMin');
-  const cdSec = document.getElementById('cdSec');
-  if(!cdSec) return;
-  const now = new Date();
-  const liveMatches = MATCHES.filter(m => { const t = getMatchTime(m); return now >= t && now <= new Date(t.getTime() + 7200000) && !state.actuals?.['m' + m.id]; });
-  const nextMatch = MATCHES.find(m => !state.actuals?.['m' + m.id] && !liveMatches.includes(m) && getMatchTime(m) > now);
-  if(!nextMatch) return;
-  const diff = getMatchTime(nextMatch) - now;
-  if(diff <= 0) { renderHero(); return; }
-  const d = Math.floor(diff / 86400000), h = Math.floor((diff % 86400000) / 3600000), min = Math.floor((diff % 3600000) / 60000), s = Math.floor((diff % 60000) / 1000);
-  if(cdDays) cdDays.textContent = d;
-  if(cdHrs) cdHrs.textContent = h;
-  if(cdMin) cdMin.textContent = min;
-  cdSec.textContent = s;
-}, 1000);
-
-// Patch render to also update hero
-// (render patch already applied above)
-// (already patched)
-
-setInterval(() => { if(currentTab === 'live') render(); }, 30000);
-render();
-
-// World Cup winners background with flag colors
-(function() {
-  const winners = [
-    {y:'1930',t:'Uruguay',f:'🇺🇾',c1:'#0038A8',c2:'#FFFFFF'},
-    {y:'1934',t:'Italy',f:'🇮🇹',c1:'#008C45',c2:'#CD212A'},
-    {y:'1938',t:'Italy',f:'🇮🇹',c1:'#008C45',c2:'#CD212A'},
-    {y:'1950',t:'Uruguay',f:'🇺🇾',c1:'#0038A8',c2:'#FFFFFF'},
-    {y:'1954',t:'Germany',f:'🇩🇪',c1:'#FFCC00',c2:'#DD0000'},
-    {y:'1958',t:'Brazil',f:'🇧🇷',c1:'#009C3B',c2:'#FFDF00'},
-    {y:'1962',t:'Brazil',f:'🇧🇷',c1:'#009C3B',c2:'#FFDF00'},
-    {y:'1966',t:'England',f:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',c1:'#FFFFFF',c2:'#CF081F'},
-    {y:'1970',t:'Brazil',f:'🇧🇷',c1:'#009C3B',c2:'#FFDF00'},
-    {y:'1974',t:'Germany',f:'🇩🇪',c1:'#FFCC00',c2:'#DD0000'},
-    {y:'1978',t:'Argentina',f:'🇦🇷',c1:'#74ACDF',c2:'#FFFFFF'},
-    {y:'1982',t:'Italy',f:'🇮🇹',c1:'#008C45',c2:'#CD212A'},
-    {y:'1986',t:'Argentina',f:'🇦🇷',c1:'#74ACDF',c2:'#FFFFFF'},
-    {y:'1990',t:'Germany',f:'🇩🇪',c1:'#DD0000',c2:'#FFCC00'},
-    {y:'1994',t:'Brazil',f:'🇧🇷',c1:'#009C3B',c2:'#FFDF00'},
-    {y:'1998',t:'France',f:'🇫🇷',c1:'#002395',c2:'#ED2939'},
-    {y:'2002',t:'Brazil',f:'🇧🇷',c1:'#009C3B',c2:'#FFDF00'},
-    {y:'2006',t:'Italy',f:'🇮🇹',c1:'#008C45',c2:'#CD212A'},
-    {y:'2010',t:'Spain',f:'🇪🇸',c1:'#AA151B',c2:'#F1BF00'},
-    {y:'2014',t:'Germany',f:'🇩🇪',c1:'#DD0000',c2:'#FFCC00'},
-    {y:'2018',t:'France',f:'🇫🇷',c1:'#002395',c2:'#ED2939'},
-    {y:'2022',t:'Argentina',f:'🇦🇷',c1:'#74ACDF',c2:'#FFFFFF'}
-  ];
-  const track = document.getElementById('wcBgTrack');
-  function buildItems() {
-    return winners.map(w =>
-      '<div class="wc-bg-item">' +
-        '<div class="wc-bg-year" style="background:linear-gradient(135deg,' + w.c1 + ',' + w.c2 + ');-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">' + w.y + '</div>' +
-        '<div class="wc-bg-team" style="color:' + w.c1 + '">' + w.t + '</div>' +
-      '</div>'
-    ).join('');
-  }
-  track.innerHTML = buildItems() + buildItems();
-})();
 </script>
 </body>
 </html>
