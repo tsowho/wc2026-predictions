@@ -148,12 +148,14 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .hero{background:linear-gradient(135deg,#0a2e1f,#1a1a2e,#0a1e3a);border-radius:16px;padding:0;margin-bottom:20px;overflow:hidden;position:relative;color:#fff;box-shadow:0 4px 20px rgba(0,0,0,0.3)}
 .hero *{color:#fff}
 /* Ticker bar */
-.hero-ticker{background:rgba(0,0,0,0.4);padding:6px 0;overflow:hidden;position:relative;border-bottom:1px solid rgba(255,255,255,0.1)}
-.hero-ticker-inner{display:flex;gap:32px;white-space:nowrap;padding:0 16px}
-.hero-ticker-item{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:500;flex-shrink:0}
+.hero-ticker{background:rgba(0,0,0,0.4);padding:8px 0;overflow:hidden;position:relative;border-bottom:1px solid rgba(255,255,255,0.1);height:34px;display:flex;align-items:center;justify-content:center}
+.hero-ticker-inner{display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;font-weight:500;color:rgba(255,255,255,0.85);white-space:nowrap;overflow:hidden}
 .ticker-dot{width:6px;height:6px;border-radius:50%;background:#1d9e75;flex-shrink:0}
 .ticker-live{background:#e24b4a;animation:pulse 1.5s infinite}
-@keyframes tickerScroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.ticker-cursor{display:inline-block;width:2px;height:14px;background:#1d9e75;animation:tickerBlink 0.7s step-end infinite;margin-left:2px;vertical-align:middle}
+@keyframes tickerBlink{0%,100%{opacity:1}50%{opacity:0}}
+.ticker-text{display:inline-block;overflow:hidden;white-space:nowrap;border-right:none;max-width:0;animation:tickerType var(--type-dur, 2s) steps(var(--type-steps, 30)) forwards}
+@keyframes tickerType{0%{max-width:0}100%{max-width:600px}}
 
 /* Hero body */
 .hero-body{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:0;min-height:160px}
@@ -1897,15 +1899,51 @@ function buildStreakBar() {
 
 var _heroHash = '';
 
-// Dynamic ticker speed
-function setupTickerAnimation() {
-  var inner = document.querySelector('.hero-ticker-inner');
-  if(!inner) return;
-  var totalWidth = inner.scrollWidth;
-  var viewWidth = inner.parentElement?.offsetWidth || 900;
-  // Speed: ~60px per second for smooth readable scroll
-  var duration = Math.max(15, Math.round(totalWidth / 60));
-  inner.style.animation = 'tickerScroll ' + duration + 's linear infinite';
+// Typewriter ticker engine
+var _tickerItems = [];
+var _tickerIdx = 0;
+var _tickerTimeout = null;
+var _tickerDotColors = [];
+
+function runTypewriter() {
+  var textEl = document.getElementById('tickerText');
+  var dotEl = document.getElementById('tickerDot');
+  if(!textEl || !_tickerItems.length) return;
+  
+  var item = _tickerItems[_tickerIdx % _tickerItems.length];
+  var dotColor = _tickerDotColors[_tickerIdx % _tickerDotColors.length] || '#1d9e75';
+  dotEl.style.background = dotColor;
+  
+  // Reset animation
+  textEl.style.animation = 'none';
+  textEl.offsetHeight; // force reflow
+  textEl.textContent = item;
+  var charCount = item.length;
+  var typeDur = Math.max(1, charCount * 0.05); // 50ms per char
+  textEl.style.setProperty('--type-dur', typeDur + 's');
+  textEl.style.setProperty('--type-steps', charCount);
+  textEl.style.animation = 'tickerType ' + typeDur + 's steps(' + charCount + ') forwards';
+  
+  // Hold for 2s after typing, then fade and move to next
+  var holdTime = typeDur * 1000 + 2000;
+  _tickerIdx++;
+  _tickerTimeout = setTimeout(function() {
+    textEl.style.transition = 'opacity 0.4s';
+    textEl.style.opacity = '0';
+    setTimeout(function() {
+      textEl.style.transition = 'none';
+      textEl.style.opacity = '1';
+      runTypewriter();
+    }, 400);
+  }, holdTime);
+}
+
+function startTypewriterTicker(items, dotColors) {
+  if(_tickerTimeout) clearTimeout(_tickerTimeout);
+  _tickerItems = items;
+  _tickerDotColors = dotColors || [];
+  _tickerIdx = 0;
+  runTypewriter();
 }
 
 function renderHero() {
@@ -1952,7 +1990,7 @@ function renderHero() {
     tickerItems.push('<span class="hero-ticker-item"><span class="ticker-dot" style="background:' + ['#BA7517','#888','#a0522d'][i] + '"></span>' + medals[i] + ' ' + p.name + ' ' + p.total + 'pts</span>');
   });
   if(tickerItems.length === 0) tickerItems.push('<span class="hero-ticker-item"><span class="ticker-dot"></span>World Cup 2026 — Predictions open!</span>');
-  const tickerHtml = tickerItems.join('') + tickerItems.join(''); // double for seamless scroll
+  // tickerItems collected above, used by typewriter below
 
   // Particles
   let particles = '';
@@ -2001,7 +2039,7 @@ function renderHero() {
   trashMsgs.forEach(function(msg) {
     tickerItems.push('<span class="hero-ticker-item"><span class="ticker-dot" style="background:#e24b4a"></span>' + msg + '</span>');
   });
-  var fullTickerHtml = tickerItems.join('') + tickerItems.join('');
+  // fullTickerHtml replaced by typewriter
 
   const bounceBall = '<div class="hero-ball-x"><div class="hero-ball-y"><div class="hero-ball">&#9917;</div></div></div>';
 
@@ -2015,7 +2053,7 @@ function renderHero() {
 
   el.innerHTML = '<div class="pitch-center"></div><div class="pitch-box-l"></div><div class="pitch-box-r"></div>' +
     '<div class="hero-particles">' + particles + '</div>' + bounceBall +
-    '<div class="hero-ticker"><div class="hero-ticker-inner">' + fullTickerHtml + '</div></div>' +
+    '<div class="hero-ticker"><div class="hero-ticker-inner" id="heroTicker"><span class="ticker-dot" id="tickerDot"></span><span class="ticker-text" id="tickerText"></span><span class="ticker-cursor"></span></div></div>' +
     '<div class="hero-body">' +
       '<div class="hero-stats">' +
         '<div style="display:flex;align-items:center;gap:12px"><span class="hero-chess">' + rank.piece + '</span><div><div class="hero-name">' + currentPlayer + '</div><div class="hero-rank-label">' + rank.name + (myPos > 0 && me.total > 0 ? ' \u2014 #' + myPos : '') + '</div></div></div>' +
@@ -2026,6 +2064,30 @@ function renderHero() {
     '</div>' +
     '<div class="hero-progress"><span class="hero-progress-label">Tournament</span><div class="hero-progress-bar"><div class="hero-progress-fill" style="width:' + pct + '%"></div></div><span class="hero-progress-label">' + played + '/' + MATCHES.length + '</span></div>' +
     buildStreakBar();
+  // Start typewriter ticker
+  var _twItems = [];
+  var _twDots = [];
+  results.forEach(function(m) {
+    var a = state.actuals['m' + m.id];
+    _twItems.push(m.team1 + ' ' + a.s1 + ' - ' + a.s2 + ' ' + m.team2);
+    _twDots.push('#1d9e75');
+  });
+  if(liveMatches.length) {
+    liveMatches.forEach(function(m) {
+      _twItems.push('LIVE: ' + m.team1 + ' vs ' + m.team2);
+      _twDots.push('#e24b4a');
+    });
+  }
+  lb.slice(0, 3).forEach(function(p, i) {
+    _twItems.push(p.name + ' — ' + p.total + ' pts');
+    _twDots.push(['#BA7517','#888','#a0522d'][i]);
+  });
+  trashMsgs.forEach(function(msg) {
+    _twItems.push(msg);
+    _twDots.push('#e24b4a');
+  });
+  if(_twItems.length === 0) _twItems.push('World Cup 2026 — Predictions open!');
+  setTimeout(function() { startTypewriterTicker(_twItems, _twDots); }, 100);
 }
 
 // Live countdown ticker
@@ -2712,7 +2774,7 @@ window.showProfile = function(name) {
   el.scrollIntoView({behavior:'smooth'});
 };
 
-// Flags added directly in renderPredict and renderResults
+// Flags added directly in render functions
 
 </script>
 </body>
