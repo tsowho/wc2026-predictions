@@ -8,8 +8,6 @@
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#f5f5f0;--card:#fff;--text:#1a1a1a;--muted:#666;--hint:#999;--border:#e0e0e0;--accent:#1d9e75;--accent2:#0f6e56;--gold:#BA7517;--silver:#888;--bronze:#a0522d;--danger:#e24b4a;--blue:#378add;--purple:#7f77dd;--input-bg:#fff;--hover:#f0f0ea;--shadow:0 1px 3px rgba(0,0,0,0.08);--locked-bg:#f9f9f5}
 @media(prefers-color-scheme:dark){:root{--bg:#1a1a1a;--card:#252525;--text:#e8e8e8;--muted:#aaa;--hint:#777;--border:#333;--input-bg:#2a2a2a;--hover:#303030;--shadow:0 1px 3px rgba(0,0,0,0.3);--locked-bg:#2a2a2a}}
-[data-theme="light"]{--bg:#f5f5f0;--card:#fff;--text:#1a1a1a;--muted:#666;--hint:#999;--border:#e0e0e0;--input-bg:#fff;--hover:#f0f0ea;--shadow:0 1px 3px rgba(0,0,0,0.08);--locked-bg:#f9f9f5}
-[data-theme="dark"]{--bg:#1a1a1a;--card:#252525;--text:#e8e8e8;--muted:#aaa;--hint:#777;--border:#333;--input-bg:#2a2a2a;--hover:#303030;--shadow:0 1px 3px rgba(0,0,0,0.3);--locked-bg:#2a2a2a}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 .container{max-width:900px;margin:0 auto;padding:16px}
 header{text-align:center;padding:24px 0 16px;border-bottom:1px solid var(--border);margin-bottom:20px}
@@ -304,143 +302,6 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .hero-particles{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:hidden}
 .hero-particle{position:absolute;width:4px;height:4px;background:rgba(255,255,255,0.15);border-radius:50%;animation:particleFloat 8s linear infinite}
 @keyframes particleFloat{0%{transform:translateY(100%) scale(0);opacity:0}20%{opacity:1;transform:translateY(60%) scale(1)}100%{transform:translateY(-20%) scale(0);opacity:0}}
-
-/* === SIGNUP CUTOFF === */
-.cutoff-warn{display:flex;align-items:center;justify-content:center;gap:8px;padding:9px 18px;border-radius:8px;background:rgba(226,75,74,0.12);border:1px solid rgba(226,75,74,0.25);margin:12px 0 4px}
-.cutoff-warn span{color:#f09595;font-size:13px;font-weight:500}
-.cutoff-closed-box{display:flex;align-items:center;justify-content:center;gap:10px;padding:12px 24px;border-radius:10px;background:rgba(226,75,74,0.08);border:1px solid rgba(226,75,74,0.2);margin:14px 0 6px}
-.cutoff-closed-box .lock-icon{font-size:22px}
-.cutoff-closed-box .closed-txt{font-size:15px;color:#f09595;font-weight:500}
-.cutoff-closed-sub{font-size:12px;color:rgba(255,255,255,0.3);margin-bottom:14px}
-/* Urgency popup overlay */
-.urgency-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:9998;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
-.urgency-card{max-width:380px;width:90%;background:rgba(10,30,20,0.95);border:1px solid rgba(29,158,117,0.2);border-radius:16px;padding:24px 20px;text-align:center;animation:urgBounce 0.4s ease-out;position:relative;overflow:hidden}
-@keyframes urgBounce{0%{opacity:0;transform:scale(0.9) translateY(20px)}60%{transform:scale(1.02) translateY(-4px)}100%{opacity:1;transform:scale(1) translateY(0)}}
-.urgency-card .urg-close{position:absolute;top:10px;right:14px;background:none;border:none;color:rgba(255,255,255,0.4);font-size:20px;cursor:pointer;padding:0;line-height:1}
-.urgency-card .urg-close:hover{color:#fff}
-.urg-mega{font-size:32px;display:inline-block;animation:megaShake 2s ease-in-out infinite}
-@keyframes megaShake{0%,100%{transform:rotate(0deg)}15%{transform:rotate(12deg)}30%{transform:rotate(-8deg)}45%{transform:rotate(6deg)}60%{transform:rotate(-3deg)}75%{transform:rotate(0deg)}}
-.urg-title{font-size:18px;font-weight:600;color:#fff;margin:8px 0 4px;display:flex;align-items:center;justify-content:center;gap:8px}
-.urg-sub{font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:16px}
-.urg-cd-row{display:flex;justify-content:center;gap:8px;margin-bottom:16px}
-.urg-cd-box{background:rgba(0,0,0,0.4);border:1px solid rgba(29,158,117,0.25);border-radius:8px;padding:8px 10px;min-width:52px;animation:pulseGlow 3s ease-in-out infinite}
-@keyframes pulseGlow{0%,100%{box-shadow:0 0 8px rgba(29,158,117,0.2)}50%{box-shadow:0 0 16px rgba(29,158,117,0.4)}}
-.urg-cd-num{font-size:22px;font-weight:600;color:#5dcaa5;font-variant-numeric:tabular-nums}
-.urg-cd-lbl{font-size:9px;letter-spacing:1.5px;color:rgba(255,255,255,0.35);margin-top:2px}
-.urg-share{display:inline-flex;align-items:center;gap:8px;padding:9px 20px;border-radius:20px;background:rgba(29,158,117,0.1);border:1px solid rgba(29,158,117,0.2);margin-top:12px;cursor:pointer;transition:all 0.3s}
-.urg-share:hover{background:rgba(29,158,117,0.2);transform:scale(1.03)}
-.urg-share span{font-size:13px;color:#5dcaa5;font-weight:500}
-.urg-deadline{font-size:11px;color:rgba(255,255,255,0.3);margin-top:12px}
-.urg-deadline strong{color:#f09595;font-weight:500}
-.urg-progress{margin:0 auto 6px;max-width:220px;height:5px;border-radius:3px;background:rgba(255,255,255,0.06);overflow:hidden}
-.urg-progress-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#1d9e75,#e24b4a);animation:barPulse 2s ease-in-out infinite}
-@keyframes barPulse{0%,100%{opacity:0.6}50%{opacity:1}}
-.urg-sparkle{position:absolute;width:3px;height:3px;border-radius:50%;background:#5dcaa5;pointer-events:none}
-@keyframes urg-sparkAnim{0%,100%{opacity:0;transform:scale(0)}50%{opacity:1;transform:scale(1)}}
-/* FAB invite button */
-.invite-fab{position:fixed;bottom:20px;right:20px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#1d9e75,#17805f);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;animation:fabPulse 2s ease-in-out infinite;z-index:9990;transition:transform 0.2s}
-.invite-fab:hover{transform:scale(1.1)}
-@keyframes fabPulse{0%,100%{box-shadow:0 4px 16px rgba(29,158,117,0.3)}50%{box-shadow:0 4px 24px rgba(29,158,117,0.6)}}
-.invite-fab .fab-ball{font-size:24px;display:inline-block;animation:ballSpin 1.5s linear infinite}
-.invite-fab .fab-badge{position:absolute;top:-2px;right:-2px;width:18px;height:18px;border-radius:50%;background:#e24b4a;color:#fff;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center}
-.invite-popup{position:fixed;bottom:86px;right:16px;width:300px;background:rgba(0,0,0,0.88);border:1px solid rgba(29,158,117,0.25);border-radius:12px;z-index:9991;display:none;animation:urgBounce 0.3s ease-out;backdrop-filter:blur(12px)}
-.invite-popup.show{display:block}
-.invite-popup-hdr{padding:12px 14px 8px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.06)}
-.invite-popup-hdr span{font-size:13px;font-weight:500;color:#fff}
-.inv-close{background:none;border:none;color:rgba(255,255,255,0.4);font-size:16px;cursor:pointer;padding:0;line-height:1}
-.inv-close:hover{color:#fff}
-.invite-popup-body{padding:14px}
-.inv-msg{font-size:12px;color:rgba(255,255,255,0.55);margin-bottom:12px;line-height:1.5}
-.inv-link-row{display:flex;gap:6px;margin-bottom:10px}
-.inv-link{flex:1;padding:8px 10px;border-radius:7px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);color:#5dcaa5;font-size:11px;outline:none;font-family:monospace}
-.inv-copy{padding:8px 12px;border-radius:7px;border:none;background:linear-gradient(135deg,#1d9e75,#17805f);color:#fff;font-size:11px;font-weight:500;cursor:pointer}
-.inv-deadline{font-size:10px;color:rgba(255,255,255,0.3);text-align:center}
-.inv-deadline strong{color:#f09595;font-weight:500}
-.inv-arrow{position:absolute;bottom:-7px;right:26px;width:14px;height:7px;overflow:hidden}
-.inv-arrow::before{content:'';position:absolute;width:10px;height:10px;background:rgba(0,0,0,0.88);border:1px solid rgba(29,158,117,0.25);transform:rotate(45deg);top:-6px;left:2px}
-/* Reject popup */
-.reject-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:9998;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
-.reject-card{max-width:340px;width:85%;background:rgba(10,20,15,0.95);border:1px solid rgba(226,75,74,0.2);border-radius:14px;padding:24px 20px;text-align:center;animation:urgBounce 0.3s ease-out}
-.reject-icon{font-size:40px;margin-bottom:8px}
-.reject-title{font-size:16px;font-weight:600;color:#fff;margin-bottom:6px}
-.reject-msg{font-size:13px;color:rgba(255,255,255,0.5);line-height:1.5;margin-bottom:16px}
-.reject-btn{padding:10px 28px;border-radius:10px;border:none;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.6);font-size:13px;font-weight:500;cursor:pointer}
-.reject-btn:hover{background:rgba(255,255,255,0.12);color:#fff}
-
-/* === BERRY TELEGRAM === */
-.berry-card{padding:14px 16px;border-radius:10px;background:rgba(0,136,204,0.06);border:1px solid rgba(0,136,204,0.15);display:flex;align-items:center;gap:14px;cursor:pointer;transition:all 0.3s;margin-top:16px}
-.berry-card:hover{border-color:rgba(0,136,204,0.35);transform:translateY(-2px)}
-.berry-card .berry-icon{font-size:32px;flex-shrink:0}
-.berry-card .berry-title{font-size:14px;font-weight:500;color:#29b6f6}
-.berry-card .berry-desc{font-size:11px;color:var(--muted);margin-top:2px}
-.berry-card .berry-link-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:10px;background:rgba(0,136,204,0.08);font-size:10px;color:#29b6f6;margin-top:4px}
-/* === TEAM PICKER === */
-.team-picker-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:9997;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
-.team-picker-card{max-width:400px;width:92%;background:rgba(10,30,20,0.95);border:1px solid rgba(29,158,117,0.2);border-radius:16px;padding:24px 20px;text-align:center;animation:urgBounce 0.4s ease-out}
-.team-picker-card .tp-title{font-size:18px;font-weight:600;color:#fff;margin-bottom:4px}
-.team-picker-card .tp-sub{font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:14px}
-.tp-search{width:100%;box-sizing:border-box;padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);color:#fff;font-size:13px;outline:none;margin-bottom:10px}
-.tp-search::placeholder{color:rgba(255,255,255,0.3)}
-.tp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-height:220px;overflow-y:auto;padding:4px;margin-bottom:14px}
-.tp-grid::-webkit-scrollbar{width:4px}
-.tp-grid::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px}
-.tp-opt{display:flex;align-items:center;gap:6px;padding:7px 8px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid transparent;cursor:pointer;transition:all 0.15s;font-size:11px;color:rgba(255,255,255,0.7)}
-.tp-opt:hover{background:rgba(29,158,117,0.08);border-color:rgba(29,158,117,0.2)}
-.tp-opt.selected{background:rgba(29,158,117,0.15);border-color:rgba(29,158,117,0.4);color:#5dcaa5}
-.tp-opt img{width:20px;height:15px;border-radius:2px;flex-shrink:0}
-.tp-confirm{width:100%;padding:12px;border-radius:10px;border:none;font-size:14px;font-weight:500;cursor:pointer;transition:all 0.2s}
-.tp-confirm.active{background:linear-gradient(135deg,#1d9e75,#17805f);color:#fff}
-.tp-confirm.disabled{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.25);cursor:default}
-.tp-skip{font-size:11px;color:rgba(255,255,255,0.25);cursor:pointer;text-decoration:underline;margin-top:8px;display:inline-block}
-/* === TODAY'S MATCHES PIN === */
-.today-pin{background:var(--card);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow);margin-bottom:16px;border-left:3px solid var(--accent)}
-.today-pin h3{font-size:13px;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:6px}
-.today-match-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;margin-bottom:6px}
-.today-match-row.live{background:rgba(226,75,74,0.06);border:1px solid rgba(226,75,74,0.12)}
-.today-match-row.upcoming{background:var(--hover)}
-.live-dot-sm{width:8px;height:8px;border-radius:50%;background:#e24b4a;animation:livePulse 1.2s ease-in-out infinite;flex-shrink:0}
-/* === AUTO-LOCK === */
-.match-locked-banner{display:flex;align-items:center;justify-content:center;gap:6px;padding:6px 12px;border-radius:6px;background:rgba(226,75,74,0.08);border:1px solid rgba(226,75,74,0.15);margin-top:8px;font-size:11px;color:#f09595}
-/* === H2H === */
-.h2h-card{background:var(--card);border-radius:12px;padding:16px;box-shadow:var(--shadow);margin-bottom:16px}
-.h2h-vs{display:flex;align-items:center;justify-content:space-between;text-align:center;margin-bottom:12px}
-.h2h-player{flex:1}
-.h2h-player .h2h-name{font-size:14px;font-weight:600}
-.h2h-player .h2h-pts{font-size:24px;font-weight:700;color:var(--accent)}
-.h2h-stat-row{display:flex;gap:4px;justify-content:center;margin-top:6px}
-.h2h-pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:500}
-/* === PLAYER PROFILE === */
-.profile-card{background:var(--card);border-radius:12px;padding:16px;box-shadow:var(--shadow);margin-bottom:16px}
-.profile-header{display:flex;align-items:center;gap:12px;margin-bottom:12px}
-.profile-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;background:var(--hover);color:var(--accent);flex-shrink:0}
-.profile-stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center}
-.profile-stat{padding:8px;border-radius:8px;background:var(--hover)}
-.profile-stat .ps-val{font-size:18px;font-weight:600}
-.profile-stat .ps-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px}
-/* === EXPORT LEADERBOARD === */
-.export-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;background:var(--hover);border:1px solid var(--border);cursor:pointer;font-size:12px;color:var(--text);transition:all 0.2s}
-.export-btn:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
-/* === MINI LEAGUES === */
-.mini-league-card{background:var(--card);border-radius:12px;padding:16px;box-shadow:var(--shadow);margin-bottom:16px}
-/* === THEME TOGGLE === */
-.theme-toggle{display:inline-flex;align-items:center;gap:4px;padding:4px;border-radius:20px;background:var(--hover);border:1px solid var(--border);cursor:pointer;font-size:16px}
-.theme-opt{padding:4px 8px;border-radius:16px;transition:all 0.2s}
-.theme-opt.active{background:var(--accent);color:#fff}
-/* === PRIZES PODIUM === */
-.prizes-podium{display:flex;justify-content:center;align-items:flex-end;gap:12px;margin:20px 0}
-.prize-spot{text-align:center}
-.prize-bar{border-radius:6px 6px 0 0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:10px}
-.prize-bar-1{width:70px;height:80px;background:linear-gradient(180deg,rgba(250,204,21,0.15),rgba(250,204,21,0.05));border:1px solid rgba(250,204,21,0.2)}
-.prize-bar-2{width:60px;height:55px;background:linear-gradient(180deg,rgba(192,192,192,0.12),rgba(192,192,192,0.04));border:1px solid rgba(192,192,192,0.15)}
-.prize-bar-3{width:60px;height:40px;background:linear-gradient(180deg,rgba(205,127,50,0.12),rgba(205,127,50,0.04));border:1px solid rgba(205,127,50,0.15)}
-/* === MATCH DAY SUMMARY === */
-.day-summary{background:var(--card);border-radius:12px;padding:16px;box-shadow:var(--shadow);margin-bottom:16px}
-/* === BULK ADMIN === */
-.bulk-entry{background:var(--card);border-radius:12px;padding:16px;box-shadow:var(--shadow);margin-bottom:16px}
-.bulk-row{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:6px;background:var(--hover);margin-bottom:6px}
-.bulk-row .bulk-teams{flex:1;font-size:12px}
-.bulk-save{padding:10px 24px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:14px;font-weight:500;cursor:pointer;margin-top:8px}
-.bulk-save:hover{background:var(--accent2)}
 </style>
 </head>
 <body>
@@ -457,7 +318,6 @@ button:disabled{opacity:.5;cursor:not-allowed}
     <h2>World Cup <em>2026</em></h2>
     <p class="login-sub">Prediction tracker</p>
     <div class="login-badge" id="loginBadge">104 MATCHES</div>
-    <div id="loginCutoffWarn"></div>
     <div class="login-countdown" id="loginCountdown"></div>
     <input type="text" id="loginName" placeholder="Enter your name" />
     <div id="loginPasswordWrap" style="display:none">
@@ -484,63 +344,6 @@ button:disabled{opacity:.5;cursor:not-allowed}
 </div>
 <div id="content"></div>
 </div>
-</div>
-
-<!-- FAB Invite Button -->
-<div id="inviteFab" class="invite-fab" style="display:none" onclick="toggleInvitePopup()">
-  <span class="fab-ball">&#9917;</span>
-  <span class="fab-badge">!</span>
-</div>
-<div id="invitePopup" class="invite-popup">
-  <div class="invite-popup-hdr">
-    <span>&#9917; Invite friends</span>
-    <button class="inv-close" onclick="toggleInvitePopup()">&times;</button>
-  </div>
-  <div class="invite-popup-body">
-    <div class="inv-msg">Hurry! Tell a friend to tell a friend!<br>Share the link below to join.</div>
-    <div class="inv-link-row">
-      <input class="inv-link" value="tsowho.github.io/wc2026-predictions" readonly id="invLinkInput" />
-      <button class="inv-copy" onclick="copyInviteLink()">Copy</button>
-    </div>
-    <div class="inv-deadline">Signups close <strong>June 12, 12:00 AM ET</strong></div>
-  </div>
-  <div class="inv-arrow"></div>
-</div>
-
-<!-- Urgency Popup (shows once) -->
-<div id="urgencyOverlay" class="urgency-overlay" style="display:none">
-  <div class="urgency-card">
-    <button class="urg-close" onclick="dismissUrgency()">&times;</button>
-    <div class="urg-mega">&#128227;</div>
-    <div class="urg-title"><span style="display:inline-block;animation:ballSpin 1.5s linear infinite">&#9917;</span> Hurry! Join the prediction game!</div>
-    <div class="urg-sub">Tell a friend to tell a friend</div>
-    <div class="urg-cd-row">
-      <div class="urg-cd-box"><div class="urg-cd-num" id="urgDays">--</div><div class="urg-cd-lbl">DAYS</div></div>
-      <div class="urg-cd-box"><div class="urg-cd-num" id="urgHours">--</div><div class="urg-cd-lbl">HOURS</div></div>
-      <div class="urg-cd-box"><div class="urg-cd-num" id="urgMins">--</div><div class="urg-cd-lbl">MINS</div></div>
-      <div class="urg-cd-box"><div class="urg-cd-num" id="urgSecs">--</div><div class="urg-cd-lbl">SECS</div></div>
-    </div>
-    <div class="urg-progress"><div class="urg-progress-fill" id="urgBar" style="width:0%"></div></div>
-    <div style="font-size:10px;color:rgba(255,255,255,0.35)">Signup window closing fast</div>
-    <div class="urg-share" onclick="copyInviteLink()">
-      <span style="display:inline-block;animation:ballSpin 1.5s linear infinite;font-size:16px">&#9917;</span>
-      <span id="urgShareTxt">Spread the word — tap to copy link</span>
-    </div>
-    <div class="urg-deadline">Signups close <strong>June 12, 12:00 AM ET</strong></div>
-  </div>
-</div>
-
-<!-- Team Picker Modal -->
-<div id="teamPickerOverlay" class="team-picker-overlay" style="display:none">
-  <div class="team-picker-card">
-    <div style="font-size:28px;display:inline-block;animation:ballSpin 2s linear infinite;margin-bottom:6px">&#9917;</div>
-    <div class="tp-title" id="tpTitle">Pick your team!</div>
-    <div class="tp-sub" id="tpSub">Choose who you're backing this World Cup</div>
-    <input class="tp-search" placeholder="Search teams..." id="tpSearch" oninput="filterTeamPicker()" />
-    <div class="tp-grid" id="tpGrid"></div>
-    <button class="tp-confirm disabled" id="tpConfirm" onclick="confirmTeamPick()">Select a team</button>
-    <span class="tp-skip" id="tpSkip" onclick="skipTeamPick()">Skip for now</span>
-  </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -649,33 +452,6 @@ const BONUS_PTS = 5;
 const WC_START = new Date('2026-06-11T00:00:00-04:00');
 const WC_END = new Date('2026-07-19T23:59:59-04:00');
 const WC_FINAL_DATE = '2026-07-19';
-
-const SIGNUP_CUTOFF = new Date('2026-06-12T04:00:00Z'); // June 12 00:00 ET
-
-// Country code mapping for flags
-const TEAM_FLAGS = {
-  'Mexico':'mx','South Africa':'za','South Korea':'kr','Czechia':'cz','Canada':'ca','Bosnia-Herzegovina':'ba',
-  'Qatar':'qa','Switzerland':'ch','Brazil':'br','Morocco':'ma','Haiti':'ht','Scotland':'gb-sct',
-  'USA':'us','Paraguay':'py','Australia':'au','Turkey':'tr','Germany':'de','Curacao':'cw',
-  'Ivory Coast':'ci','Ecuador':'ec','Netherlands':'nl','Japan':'jp','Sweden':'se','Tunisia':'tn',
-  'Iran':'ir','New Zealand':'nz','Belgium':'be','Egypt':'eg','Spain':'es','Cape Verde':'cv',
-  'Saudi Arabia':'sa','Uruguay':'uy','France':'fr','Senegal':'sn','Iraq':'iq','Norway':'no',
-  'Argentina':'ar','Algeria':'dz','Austria':'at','Jordan':'jo','Portugal':'pt','DR Congo':'cd',
-  'Uzbekistan':'uz','Colombia':'co','England':'gb-eng','Croatia':'hr','Ghana':'gh','Panama':'pa'
-};
-function teamFlag(name, size) {
-  var s = size || 20;
-  var code = TEAM_FLAGS[name];
-  if(!code) return '';
-  return '<img src="https://flagcdn.com/' + (s*2) + 'x' + Math.round(s*1.5) + '/' + code + '.png" width="' + s + '" height="' + Math.round(s*0.75) + '" alt="' + name + '" style="border-radius:2px;vertical-align:middle;margin:0 3px" />';
-}
-
-// Player favourite teams
-let playerTeams = {};
-db.ref('wc2026/playerTeams').on('value', function(snap) { playerTeams = snap.val() || {}; });
-
-function isSignupOpen() { return new Date() < SIGNUP_CUTOFF; }
-
 
 let state = { players: {}, predictions: {}, actuals: {} };
 let bonusPredictions = {};
@@ -1181,14 +957,14 @@ function renderDashboard() {
   if(!players.length) return h + '<div class="card"><div class="empty">Share the link to get friends to join!</div></div>';
   if(lb.length) {
     h += '<div class="card"><h2>Leaderboard</h2><table><tr><th>#</th><th>Player</th><th style="text-align:right">Exact</th><th style="text-align:right">Correct</th><th style="text-align:right">Points</th></tr>';
-    lb.forEach((p, i) => { h += '<tr><td class="' + (i < 3 ? 'rank-' + (i + 1) : '') + '">' + (i + 1) + '</td><td>' + (playerTeams[p.name] ? teamFlag(playerTeams[p.name], 14) : '') + chessIcon(p.name) + p.name + '</td><td style="text-align:right">' + p.exact + '</td><td style="text-align:right">' + p.correct + '</td><td style="text-align:right;font-weight:600">' + p.total + '</td></tr>'; });
+    lb.forEach((p, i) => { h += '<tr><td class="' + (i < 3 ? 'rank-' + (i + 1) : '') + '">' + (i + 1) + '</td><td>' + chessIcon(p.name) + p.name + '</td><td style="text-align:right">' + p.exact + '</td><td style="text-align:right">' + p.correct + '</td><td style="text-align:right;font-weight:600">' + p.total + '</td></tr>'; });
     h += '</table></div>';
   }
   const nm = MATCHES.find(m => !state.actuals?.['m' + m.id]);
   if(nm) {
     h += '<div class="card"><h2>Next match</h2>';
     h += '<div class="match-header"><span>Group ' + nm.group + '</span><span class="countdown">' + getCountdown(nm) + '</span></div>';
-    h += '<div class="match-teams"><span class="team">' + teamFlag(nm.team1) + nm.team1 + '</span><span class="match-vs">vs</span><span class="team">' + nm.team2 + teamFlag(nm.team2) + '</span></div>';
+    h += '<div class="match-teams"><span class="team">' + nm.team1 + '</span><span class="match-vs">vs</span><span class="team">' + nm.team2 + '</span></div>';
     h += '<div style="text-align:center;margin-top:8px;font-size:12px;color:var(--hint)">' + nm.venue + '<br>' + fmtDate(nm.date) + ' ' + nm.time + ' ET</div>';
     h += isPredLocked(currentPlayer, nm.id) ? '<div style="text-align:center;margin-top:8px"><span class="locked-badge">Your prediction is locked</span></div>' : '<div style="text-align:center;margin-top:8px"><span style="font-size:12px;color:var(--danger)">You haven\'t predicted this match yet!</span></div>';
     h += '</div>';
@@ -1220,9 +996,9 @@ function liveCard(m, players) {
   const matchReactions = reactions['m' + m.id] || {};
   let h = '<div class="match-card"><div class="match-header"><span>Group ' + m.group + ' | ' + fmtDate(m.date) + ' ' + m.time + ' ET</span>';
   h += started && !actual ? '<span class="live-badge">LIVE</span>' : !started ? '<span class="countdown">' + getCountdown(m) + '</span>' : '';
-  h += '</div><div class="match-teams"><span class="team">' + teamFlag(m.team1) + m.team1 + '</span>';
+  h += '</div><div class="match-teams"><span class="team">' + m.team1 + '</span>';
   h += actual && actual.s1 !== undefined ? '<div class="match-score"><span style="font-size:20px;font-weight:700">' + actual.s1 + ' - ' + actual.s2 + '</span></div>' : '<span class="match-vs">vs</span>';
-  h += '<span class="team">' + m.team2 + teamFlag(m.team2) + '</span></div>';
+  h += '<span class="team">' + m.team2 + '</span></div>';
   h += '<div style="margin-top:10px;border-top:1px dashed var(--border);padding-top:8px"><div style="font-size:11px;color:var(--hint);margin-bottom:6px">Everyone\'s predictions:</div><div class="pred-grid">';
   players.forEach(p => {
     const pred = state.predictions?.[p]?.['m' + m.id];
@@ -1312,12 +1088,12 @@ function renderPredict() {
     const pred = state.predictions?.[currentPlayer]?.['m' + m.id] || {}, locked = pred.locked, started = isMatchStarted(m), result = calcPoints(pred, state.actuals?.['m' + m.id]);
     h += '<div class="match-card" data-group="' + m.group + '"' + (m.group !== 'A' ? ' style="display:none"' : '') + '><div class="match-header"><span>Group ' + m.group + ' | ' + fmtDate(m.date) + ' ' + m.time + ' ET</span>';
     h += locked ? '<span class="locked-badge">Locked</span>' : started ? '<span style="font-size:11px;color:var(--danger)">Match started</span>' : '<span class="countdown">' + getCountdown(m) + '</span>';
-    h += '</div><div class="match-teams"><span class="team">' + teamFlag(m.team1) + m.team1 + '</span><div class="match-score">';
+    h += '</div><div class="match-teams"><span class="team">' + m.team1 + '</span><div class="match-score">';
     h += '<input type="number" min="0" max="20" value="' + (pred.s1 ?? '') + '" data-match="' + m.id + '" data-side="s1" class="pred-input"' + (locked || started ? ' disabled' : '') + '/>';
     h += '<span class="match-vs">-</span>';
     h += '<input type="number" min="0" max="20" value="' + (pred.s2 ?? '') + '" data-match="' + m.id + '" data-side="s2" class="pred-input"' + (locked || started ? ' disabled' : '') + '/>';
     if(!locked && !started) h += '<button class="btn-lock" onclick="lockPrediction(' + m.id + ')">Lock</button>';
-    h += '</div><span class="team">' + m.team2 + teamFlag(m.team2) + '</span></div>';
+    h += '</div><span class="team">' + m.team2 + '</span></div>';
     if(result) { const cls = result.type === 'exact' ? 'result-exact' : result.type === 'correct' ? 'result-correct' : 'result-wrong'; const lbl = result.type === 'exact' ? 'Exact! +3' : result.type === 'correct' ? 'Correct result +1' : 'Wrong 0'; h += '<div style="text-align:center;margin-top:8px"><span class="result-badge ' + cls + '">' + lbl + '</span></div>'; }
     h += '</div>';
   });
@@ -1335,11 +1111,11 @@ function renderResults() {
   MATCHES.forEach(m => {
     const actual = state.actuals?.['m' + m.id] || {}, hasA = actual.s1 !== undefined && actual.s1 !== '';
     h += '<div class="match-card" data-group="' + m.group + '"><div class="match-header"><span>Group ' + m.group + ' | ' + fmtDate(m.date) + '</span><span>' + m.venue + '</span></div>';
-    h += '<div class="match-teams"><span class="team">' + teamFlag(m.team1) + m.team1 + '</span><div class="match-score">';
+    h += '<div class="match-teams"><span class="team">' + m.team1 + '</span><div class="match-score">';
     if(isAdmin) { h += '<input type="number" min="0" max="20" value="' + (actual.s1 ?? '') + '" data-match="' + m.id + '" data-side="s1" class="actual-input"/><span class="match-vs">-</span><input type="number" min="0" max="20" value="' + (actual.s2 ?? '') + '" data-match="' + m.id + '" data-side="s2" class="actual-input"/>'; }
     else if(hasA) h += '<span style="font-size:18px;font-weight:700">' + actual.s1 + ' - ' + actual.s2 + '</span>';
     else h += '<span class="match-vs">vs</span>';
-    h += '</div><span class="team">' + m.team2 + teamFlag(m.team2) + '</span></div>';
+    h += '</div><span class="team">' + m.team2 + '</span></div>';
     if(hasA) {
       h += '<div style="margin-top:10px;border-top:1px dashed var(--border);padding-top:8px"><div style="font-size:11px;color:var(--hint);margin-bottom:6px">Predictions:</div>';
       Object.keys(state.players || {}).filter(p => currentPlayer === ADMIN || p !== ADMIN).forEach(p => {
@@ -1432,7 +1208,7 @@ function renderPlayers() {
   players.forEach(p => {
     const jt = joinTimes[p] ? new Date(joinTimes[p]).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
     if(p === ADMIN && !isAdmin) return; // Hide admin from other players
-    h += '<div class="player-chip">' + (playerTeams[p] ? teamFlag(playerTeams[p], 14) : '') + chessIcon(p) + '<span>' + p + '</span>' + chessLabel(p) + (p === ADMIN && isAdmin ? '<span class="admin-badge">admin</span>' : '') + (isAdmin && jt ? '<span style="font-size:10px;color:var(--hint);margin-left:6px">joined ' + jt + '</span>' : '') + (isAdmin && p !== ADMIN ? '<span style="font-size:11px;color:var(--blue);cursor:pointer;margin-left:6px" onclick="resetPlayerPassword(\'' + p.replace(/'/g, "\\'") + '\')">reset pw</span><span class="remove" onclick="removePlayer(\'' + p.replace(/'/g, "\\'") + '\')">&times;</span>' : '') + '</div>';
+    h += '<div class="player-chip">' + chessIcon(p) + '<span>' + p + '</span>' + chessLabel(p) + (p === ADMIN && isAdmin ? '<span class="admin-badge">admin</span>' : '') + (isAdmin && jt ? '<span style="font-size:10px;color:var(--hint);margin-left:6px">joined ' + jt + '</span>' : '') + (isAdmin && p !== ADMIN ? '<span style="font-size:11px;color:var(--blue);cursor:pointer;margin-left:6px" onclick="resetPlayerPassword(\'' + p.replace(/'/g, "\\'") + '\')">reset pw</span><span class="remove" onclick="removePlayer(\'' + p.replace(/'/g, "\\'") + '\')">&times;</span>' : '') + '</div>';
   });
   h += '</div></div>';
   h += '<div class="card"><h2>Share this link</h2><p style="font-size:14px;color:var(--muted);margin-bottom:12px">Send this to your friends so they can join and predict:</p>';
@@ -1657,9 +1433,9 @@ function renderKnockout() {
 
       h += '<div class="match-teams">';
       if(isAdmin && !hasResult) {
-        h += '<span class="team" style="cursor:pointer;text-decoration:underline dotted" onclick="setKoTeam(\'' + slot.id + '\',1)">' + teamFlag(m.team1) + m.team1 + '</span>';
+        h += '<span class="team" style="cursor:pointer;text-decoration:underline dotted" onclick="setKoTeam(\'' + slot.id + '\',1)">' + m.team1 + '</span>';
       } else {
-        h += '<span class="team">' + teamFlag(m.team1) + m.team1 + '</span>';
+        h += '<span class="team">' + m.team1 + '</span>';
       }
       h += '<div class="match-score">';
 
@@ -1677,9 +1453,9 @@ function renderKnockout() {
 
       h += '</div>';
       if(isAdmin && !hasResult) {
-        h += '<span class="team" style="cursor:pointer;text-decoration:underline dotted" onclick="setKoTeam(\'' + slot.id + '\',2)">' + teamFlag(m.team2) + m.team2 + '</span>';
+        h += '<span class="team" style="cursor:pointer;text-decoration:underline dotted" onclick="setKoTeam(\'' + slot.id + '\',2)">' + m.team2 + '</span>';
       } else {
-        h += '<span class="team">' + teamFlag(m.team2) + m.team2 + '</span>';
+        h += '<span class="team">' + m.team2 + '</span>';
       }
       h += '</div>';
 
@@ -2039,812 +1815,6 @@ setInterval(() => {
 // Patch render to also update hero
 const _origRender = render;
 render = function() { renderHero(); _origRender(); };
-
-setInterval(() => { if(currentTab === 'live') render(); }, 30000);
-render();
-
-// World Cup winners background with flag colors
-(function() {
-  const winners = [
-    {y:'1930',t:'Uruguay',f:'🇺🇾',c1:'#0038A8',c2:'#FFFFFF'},
-    {y:'1934',t:'Italy',f:'🇮🇹',c1:'#008C45',c2:'#CD212A'},
-    {y:'1938',t:'Italy',f:'🇮🇹',c1:'#008C45',c2:'#CD212A'},
-    {y:'1950',t:'Uruguay',f:'🇺🇾',c1:'#0038A8',c2:'#FFFFFF'},
-    {y:'1954',t:'Germany',f:'🇩🇪',c1:'#FFCC00',c2:'#DD0000'},
-    {y:'1958',t:'Brazil',f:'🇧🇷',c1:'#009C3B',c2:'#FFDF00'},
-    {y:'1962',t:'Brazil',f:'🇧🇷',c1:'#009C3B',c2:'#FFDF00'},
-    {y:'1966',t:'England',f:'🏴󠁧󠁢󠁥󠁮󠁧󠁿',c1:'#FFFFFF',c2:'#CF081F'},
-    {y:'1970',t:'Brazil',f:'🇧🇷',c1:'#009C3B',c2:'#FFDF00'},
-    {y:'1974',t:'Germany',f:'🇩🇪',c1:'#FFCC00',c2:'#DD0000'},
-    {y:'1978',t:'Argentina',f:'🇦🇷',c1:'#74ACDF',c2:'#FFFFFF'},
-    {y:'1982',t:'Italy',f:'🇮🇹',c1:'#008C45',c2:'#CD212A'},
-    {y:'1986',t:'Argentina',f:'🇦🇷',c1:'#74ACDF',c2:'#FFFFFF'},
-    {y:'1990',t:'Germany',f:'🇩🇪',c1:'#DD0000',c2:'#FFCC00'},
-    {y:'1994',t:'Brazil',f:'🇧🇷',c1:'#009C3B',c2:'#FFDF00'},
-    {y:'1998',t:'France',f:'🇫🇷',c1:'#002395',c2:'#ED2939'},
-    {y:'2002',t:'Brazil',f:'🇧🇷',c1:'#009C3B',c2:'#FFDF00'},
-    {y:'2006',t:'Italy',f:'🇮🇹',c1:'#008C45',c2:'#CD212A'},
-    {y:'2010',t:'Spain',f:'🇪🇸',c1:'#AA151B',c2:'#F1BF00'},
-    {y:'2014',t:'Germany',f:'🇩🇪',c1:'#DD0000',c2:'#FFCC00'},
-    {y:'2018',t:'France',f:'🇫🇷',c1:'#002395',c2:'#ED2939'},
-    {y:'2022',t:'Argentina',f:'🇦🇷',c1:'#74ACDF',c2:'#FFFFFF'}
-  ];
-  const track = document.getElementById('wcBgTrack');
-  function buildItems() {
-    return winners.map(w =>
-      '<div class="wc-bg-item">' +
-        '<div class="wc-bg-year" style="background:linear-gradient(135deg,' + w.c1 + ',' + w.c2 + ');-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">' + w.y + '</div>' +
-        '<div class="wc-bg-team" style="color:' + w.c1 + '">' + w.t + '</div>' +
-      '</div>'
-    ).join('');
-  }
-  track.innerHTML = buildItems() + buildItems();
-})();
-
-
-// ============================================================
-// UPGRADE 1A: SIGNUP CUTOFF SYSTEM
-// ============================================================
-function updateLoginCutoff() {
-  var el = document.getElementById('loginCutoffWarn');
-  if(!el) return;
-  var now = new Date();
-  if(now >= SIGNUP_CUTOFF) {
-    el.innerHTML = '<div class="cutoff-closed-box"><span class="lock-icon">&#128274;</span><span class="closed-txt">Signups are closed</span></div><div class="cutoff-closed-sub">Existing players can still log in</div>';
-  } else {
-    el.innerHTML = '<div class="cutoff-warn"><span style="font-size:15px">&#9200;</span><span>Signups close June 12, 12:00 AM ET</span></div>';
-  }
-}
-updateLoginCutoff();
-
-// Override login to block new signups after cutoff
-var _origLoginClick = document.getElementById('loginBtn').onclick;
-document.getElementById('loginBtn').addEventListener('click', function(e) {
-  // Already handled by existing listener, but we intercept for new players
-}, true);
-
-// Patch: block new player registration after cutoff
-(function() {
-  var origHandler = null;
-  var btn = document.getElementById('loginBtn');
-  // Clone and re-add to remove old listener — actually let's just patch completeLogin
-})();
-
-// Show urgency popup on first login (once per device)
-function showUrgencyPopup() {
-  if(!isSignupOpen()) return;
-  if(localStorage.getItem('wc2026_urgency_shown')) return;
-  document.getElementById('urgencyOverlay').style.display = 'flex';
-  localStorage.setItem('wc2026_urgency_shown', '1');
-  startUrgencyCountdown();
-}
-
-function dismissUrgency() {
-  document.getElementById('urgencyOverlay').style.display = 'none';
-}
-
-var urgInterval = null;
-function startUrgencyCountdown() {
-  function tick() {
-    var now = new Date();
-    var diff = SIGNUP_CUTOFF - now;
-    if(diff <= 0) { dismissUrgency(); return; }
-    var d=Math.floor(diff/86400000), h=Math.floor((diff%86400000)/3600000), m=Math.floor((diff%3600000)/60000), s=Math.floor((diff%60000)/1000);
-    var pad = function(n){ return n<10?'0'+n:String(n); };
-    document.getElementById('urgDays').textContent = pad(d);
-    document.getElementById('urgHours').textContent = pad(h);
-    document.getElementById('urgMins').textContent = pad(m);
-    document.getElementById('urgSecs').textContent = pad(s);
-    var opened = new Date('2026-06-08T00:00:00Z');
-    var pct = Math.min(100, Math.max(0, Math.round(((now - opened) / (SIGNUP_CUTOFF - opened)) * 100)));
-    document.getElementById('urgBar').style.width = pct + '%';
-  }
-  tick();
-  urgInterval = setInterval(tick, 1000);
-}
-
-// FAB invite
-function showFabIfOpen() {
-  var fab = document.getElementById('inviteFab');
-  if(!fab) return;
-  fab.style.display = isSignupOpen() && currentPlayer ? 'flex' : 'none';
-}
-
-function toggleInvitePopup() {
-  var p = document.getElementById('invitePopup');
-  p.classList.toggle('show');
-}
-
-function copyInviteLink() {
-  if(navigator.clipboard) {
-    navigator.clipboard.writeText('https://tsowho.github.io/wc2026-predictions');
-    var copyBtn = document.querySelector('.inv-copy');
-    if(copyBtn) { copyBtn.textContent = 'Copied!'; setTimeout(function(){ copyBtn.textContent = 'Copy'; }, 2000); }
-    var urgTxt = document.getElementById('urgShareTxt');
-    if(urgTxt) { urgTxt.textContent = 'Link copied! Share it now'; urgTxt.style.color = '#fff'; setTimeout(function(){ urgTxt.textContent = 'Spread the word — tap to copy link'; urgTxt.style.color = '#5dcaa5'; }, 2000); }
-  }
-}
-
-// ============================================================
-// UPGRADE 1B: TEAM PICKER
-// ============================================================
-var selectedTeam = null;
-function showTeamPicker(isReturning) {
-  // Lock: if team already selected, don't allow changes
-  if(currentPlayer && playerTeams[currentPlayer]) return;
-  var overlay = document.getElementById('teamPickerOverlay');
-  overlay.style.display = 'flex';
-  var title = document.getElementById('tpTitle');
-  var sub = document.getElementById('tpSub');
-  var skip = document.getElementById('tpSkip');
-  if(isReturning) {
-    title.textContent = 'Welcome back, ' + currentPlayer + '!';
-    sub.textContent = "One quick thing — who are you backing?";
-    skip.style.display = 'inline-block';
-  } else {
-    title.textContent = 'Pick your team!';
-    sub.textContent = "Choose who you're backing this World Cup";
-    skip.style.display = 'inline-block';
-  }
-  buildTeamGrid();
-}
-
-function buildTeamGrid() {
-  var grid = document.getElementById('tpGrid');
-  grid.innerHTML = '';
-  selectedTeam = null;
-  var teams = Object.keys(TEAM_FLAGS).sort();
-  teams.forEach(function(t) {
-    var div = document.createElement('div');
-    div.className = 'tp-opt';
-    div.setAttribute('data-team', t);
-    div.innerHTML = '<img src="https://flagcdn.com/40x30/' + TEAM_FLAGS[t] + '.png" width="20" height="15" alt="' + t + '" /> ' + t;
-    div.onclick = function() {
-      grid.querySelectorAll('.tp-opt').forEach(function(el){el.classList.remove('selected')});
-      div.classList.add('selected');
-      selectedTeam = t;
-      var btn = document.getElementById('tpConfirm');
-      btn.textContent = 'Confirm: ' + t;
-      btn.className = 'tp-confirm active';
-    };
-    grid.appendChild(div);
-  });
-  document.getElementById('tpConfirm').textContent = 'Select a team';
-  document.getElementById('tpConfirm').className = 'tp-confirm disabled';
-}
-
-function filterTeamPicker() {
-  var val = document.getElementById('tpSearch').value.toLowerCase();
-  document.querySelectorAll('#tpGrid .tp-opt').forEach(function(el) {
-    el.style.display = el.getAttribute('data-team').toLowerCase().indexOf(val) >= 0 ? '' : 'none';
-  });
-}
-
-function confirmTeamPick() {
-  if(!selectedTeam || !currentPlayer) return;
-  db.ref('wc2026/playerTeams/' + currentPlayer).set(selectedTeam);
-  document.getElementById('teamPickerOverlay').style.display = 'none';
-  _heroHash = '';
-  render();
-}
-
-function skipTeamPick() {
-  localStorage.setItem('wc2026_team_skipped_' + currentPlayer, '1');
-  document.getElementById('teamPickerOverlay').style.display = 'none';
-}
-
-// ============================================================
-// UPGRADE 1C: BERRY'S TELEGRAM (injected in renderDashboard)
-// ============================================================
-function berryCard() {
-  return '<a href="https://t.me/BERRYNWA1" target="_blank" rel="noopener" style="text-decoration:none"><div class="berry-card">' +
-    '<div class="berry-icon">&#127827;</div>' +
-    '<div style="flex:1"><div class="berry-title">Join Berry on Telegram</div>' +
-    '<div class="berry-desc">Betting tips, match previews & community chat</div>' +
-    '<div class="berry-link-badge">&#9992; t.me/BERRYNWA1</div></div>' +
-    '<span style="font-size:16px;color:rgba(0,136,204,0.4)">&#10132;</span>' +
-    '</div></a>';
-}
-
-// ============================================================
-// UPGRADE 1G: TODAY'S MATCHES PINNED
-// ============================================================
-function renderTodayPinned() {
-  var now = new Date();
-  var todayStr = now.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
-  var todayMatches = MATCHES.filter(function(m) { return m.date === todayStr; });
-  if(!todayMatches.length) return '';
-  var h = '<div class="today-pin"><h3>&#128197; Today\'s matches — ' + fmtDate(todayStr) + '</h3>';
-  todayMatches.forEach(function(m) {
-    var started = isMatchStarted(m);
-    var actual = state.actuals?.['m' + m.id];
-    var isLive = started && !actual;
-    h += '<div class="today-match-row ' + (isLive ? 'live' : 'upcoming') + '">';
-    if(isLive) h += '<div class="live-dot-sm"></div>';
-    else h += '<span style="font-size:10px;color:var(--hint);width:8px">&#9200;</span>';
-    h += '<span style="font-size:13px;flex:1">' + teamFlag(m.team1) + m.team1 + ' vs ' + m.team2 + teamFlag(m.team2) + '</span>';
-    if(actual && actual.s1 !== undefined) h += '<span style="font-weight:600;color:var(--accent)">' + actual.s1 + ' — ' + actual.s2 + '</span>';
-    else if(isLive) h += '<span style="font-size:11px;color:#e24b4a;font-weight:600">LIVE</span>';
-    else h += '<span style="font-size:12px;color:var(--muted)">' + m.time + ' ET</span>';
-    h += '</div>';
-  });
-  h += '</div>';
-  return h;
-}
-
-// ============================================================
-// UPGRADE 1J: AUTO-LOCK PREDICTIONS
-// ============================================================
-function isAutoLocked(m) {
-  var lockTime = getMatchTime(m).getTime() - 5 * 60 * 1000; // 5 min before
-  return new Date().getTime() >= lockTime;
-}
-
-// ============================================================
-// UPGRADE 1D: H2H COMPARISON
-// ============================================================
-function renderH2H(p1, p2) {
-  var stats = { p1: {pts:0, exact:0, wins:0}, p2: {pts:0, exact:0, wins:0}, draws:0, compared:0 };
-  MATCHES.forEach(function(m) {
-    var pred1 = state.predictions?.[p1]?.['m'+m.id];
-    var pred2 = state.predictions?.[p2]?.['m'+m.id];
-    var actual = state.actuals?.['m'+m.id];
-    if(!pred1 || !pred1.locked || !pred2 || !pred2.locked || !actual) return;
-    var r1 = calcPoints(pred1, actual);
-    var r2 = calcPoints(pred2, actual);
-    if(!r1 || !r2) return;
-    stats.compared++;
-    stats.p1.pts += r1.pts; stats.p2.pts += r2.pts;
-    if(r1.type === 'exact') stats.p1.exact++;
-    if(r2.type === 'exact') stats.p2.exact++;
-    if(r1.pts > r2.pts) stats.p1.wins++;
-    else if(r2.pts > r1.pts) stats.p2.wins++;
-    else stats.draws++;
-  });
-  var h = '<div class="h2h-card"><h2>Head to Head</h2>';
-  h += '<div class="h2h-vs">';
-  h += '<div class="h2h-player"><div class="h2h-name">' + chessIcon(p1) + p1 + '</div>';
-  h += (playerTeams[p1] ? teamFlag(playerTeams[p1]) : '') + '<div class="h2h-pts">' + stats.p1.pts + '</div><div style="font-size:10px;color:var(--muted)">POINTS</div></div>';
-  h += '<div style="flex:0.8;text-align:center"><div style="font-size:11px;color:var(--muted);margin-bottom:6px">' + stats.compared + ' matches compared</div>';
-  h += '<div class="h2h-stat-row"><span class="h2h-pill" style="background:rgba(29,158,117,0.1);color:var(--accent)">' + stats.p1.wins + ' wins</span>';
-  h += '<span class="h2h-pill" style="background:var(--hover);color:var(--muted)">' + stats.draws + ' draw</span>';
-  h += '<span class="h2h-pill" style="background:rgba(226,75,74,0.1);color:var(--danger)">' + stats.p2.wins + ' wins</span></div>';
-  h += '<div style="font-size:10px;color:var(--muted);margin-top:4px">Exact: ' + stats.p1.exact + ' vs ' + stats.p2.exact + '</div></div>';
-  h += '<div class="h2h-player"><div class="h2h-name">' + chessIcon(p2) + p2 + '</div>';
-  h += (playerTeams[p2] ? teamFlag(playerTeams[p2]) : '') + '<div class="h2h-pts">' + stats.p2.pts + '</div><div style="font-size:10px;color:var(--muted)">POINTS</div></div>';
-  h += '</div></div>';
-  return h;
-}
-
-// ============================================================
-// UPGRADE 1E: ACHIEVEMENT BADGES (enhanced)
-// ============================================================
-function getBadges(player) {
-  var preds = state.predictions?.[player] || {};
-  var exactCount = 0, correctCount = 0, totalPredicted = 0;
-  MATCHES.forEach(function(m) {
-    var pred = preds['m' + m.id];
-    if(!pred || !pred.locked) return;
-    var r = calcPoints(pred, state.actuals?.['m' + m.id]);
-    if(!r) return;
-    totalPredicted++;
-    if(r.type === 'exact') exactCount++;
-    if(r.pts > 0) correctCount++;
-  });
-  var si = getStreakInfo(player);
-  var badges = [];
-  if(exactCount >= 1) badges.push({icon:'&#127942;', name:'First Blood', desc:'First exact score'});
-  if(si.streak >= 5) badges.push({icon:'&#128293;', name:'On Fire', desc:'5-day login streak'});
-  if(exactCount >= 10) badges.push({icon:'&#129504;', name:'Oracle', desc:'10 exact scores'});
-  if(correctCount >= 20) badges.push({icon:'&#127919;', name:'Sharpshooter', desc:'20+ correct results'});
-  if(getStreak(player) >= 5) badges.push({icon:'&#9889;', name:'Hot Streak', desc:'5 correct in a row'});
-  return badges;
-}
-
-function renderBadgesInline(player) {
-  var badges = getBadges(player);
-  if(!badges.length) return '';
-  return badges.map(function(b) { return '<span title="' + b.name + ': ' + b.desc + '" style="font-size:16px;cursor:help">' + b.icon + '</span>'; }).join(' ');
-}
-
-// ============================================================
-// UPGRADE 1F: WHO PICKED WHAT
-// ============================================================
-function renderWhoPickedWhat(matchId) {
-  var m = MATCHES.find(function(x){ return x.id === matchId; });
-  if(!m) return '';
-  var started = isMatchStarted(m);
-  if(!started) return '<div style="font-size:11px;color:var(--hint);margin-top:6px">Predictions visible after kickoff</div>';
-  var players = Object.keys(state.players || {}).filter(function(p){ return p !== ADMIN || currentPlayer === ADMIN; });
-  var h = '<div style="margin-top:8px;border-top:1px dashed var(--border);padding-top:8px"><div style="font-size:11px;color:var(--hint);margin-bottom:4px">Who picked what:</div>';
-  players.forEach(function(p) {
-    var pred = state.predictions?.[p]?.['m' + matchId];
-    if(!pred || !pred.locked) return;
-    var actual = state.actuals?.['m' + matchId];
-    var r = actual ? calcPoints(pred, actual) : null;
-    var col = r ? (r.type === 'exact' ? 'color:var(--accent);font-weight:700' : r.type === 'correct' ? 'color:var(--gold)' : 'color:var(--danger)') : 'color:var(--muted)';
-    h += '<div style="display:flex;align-items:center;gap:6px;padding:2px 0;font-size:12px">';
-    h += (playerTeams[p] ? teamFlag(playerTeams[p], 14) : '') + '<span style="flex:1">' + p + '</span>';
-    h += '<span style="' + col + '">' + pred.s1 + ' — ' + pred.s2 + '</span></div>';
-  });
-  h += '</div>';
-  return h;
-}
-
-// ============================================================
-// UPGRADE 1K: BULK RESULT ENTRY
-// ============================================================
-function renderBulkEntry() {
-  if(currentPlayer !== ADMIN) return '';
-  var unplayed = MATCHES.filter(function(m) { return isMatchStarted(m) && !state.actuals?.['m' + m.id]; });
-  if(!unplayed.length) return '';
-  var h = '<div class="bulk-entry"><h2>&#9997; Bulk Result Entry</h2>';
-  unplayed.forEach(function(m) {
-    h += '<div class="bulk-row">';
-    h += '<span class="bulk-teams">' + teamFlag(m.team1) + m.team1 + ' vs ' + m.team2 + teamFlag(m.team2) + '</span>';
-    h += '<input type="number" min="0" max="99" id="bulk_s1_' + m.id + '" style="width:40px" placeholder="-" />';
-    h += '<span style="color:var(--muted)">—</span>';
-    h += '<input type="number" min="0" max="99" id="bulk_s2_' + m.id + '" style="width:40px" placeholder="-" />';
-    h += '</div>';
-  });
-  h += '<button class="bulk-save" onclick="saveBulkResults()">Save all results</button></div>';
-  return h;
-}
-
-window.saveBulkResults = function() {
-  var unplayed = MATCHES.filter(function(m) { return isMatchStarted(m) && !state.actuals?.['m' + m.id]; });
-  var updates = {};
-  unplayed.forEach(function(m) {
-    var s1 = document.getElementById('bulk_s1_' + m.id);
-    var s2 = document.getElementById('bulk_s2_' + m.id);
-    if(s1 && s2 && s1.value !== '' && s2.value !== '') {
-      updates['m' + m.id] = { s1: parseInt(s1.value), s2: parseInt(s2.value) };
-    }
-  });
-  if(Object.keys(updates).length === 0) { alert('No results entered.'); return; }
-  db.ref('wc2026/actuals').update(updates).then(function() { alert('Saved ' + Object.keys(updates).length + ' result(s)!'); });
-};
-
-// ============================================================
-// UPGRADE 1L: MATCH DAY SUMMARY
-// ============================================================
-function renderDaySummary() {
-  var played = Object.keys(state.actuals || {});
-  if(!played.length) return '';
-  // Get last played date
-  var lastDate = null;
-  MATCHES.forEach(function(m) {
-    if(state.actuals?.['m' + m.id]) {
-      if(!lastDate || m.date > lastDate) lastDate = m.date;
-    }
-  });
-  if(!lastDate) return '';
-  var dayMatches = MATCHES.filter(function(m) { return m.date === lastDate && state.actuals?.['m' + m.id]; });
-  if(!dayMatches.length) return '';
-  var players = Object.keys(state.players || {}).filter(function(p) { return p !== ADMIN || currentPlayer === ADMIN; });
-  var dayPts = {};
-  players.forEach(function(p) { dayPts[p] = 0; });
-  dayMatches.forEach(function(m) {
-    players.forEach(function(p) {
-      var pred = state.predictions?.[p]?.['m' + m.id];
-      if(!pred || !pred.locked) return;
-      var r = calcPoints(pred, state.actuals['m' + m.id]);
-      if(r) dayPts[p] += r.pts;
-    });
-  });
-  var sorted = players.map(function(p) { return {name:p, pts:dayPts[p]}; }).sort(function(a,b) { return b.pts - a.pts; });
-  var lb = getLeaderboard();
-  var h = '<div class="day-summary"><h2>&#128200; Match Day Summary — ' + fmtDate(lastDate) + '</h2>';
-  sorted.forEach(function(p, i) {
-    var lbIdx = lb.findIndex(function(x) { return x.name === p.name; });
-    h += '<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)"><span style="flex:1;font-size:13px">' + (playerTeams[p.name] ? teamFlag(playerTeams[p.name], 14) : '') + chessIcon(p.name) + p.name + '</span>';
-    h += '<span style="font-weight:600;color:' + (p.pts > 0 ? 'var(--accent)' : 'var(--muted)') + '">+' + p.pts + ' pts</span>';
-    h += '<span style="font-size:11px;color:var(--muted)">' + (lbIdx >= 0 ? '#' + (lbIdx+1) : '') + '</span></div>';
-  });
-  h += '</div>';
-  return h;
-}
-
-// ============================================================
-// UPGRADE 1M: EXPORT LEADERBOARD
-// ============================================================
-window.exportLeaderboard = function() {
-  var lb = getLeaderboard();
-  var canvas = document.createElement('canvas');
-  canvas.width = 600; canvas.height = 60 + lb.length * 36 + 40;
-  var ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#0a2e1f'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = '#fff'; ctx.font = 'bold 18px -apple-system, sans-serif';
-  ctx.fillText('World Cup 2026 — Leaderboard', 20, 35);
-  ctx.font = '11px sans-serif'; ctx.fillStyle = '#5dcaa5';
-  ctx.fillText(new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }), 20, 52);
-  lb.forEach(function(p, i) {
-    var y = 75 + i * 36;
-    ctx.fillStyle = i === 0 ? '#BA7517' : i === 1 ? '#888' : i === 2 ? '#a0522d' : 'rgba(255,255,255,0.6)';
-    ctx.font = 'bold 14px sans-serif';
-    ctx.fillText((i+1) + '.', 20, y);
-    ctx.fillStyle = '#fff'; ctx.font = '14px sans-serif';
-    ctx.fillText(p.name, 50, y);
-    ctx.fillStyle = '#5dcaa5'; ctx.font = 'bold 14px sans-serif';
-    ctx.fillText(p.total + ' pts', 500, y);
-    ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.font = '11px sans-serif';
-    ctx.fillText(p.exact + ' exact', 400, y);
-  });
-  ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.font = '10px sans-serif';
-  ctx.fillText('tsowho.github.io/wc2026-predictions', 20, canvas.height - 15);
-  canvas.toBlob(function(blob) {
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement('a');
-    a.href = url; a.download = 'wc2026-leaderboard.png'; a.click();
-    URL.revokeObjectURL(url);
-  });
-};
-
-// ============================================================
-// UPGRADE 1N: PLAYER PROFILE
-// ============================================================
-function renderProfile(player) {
-  var lb = getLeaderboard();
-  var entry = lb.find(function(p) { return p.name === player; }) || {total:0,exact:0,correct:0,wrong:0,predicted:0};
-  var rank = lb.indexOf(entry) + 1;
-  var acc = entry.predicted > 0 ? Math.round(((entry.exact + entry.correct) / entry.predicted) * 100) : 0;
-  var si = getStreakInfo(player);
-  var badges = getBadges(player);
-  var favTeam = playerTeams[player];
-  var h = '<div class="profile-card"><div class="profile-header">';
-  h += '<div class="profile-avatar">' + (favTeam ? teamFlag(favTeam, 24) : chessIcon(player)) + '</div>';
-  h += '<div><div style="font-size:15px;font-weight:600">' + chessIcon(player) + player + ' ' + chessLabel(player) + '</div>';
-  h += '<div style="font-size:11px;color:var(--muted)">' + (favTeam ? 'Backing ' + favTeam + ' ' + teamFlag(favTeam, 14) : '') + (si.streak > 0 ? ' &#128293; ' + si.streak + '-day streak' : '') + '</div></div></div>';
-  h += '<div class="profile-stats-grid">';
-  h += '<div class="profile-stat"><div class="ps-val" style="color:var(--accent)">' + entry.total + '</div><div class="ps-lbl">Points</div></div>';
-  h += '<div class="profile-stat"><div class="ps-val">' + entry.exact + '</div><div class="ps-lbl">Exact</div></div>';
-  h += '<div class="profile-stat"><div class="ps-val">' + acc + '%</div><div class="ps-lbl">Accuracy</div></div>';
-  h += '<div class="profile-stat"><div class="ps-val">' + (rank > 0 ? '#' + rank : '-') + '</div><div class="ps-lbl">Rank</div></div></div>';
-  if(badges.length) {
-    h += '<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:8px"><div style="font-size:10px;color:var(--muted);margin-bottom:4px">BADGES</div>';
-    h += badges.map(function(b) { return '<span title="' + b.name + ': ' + b.desc + '" style="font-size:20px;cursor:help;margin-right:4px">' + b.icon + '</span>'; }).join('');
-    h += '</div>';
-  }
-  h += '</div>';
-  return h;
-}
-
-// ============================================================
-// UPGRADE 1O: WEEKLY MINI-LEAGUES
-// ============================================================
-function renderMiniLeague() {
-  var now = new Date();
-  // Find current week's Monday
-  var mon = new Date(now);
-  mon.setDate(mon.getDate() - ((mon.getDay() + 6) % 7));
-  var monStr = mon.toLocaleDateString('en-CA');
-  var sun = new Date(mon); sun.setDate(sun.getDate() + 6);
-  var sunStr = sun.toLocaleDateString('en-CA');
-  var weekMatches = MATCHES.filter(function(m) { return m.date >= monStr && m.date <= sunStr && state.actuals?.['m' + m.id]; });
-  if(!weekMatches.length) return '';
-  var players = Object.keys(state.players || {}).filter(function(p) { return p !== ADMIN || currentPlayer === ADMIN; });
-  var weekPts = {};
-  players.forEach(function(p) { weekPts[p] = 0; });
-  weekMatches.forEach(function(m) {
-    players.forEach(function(p) {
-      var pred = state.predictions?.[p]?.['m' + m.id];
-      if(!pred || !pred.locked) return;
-      var r = calcPoints(pred, state.actuals['m' + m.id]);
-      if(r) weekPts[p] += r.pts;
-    });
-  });
-  var sorted = players.map(function(p) { return {name:p, pts:weekPts[p]}; }).sort(function(a,b) { return b.pts - a.pts; });
-  var h = '<div class="mini-league-card"><h2>&#127942; Weekly Mini-League</h2>';
-  h += '<div style="font-size:11px;color:var(--muted);margin-bottom:10px">' + fmtDate(monStr) + ' — ' + fmtDate(sunStr) + ' &middot; ' + weekMatches.length + ' matches</div>';
-  sorted.forEach(function(p, i) {
-    var medal = i === 0 ? '&#129351;' : i === 1 ? '&#129352;' : i === 2 ? '&#129353;' : (i+1) + '.';
-    h += '<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)"><span style="font-size:13px;width:28px">' + medal + '</span>';
-    h += '<span style="flex:1;font-size:13px">' + (playerTeams[p.name] ? teamFlag(playerTeams[p.name], 14) : '') + p.name + '</span>';
-    h += '<span style="font-weight:600;color:var(--accent)">' + p.pts + ' pts</span></div>';
-  });
-  h += '</div>';
-  return h;
-}
-
-// ============================================================
-// UPGRADE 1Q: THEME TOGGLE
-// ============================================================
-var userTheme = localStorage.getItem('wc2026_theme') || 'auto';
-function applyTheme() {
-  if(userTheme === 'light') {
-    document.documentElement.setAttribute('data-theme', 'light');
-  } else if(userTheme === 'dark') {
-    document.documentElement.setAttribute('data-theme', 'dark');
-  } else {
-    document.documentElement.removeAttribute('data-theme');
-  }
-  // Force repaint
-  document.body.style.background = 'var(--bg)';
-  document.body.style.color = 'var(--text)';
-}
-applyTheme();
-
-window.toggleTheme = function() {
-  if(userTheme === 'dark') userTheme = 'light';
-  else userTheme = 'dark';
-  localStorage.setItem('wc2026_theme', userTheme);
-  applyTheme();
-  render();
-};
-
-// ============================================================
-// UPGRADE 1R: PRIZES PODIUM
-// ============================================================
-function renderPrizesPodium() {
-  var now = new Date();
-  if(now <= WC_END) return '';
-  var lb = getLeaderboard();
-  if(lb.length < 3) return '';
-  var h = '<div class="card"><h2>&#127942; Final Standings</h2>';
-  h += '<div class="prizes-podium">';
-  h += '<div class="prize-spot"><div style="font-size:24px">&#129352;</div><div style="font-size:12px">' + lb[1].name + '</div><div class="prize-bar prize-bar-2"><span style="font-size:11px;color:var(--muted)">' + lb[1].total + ' pts</span></div></div>';
-  h += '<div class="prize-spot"><div style="font-size:28px">&#129351;</div><div style="font-size:13px;font-weight:600;color:var(--gold)">' + lb[0].name + '</div><div class="prize-bar prize-bar-1"><span style="font-size:12px;color:var(--gold)">' + lb[0].total + ' pts</span></div></div>';
-  h += '<div class="prize-spot"><div style="font-size:22px">&#129353;</div><div style="font-size:12px">' + lb[2].name + '</div><div class="prize-bar prize-bar-3"><span style="font-size:11px;color:var(--muted)">' + lb[2].total + ' pts</span></div></div>';
-  h += '</div></div>';
-  return h;
-}
-
-// ============================================================
-// PATCH: completeLogin to show team picker + urgency + FAB
-// ============================================================
-var _origCompleteLogin = completeLogin;
-completeLogin = function(name) {
-  // Check if signup is closed for NEW players
-  if(!state.players[name] && !isSignupOpen()) {
-    // Show rejection popup
-    var overlay = document.createElement('div');
-    overlay.className = 'reject-overlay';
-    overlay.innerHTML = '<div class="reject-card"><div class="reject-icon">&#9940;</div><div class="reject-title">Signups have closed</div><div class="reject-msg">The prediction game started on June 11 and new players can no longer join.<br><br>Better luck next time!</div><button class="reject-btn" onclick="this.closest(\'.reject-overlay\').remove()">OK</button></div>';
-    document.body.appendChild(overlay);
-    return;
-  }
-  _origCompleteLogin(name);
-  // Show urgency popup (once)
-  setTimeout(function() { showUrgencyPopup(); }, 500);
-  // Show FAB
-  showFabIfOpen();
-  // Check team picker
-  setTimeout(function() {
-    if(!playerTeams[name] && !localStorage.getItem('wc2026_team_skipped_' + name)) {
-      showTeamPicker(!!state.players[name]);
-    }
-  }, 1500);
-};
-
-// If auto-logged in, show FAB
-if(currentPlayer) {
-  showFabIfOpen();
-  // Check team picker for auto-login
-  setTimeout(function() {
-    if(currentPlayer && !playerTeams[currentPlayer] && !localStorage.getItem('wc2026_team_skipped_' + currentPlayer)) {
-      showTeamPicker(true);
-    }
-  }, 2000);
-}
-
-// ============================================================
-// PATCH: renderDashboard to add today's matches, berry, mini-league, day summary, bulk entry, prizes, export, theme
-// ============================================================
-var _origRenderDashboard = renderDashboard;
-renderDashboard = function() {
-  var teamBtn = '';
-  if(currentPlayer && !playerTeams[currentPlayer]) {
-    teamBtn = '<button class="export-btn" onclick="showTeamPicker(true)" style="margin-right:auto">&#9917; Pick your team</button>';
-  } else if(currentPlayer && playerTeams[currentPlayer]) {
-    teamBtn = '<span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;background:var(--hover);border:1px solid var(--border);font-size:12px;color:var(--text);margin-right:auto">' + teamFlag(playerTeams[currentPlayer], 16) + playerTeams[currentPlayer] + '</span>';
-  }
-  var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">' + teamBtn + '<span class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">' + (userTheme === 'dark' ? '&#127769; Dark' : '&#9728;&#65039; Light') + '</span></div>';
-  h += renderTodayPinned();
-  h += _origRenderDashboard();
-  h += renderDaySummary();
-  h += renderMiniLeague();
-  if(currentPlayer === ADMIN) h += renderBulkEntry();
-  h += renderPrizesPodium();
-  h += berryCard();
-  return h;
-};
-
-// ============================================================
-// PATCH: renderLeaderboard to add flags, badges, export, H2H, profiles
-// ============================================================
-var _origRenderLeaderboard = renderLeaderboard;
-renderLeaderboard = function() {
-  var lb = getLeaderboard();
-  var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div style="display:flex;gap:6px">';
-  h += '<button class="export-btn" onclick="exportLeaderboard()">&#128247; Export as image</button>';
-  
-  h += '</div></div>';
-  h += '<div class="card"><h2>Leaderboard</h2><table><tr><th>#</th><th>Player</th><th style="text-align:right">Exact</th><th style="text-align:right">Correct</th><th style="text-align:right">Points</th><th></th></tr>';
-  lb.forEach(function(p, i) {
-    var flag = playerTeams[p.name] ? teamFlag(playerTeams[p.name], 14) : '';
-    var badges = renderBadgesInline(p.name);
-    h += '<tr><td class="' + (i < 3 ? 'rank-' + (i+1) : '') + '">' + (i+1) + '</td>';
-    h += '<td>' + flag + chessIcon(p.name) + p.name + (badges ? ' ' + badges : '') + '</td>';
-    h += '<td style="text-align:right">' + p.exact + '</td>';
-    h += '<td style="text-align:right">' + p.correct + '</td>';
-    h += '<td style="text-align:right;font-weight:600">' + p.total + '</td>';
-    h += '<td><button class="btn-sm" onclick="showProfile(this.dataset.p)" data-p="' + p.name + '">&#128100;</button></td></tr>';
-  });
-  h += '</table></div>';
-  // H2H selector
-  var players = Object.keys(state.players || {}).filter(function(p) { return p !== ADMIN || currentPlayer === ADMIN; });
-  if(players.length >= 2) {
-    h += '<div class="card"><h2>&#9876; Head to Head</h2>';
-    h += '<div style="display:flex;gap:8px;margin-bottom:12px">';
-    h += '<select id="h2h1" style="flex:1">' + players.map(function(p) { return '<option>' + p + '</option>'; }).join('') + '</select>';
-    h += '<span style="align-self:center;color:var(--muted)">vs</span>';
-    h += '<select id="h2h2" style="flex:1">' + players.map(function(p,i) { return '<option' + (i===1?' selected':'') + '>' + p + '</option>'; }).join('') + '</select>';
-    h += '<button class="btn-primary btn-sm" onclick="showH2H()">Compare</button></div>';
-    h += '<div id="h2hResult"></div></div>';
-  }
-  // Profile section
-  h += '<div id="profileSection"></div>';
-  return h;
-};
-
-window.showH2H = function() {
-  var p1 = document.getElementById('h2h1').value;
-  var p2 = document.getElementById('h2h2').value;
-  if(p1 === p2) { alert('Pick two different players!'); return; }
-  document.getElementById('h2hResult').innerHTML = renderH2H(p1, p2);
-};
-
-window.showProfile = function(name) {
-  var el = document.getElementById('profileSection');
-  if(el) el.innerHTML = renderProfile(name);
-  el.scrollIntoView({behavior:'smooth'});
-};
-
-// Flags added directly in renderPredict and renderResults
-
-function renderHero() {
-  const el = document.getElementById('heroDashboard');
-  if(!el || !currentPlayer) return;
-  // Only rebuild DOM when data changes - prevents CSS animation resets
-  var dataHash = JSON.stringify([
-    Object.keys(state.players || {}),
-    Object.keys(state.actuals || {}),
-    Object.keys(state.predictions || {}),
-    Object.keys(bonusPredictions || {}),
-    currentPlayer
-  ]);
-  if(dataHash === _heroHash && el.innerHTML !== '') return;
-  _heroHash = dataHash;
-  const lb = getLeaderboard(true);
-  const me = lb.find(p => p.name === currentPlayer) || { total: 0, exact: 0, correct: 0, predicted: 0 };
-  const myPos = lb.indexOf(me) + 1;
-  const rank = getChessRank(currentPlayer);
-  const played = Object.keys(state.actuals || {}).length;
-  const pct = MATCHES.length > 0 ? Math.round((played / MATCHES.length) * 100) : 0;
-  const now = new Date();
-
-  // Find live and next match
-  const liveMatches = MATCHES.filter(m => { const t = getMatchTime(m); return now >= t && now <= new Date(t.getTime() + 7200000) && !state.actuals?.['m' + m.id]; });
-  const nextMatch = MATCHES.find(m => !state.actuals?.['m' + m.id] && !liveMatches.includes(m) && getMatchTime(m) > now);
-
-  // Ticker items
-  let tickerItems = [];
-  // Recent results
-  const results = MATCHES.filter(m => state.actuals?.['m' + m.id]).slice(-6);
-  results.forEach(m => {
-    const a = state.actuals['m' + m.id];
-    tickerItems.push('<span class="hero-ticker-item"><span class="ticker-dot"></span>' + m.team1 + ' ' + a.s1 + '-' + a.s2 + ' ' + m.team2 + '</span>');
-  });
-  if(liveMatches.length) {
-    liveMatches.forEach(m => {
-      tickerItems.push('<span class="hero-ticker-item"><span class="ticker-dot ticker-live"></span>LIVE: ' + m.team1 + ' vs ' + m.team2 + '</span>');
-    });
-  }
-  // Top players
-  lb.slice(0, 3).forEach((p, i) => {
-    const medals = ['&#9733;', '&#9734;', '&#9672;'];
-    tickerItems.push('<span class="hero-ticker-item"><span class="ticker-dot" style="background:' + ['#BA7517','#888','#a0522d'][i] + '"></span>' + medals[i] + ' ' + p.name + ' ' + p.total + 'pts</span>');
-  });
-  if(tickerItems.length === 0) tickerItems.push('<span class="hero-ticker-item"><span class="ticker-dot"></span>World Cup 2026 — Predictions open!</span>');
-  const tickerHtml = tickerItems.join('') + tickerItems.join(''); // double for seamless scroll
-
-  // Particles
-  let particles = '';
-  for(let i = 0; i < 12; i++) {
-    const left = Math.random() * 100, delay = Math.random() * 8, size = 2 + Math.random() * 4;
-    particles += '<div class="hero-particle" style="left:' + left + '%;animation-delay:' + delay + 's;width:' + size + 'px;height:' + size + 'px"></div>';
-  }
-
-  // Center: countdown or live
-  let centerHtml = '';
-  if(liveMatches.length) {
-    const lm = liveMatches[0];
-    centerHtml = '<div class="hero-next-label">Match in progress</div>';
-    centerHtml += '<div class="hero-next-teams">' + lm.team1 + ' vs ' + lm.team2 + '</div>';
-    centerHtml += '<div class="hero-next-meta">Group ' + lm.group + ' | ' + lm.venue + '</div>';
-    centerHtml += '<div class="hero-live-now"><span class="hero-live-pulse"></span> LIVE NOW</div>';
-  } else if(nextMatch) {
-    const diff = getMatchTime(nextMatch) - now;
-    const d = Math.floor(diff / 86400000), h = Math.floor((diff % 86400000) / 3600000), min = Math.floor((diff % 3600000) / 60000), s = Math.floor((diff % 60000) / 1000);
-    centerHtml = '<div class="hero-next-label">Next match</div>';
-    centerHtml += '<div class="hero-next-teams">' + nextMatch.team1 + ' vs ' + nextMatch.team2 + '</div>';
-    centerHtml += '<div class="hero-next-meta">Group ' + nextMatch.group + ' | ' + fmtDate(nextMatch.date) + ' ' + nextMatch.time + ' ET</div>';
-    centerHtml += '<div class="hero-countdown">';
-    if(d > 0) centerHtml += '<div class="hero-cd-box"><div class="hero-cd-num" id="cdDays">' + d + '</div><div class="hero-cd-unit">days</div></div>';
-    centerHtml += '<div class="hero-cd-box"><div class="hero-cd-num" id="cdHrs">' + h + '</div><div class="hero-cd-unit">hrs</div></div>';
-    centerHtml += '<div class="hero-cd-box"><div class="hero-cd-num" id="cdMin">' + min + '</div><div class="hero-cd-unit">min</div></div>';
-    centerHtml += '<div class="hero-cd-box"><div class="hero-cd-num" id="cdSec">' + s + '</div><div class="hero-cd-unit">sec</div></div>';
-    centerHtml += '</div>';
-  } else {
-    centerHtml = '<div class="hero-next-label">Tournament</div><div class="hero-next-teams">Complete!</div>';
-  }
-
-  // Podium
-  let podiumHtml = '<div class="hero-podium-title">Leaderboard</div><div class="podium-row">';
-  const podiumOrder = [1, 0, 2]; // 2nd, 1st, 3rd visual order
-  podiumOrder.forEach(i => {
-    const p = lb[i];
-    if(!p || p.total === 0) { podiumHtml += '<div class="podium-spot podium-' + (i + 1) + '"><div class="podium-piece">-</div><div class="podium-name">-</div></div>'; return; }
-    const r = getChessRank(p.name);
-    podiumHtml += '<div class="podium-spot podium-' + (i + 1) + '"><div class="podium-piece">' + r.piece + '</div><div class="podium-name">' + p.name + '</div><div class="podium-pts">' + p.total + ' pts</div></div>';
-  });
-  podiumHtml += '</div>';
-
-  // Trash talk merged into ticker
-  trashMsgs = getTrashTalk();
-  trashMsgs.forEach(function(msg) {
-    tickerItems.push('<span class="hero-ticker-item"><span class="ticker-dot" style="background:#e24b4a"></span>' + msg + '</span>');
-  });
-  var fullTickerHtml = tickerItems.join('') + tickerItems.join('');
-
-  const bounceBall = '<div class="hero-ball-x"><div class="hero-ball-y"><div class="hero-ball">&#9917;</div></div></div>';
-
-  // Burning fuse under countdown
-  var fuseHtml = '';
-  if(nextMatch && !liveMatches.length) {
-    var diff2 = getMatchTime(nextMatch) - now;
-    var burnPct = Math.max(0, Math.min(100, (1 - diff2 / (7 * 86400000)) * 100));
-    fuseHtml = '<div class="fuse-wrap"><div class="fuse-label">&#9200;</div><div class="fuse-line"><div class="fuse-burned" style="width:' + burnPct + '%"></div><div class="fuse-spark" style="left:calc(' + burnPct + '% - 4px)"><div class="fuse-sparks"><div class="fuse-spark-p" style="--sx:6px;--sy:-10px"></div><div class="fuse-spark-p" style="--sx:-4px;--sy:-12px"></div><div class="fuse-spark-p" style="--sx:3px;--sy:-8px"></div></div></div></div><div class="fuse-bomb">&#128163;</div></div>';
-  }
-
-  el.innerHTML = '<div class="pitch-center"></div><div class="pitch-box-l"></div><div class="pitch-box-r"></div>' +
-    '<div class="hero-particles">' + particles + '</div>' + bounceBall +
-    '<div class="hero-ticker"><div class="hero-ticker-inner">' + fullTickerHtml + '</div></div>' +
-    '<div class="hero-body">' +
-      '<div class="hero-stats">' +
-        '<div style="display:flex;align-items:center;gap:12px"><span class="hero-chess">' + rank.piece + '</span><div><div class="hero-name">' + currentPlayer + '</div><div class="hero-rank-label">' + rank.name + (myPos > 0 && me.total > 0 ? ' \u2014 #' + myPos : '') + '</div></div></div>' +
-        '<div class="hero-stat-row"><div><div class="hero-stat-num">' + me.total + '</div><div class="hero-stat-label">Points</div></div><div><div class="hero-stat-num">' + me.exact + '</div><div class="hero-stat-label">Exact</div></div><div><div class="hero-stat-num">' + me.predicted + '</div><div class="hero-stat-label">Predicted</div></div></div>' +
-      '</div>' +
-      '<div class="hero-center">' + centerHtml + fuseHtml + '</div>' +
-      '<div class="hero-podium">' + podiumHtml + '</div>' +
-    '</div>' +
-    '<div class="hero-progress"><span class="hero-progress-label">Tournament</span><div class="hero-progress-bar"><div class="hero-progress-fill" style="width:' + pct + '%"></div></div><span class="hero-progress-label">' + played + '/' + MATCHES.length + '</span></div>' +
-    buildStreakBar();
-}
-
-// Live countdown ticker
-setInterval(() => {
-  const cdDays = document.getElementById('cdDays');
-  const cdHrs = document.getElementById('cdHrs');
-  const cdMin = document.getElementById('cdMin');
-  const cdSec = document.getElementById('cdSec');
-  if(!cdSec) return;
-  const now = new Date();
-  const liveMatches = MATCHES.filter(m => { const t = getMatchTime(m); return now >= t && now <= new Date(t.getTime() + 7200000) && !state.actuals?.['m' + m.id]; });
-  const nextMatch = MATCHES.find(m => !state.actuals?.['m' + m.id] && !liveMatches.includes(m) && getMatchTime(m) > now);
-  if(!nextMatch) return;
-  const diff = getMatchTime(nextMatch) - now;
-  if(diff <= 0) { renderHero(); return; }
-  const d = Math.floor(diff / 86400000), h = Math.floor((diff % 86400000) / 3600000), min = Math.floor((diff % 3600000) / 60000), s = Math.floor((diff % 60000) / 1000);
-  if(cdDays) cdDays.textContent = d;
-  if(cdHrs) cdHrs.textContent = h;
-  if(cdMin) cdMin.textContent = min;
-  cdSec.textContent = s;
-}, 1000);
-
-// Patch render to also update hero
-// (render patch already applied above)
-// (already patched)
 
 setInterval(() => { if(currentTab === 'live') render(); }, 30000);
 render();
