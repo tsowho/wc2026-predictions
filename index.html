@@ -1955,7 +1955,8 @@ function renderHero() {
     Object.keys(state.actuals || {}),
     Object.keys(state.predictions || {}),
     Object.keys(bonusPredictions || {}),
-    currentPlayer
+    currentPlayer,
+    loginDates[currentPlayer] || {}
   ]);
   if(dataHash === _heroHash && el.innerHTML !== '') return;
   _heroHash = dataHash;
