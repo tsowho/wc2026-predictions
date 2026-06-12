@@ -960,7 +960,7 @@ function render() {
     case 'leaderboard': c.innerHTML = renderLeaderboard(); break;
     case 'news': c.innerHTML = renderNews(); break;
     case 'knockout': c.innerHTML = renderKnockout(); break;
-    case 'players': c.innerHTML = renderPlayers(); break;
+    case 'players': c.innerHTML = renderPlayers(); if(currentPlayer) db.ref('wc2026/playerEmails/' + currentPlayer).once('value').then(function(snap) { var el = document.getElementById('playerEmailInput'); if(el && snap.val()) el.value = snap.val(); }); break;
   }
   attachEvents();
   if(currentTab === 'results' || currentTab === 'predict') {
@@ -1490,8 +1490,7 @@ function renderLeaderboard() {
 
 function renderPlayers() {
   const players = Object.keys(state.players || {}), isAdmin = currentPlayer === ADMIN;
-  let h = '<div class="card"><div class="collapsible-hdr" onclick="toggleCollapse(this)"><h2 style="margin:0">&#9881; Your Account</h2><span class="collapsible-arrow">&#9660;</span></div><div class="collapsible-body collapsed"><div style="margin:12px 0"><label style="font-size:13px;color:var(--muted);display:block;margin-bottom:4px">Your email (optional)</label><div style="display:flex;gap:8px"><input type="email" id="playerEmailInput" placeholder="your@email.com" style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px" /><button class="btn-primary btn-sm" onclick="savePlayerEmail()">Save</button></div></div><div style="margin-top:12px"><button class="export-btn" onclick="contactSupport()" style="width:100%">&#9993; Contact Support</button></div></div></div>';
-  if(currentPlayer) db.ref('wc2026/playerEmails/' + currentPlayer).once('value').then(function(snap) { var el = document.getElementById('playerEmailInput'); if(el && snap.val()) el.value = snap.val(); });
+  let h = '';
   h += '<div class="card"><h2>Players (' + players.length + ')</h2><div class="player-list">';
   players.forEach(p => {
     const jt = joinTimes[p] ? new Date(joinTimes[p]).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
@@ -1502,12 +1501,15 @@ function renderPlayers() {
   h += '<div class="card"><h2>Share this link</h2><p style="font-size:14px;color:var(--muted);margin-bottom:12px">Send this to your friends so they can join and predict:</p>';
   h += '<div style="display:flex;gap:8px"><input type="text" value="https://tsowho.github.io/wc2026-predictions" id="shareLink" readonly style="font-size:13px"/>';
   h += '<button class="btn-primary btn-sm" onclick="copyLink()">Copy</button></div></div>';
-  h += '<div class="card"><h2>Your account</h2><p style="font-size:14px;color:var(--muted);margin-bottom:12px">Logged in as ' + chessIcon(currentPlayer) + '<strong>' + currentPlayer + '</strong> ' + chessLabel(currentPlayer) + '</p>';
-  h += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
+  h += '<div class="card"><h2>&#9881; Your Account</h2><p style="font-size:14px;color:var(--muted);margin-bottom:12px">Logged in as ' + chessIcon(currentPlayer) + '<strong>' + currentPlayer + '</strong> ' + chessLabel(currentPlayer) + '</p>';
+  h += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">';
   h += '<button class="btn-sm" onclick="logout()">Switch player</button>';
   if(currentPlayer !== ADMIN) h += '<button class="btn-sm" onclick="changeName()">Change name</button>';
   h += '<button class="btn-sm" onclick="changePassword()">Change password</button>';
-  h += '</div></div>';
+  h += '</div>';
+  h += '<div style="margin:12px 0"><label style="font-size:13px;color:var(--muted);display:block;margin-bottom:4px">Your email (optional)</label><div style="display:flex;gap:8px"><input type="email" id="playerEmailInput" placeholder="your@email.com" style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px" /><button class="btn-primary btn-sm" onclick="savePlayerEmail()">Save</button></div></div>';
+  h += '<div style="margin-top:12px"><button class="export-btn" onclick="contactSupport()" style="width:100%">&#9993; Contact Support</button></div>';
+  h += '</div>';
   return h;
 }
 
