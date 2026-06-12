@@ -157,6 +157,21 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .ticker-text{display:inline-block;overflow:hidden;white-space:nowrap;border-right:none;max-width:0;animation:tickerType var(--type-dur, 2s) steps(var(--type-steps, 30)) forwards}
 @keyframes tickerType{0%{max-width:0}100%{max-width:600px}}
 
+.collapsible-hdr{display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding:6px 0;user-select:none}
+.collapsible-hdr:hover{opacity:0.8}
+.collapsible-arrow{font-size:14px;color:var(--muted);transition:transform 0.2s}
+.collapsible-arrow.open{transform:rotate(180deg)}
+.collapsible-body.collapsed{max-height:0 !important;overflow:hidden}
+.chat-fab{position:fixed;bottom:20px;right:20px;width:52px;height:52px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:900;border:none;font-size:24px;color:#fff;box-shadow:0 4px 15px rgba(0,0,0,0.3);animation:chatGlow 2s ease-in-out infinite}
+@keyframes chatGlow{0%,100%{box-shadow:0 4px 15px rgba(29,158,117,0.4)}50%{box-shadow:0 4px 25px rgba(29,158,117,0.7),0 0 40px rgba(29,158,117,0.3)}}
+.chat-fab-badge{position:absolute;top:-2px;right:-2px;min-width:18px;height:18px;border-radius:9px;background:#e24b4a;font-size:10px;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;padding:0 4px}
+.chat-panel{position:fixed;bottom:80px;right:20px;width:360px;max-height:500px;background:var(--card);border:1px solid var(--border);border-radius:16px;z-index:901;display:none;flex-direction:column;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,0.3)}
+.chat-panel.open{display:flex}
+.chat-panel-hdr{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);background:var(--hover)}
+.chat-panel-hdr h3{margin:0;font-size:15px}
+.chat-panel-close{background:none;border:none;font-size:20px;color:var(--muted);cursor:pointer}
+@media(max-width:500px){.chat-panel{width:calc(100vw - 24px);right:12px;bottom:76px}}
+.logged-in-bar{position:fixed;top:8px;right:16px;z-index:800;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);background:var(--card);padding:4px 12px;border-radius:20px;border:1px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,0.15)}
 /* Hero body */
 .hero-body{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:0;min-height:160px}
 @media(max-width:700px){.hero-body{grid-template-columns:1fr;min-height:auto}}
@@ -471,6 +486,17 @@ button:disabled{opacity:.5;cursor:not-allowed}
   </div>
 </div>
 
+<!-- Floating Chat -->
+<button class="chat-fab" id="chatFab" onclick="toggleChatPanel()">&#128172;<span class="chat-fab-badge" id="chatBadge" style="display:none">0</span></button>
+<div class="chat-panel" id="chatPanel">
+<div class="chat-panel-hdr"><h3>&#128172; Chat</h3><button class="chat-panel-close" onclick="toggleChatPanel()">&times;</button></div>
+<div id="floatingChatMsgs" style="flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:8px;max-height:350px"></div>
+<div style="display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--border)">
+<input type="text" id="floatingChatInput" placeholder="Type a message..." style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px" maxlength="300" onkeydown="if(event.key==='Enter')sendFloatingChat()" />
+<button class="btn-primary" onclick="sendFloatingChat()" style="padding:8px 16px">Send</button>
+</div>
+</div>
+
 <div id="mainApp" class="hidden">
 <div id="heroDashboard" class="hero"></div>
 <div class="tabs" id="tabs">
@@ -481,7 +507,6 @@ button:disabled{opacity:.5;cursor:not-allowed}
 <button class="tab" data-tab="leaderboard">Leaderboard</button>
 <button class="tab" data-tab="news">News</button>
 <button class="tab" data-tab="knockout">Knockout</button>
-<button class="tab" data-tab="chat">Chat</button>
 <button class="tab" data-tab="players">Players</button>
 </div>
 <div id="content"></div>
@@ -881,10 +906,19 @@ function renderNews() {
 function fetchNews() {
   const now = Date.now();
   if(newsCache && now - newsLastFetch < 300000) return; // 5 min cache
-  fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://news.google.com/rss/search?q=FIFA+World+Cup+2026&hl=en-US&gl=US&ceid=US:en'))
-    .then(r => r.json()).then(data => {
-      if(data.items) {
-        newsCache = data.items.slice(0, 12);
+  var newsUrls = [
+      'https://news.google.com/rss/search?q=FIFA+World+Cup+2026&hl=en-US&gl=US&ceid=US:en',
+      'https://news.google.com/rss/search?q=World+Cup+2026+results+scores&hl=en-US&gl=US&ceid=US:en'
+    ];
+  Promise.all(newsUrls.map(function(u){return fetch('https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(u)).then(function(r){return r.json()}).catch(function(){return {items:[]}})}))
+    .then(function(results) {
+      var allItems = [];
+      results.forEach(function(data) { if(data.items) allItems = allItems.concat(data.items); });
+      var seen = {};
+      allItems = allItems.filter(function(item) { if(seen[item.title]) return false; seen[item.title] = true; return true; });
+      allItems.sort(function(a,b) { return new Date(b.pubDate) - new Date(a.pubDate); });
+      if(allItems.length) {
+        newsCache = allItems.slice(0, 20);
         newsLastFetch = Date.now();
         if(currentTab === 'news') {
           const c = document.getElementById('newsContainer');
@@ -901,7 +935,7 @@ function fetchNews() {
           }
         }
       }
-    }).catch(() => {});
+    }).catch(function(){});
 }
 function timeAgo(date) {
   const s = Math.floor((Date.now() - date) / 1000);
@@ -913,7 +947,11 @@ function timeAgo(date) {
 setInterval(() => { if(currentTab === 'news') fetchNews(); }, 300000);
 
 function render() {
-  const c = document.getElementById('content');
+  var c = document.getElementById('content');
+  var scrollY = window.scrollY;
+  var activeEl = document.activeElement;
+  var activeMatch = activeEl ? activeEl.getAttribute('data-match') : null;
+  var activeSide = activeEl ? activeEl.getAttribute('data-side') : null;
   switch(currentTab) {
     case 'dashboard': c.innerHTML = renderDashboard(); break;
     case 'live': c.innerHTML = renderLive(); break;
@@ -922,10 +960,17 @@ function render() {
     case 'leaderboard': c.innerHTML = renderLeaderboard(); break;
     case 'news': c.innerHTML = renderNews(); break;
     case 'knockout': c.innerHTML = renderKnockout(); break;
-    case 'chat': c.innerHTML = renderChat(); break;
     case 'players': c.innerHTML = renderPlayers(); break;
   }
   attachEvents();
+  if(currentTab === 'results' || currentTab === 'predict') {
+    window.scrollTo(0, scrollY);
+    if(activeMatch && activeSide) {
+      var el = c.querySelector('[data-match="' + activeMatch + '"][data-side="' + activeSide + '"]');
+      if(el) el.focus();
+    }
+  }
+  renderFloatingChat();
 }
 
 function getMatchTime(m) { return new Date(m.date + 'T' + m.time + ':00-04:00'); }
@@ -1174,19 +1219,28 @@ function chessLabel(playerName) {
 
 function renderDashboard() {
   const lb = getLeaderboard(), leader = lb[0], played = Object.keys(state.actuals || {}).length, players = Object.keys(state.players || {});
+  var pctPlayed = MATCHES.length > 0 ? Math.round((played / MATCHES.length) * 100) : 0;
+  var leaderFlag = leader && leader.total > 0 && playerTeams[leader.name] ? teamFlag(playerTeams[leader.name], 14) : '';
+  var topExact = lb.length ? lb.reduce(function(a,b){return a.exact>b.exact?a:b}).exact : 0;
   let h = '<div class="stats-row">';
-  h += '<div class="stat-card"><div class="label">Players</div><div class="value">' + players.length + '</div></div>';
-  h += '<div class="stat-card"><div class="label">Matches played</div><div class="value">' + played + ' / ' + MATCHES.length + '</div></div>';
-  h += '<div class="stat-card"><div class="label">Leader</div><div class="value">' + (leader && leader.total > 0 ? leader.name : '-') + '</div></div>';
-  h += '<div class="stat-card"><div class="label">Top score</div><div class="value">' + (leader && leader.total > 0 ? leader.total + ' pts' : '-') + '</div></div></div>';
-  h += '<div style="text-align:center;margin-bottom:16px;font-size:13px;color:var(--muted)">Logged in as ' + chessIcon(currentPlayer) + '<strong>' + currentPlayer + '</strong> ' + chessLabel(currentPlayer) + ' <button class="btn-sm" onclick="logout()" style="margin-left:8px">Switch</button></div>';
+  h += '<div class="stat-card" style="text-align:center;background:linear-gradient(135deg,#0a2e1f,#1a1a2e);border-radius:10px;border:none"><div style="font-size:20px;margin-bottom:4px;color:#1d9e75">&#128101;</div><div class="value">' + players.length + '</div><div class="label">Players</div></div>';
+  h += '<div class="stat-card" style="text-align:center;background:linear-gradient(135deg,#0a2e1f,#1a1a2e);border-radius:10px;border:none"><div style="font-size:20px;margin-bottom:4px;color:#1d9e75">&#9917;</div><div class="value">' + played + '<span style="font-size:14px;color:var(--muted)"> / ' + MATCHES.length + '</span></div><div class="label">Matches</div><div style="height:3px;background:rgba(255,255,255,0.1);border-radius:2px;margin-top:6px"><div style="height:100%;width:' + pctPlayed + '%;background:#1d9e75;border-radius:2px"></div></div></div>';
+  h += '<div class="stat-card" style="text-align:center;background:linear-gradient(135deg,#0a2e1f,#1a1a2e);border-radius:10px;border:none"><div style="font-size:18px;margin-bottom:4px">&#128081;</div><div class="value">' + (leader && leader.total > 0 ? leader.name : '-') + '</div><div class="label">Leader</div>' + (leader && leader.total > 0 ? '<div style="display:flex;align-items:center;justify-content:center;gap:4px;margin-top:4px">' + leaderFlag + '<span style="font-size:11px;color:var(--muted)">' + leader.total + ' pts</span></div>' : '') + '</div>';
+  h += '<div class="stat-card" style="text-align:center;background:linear-gradient(135deg,#0a2e1f,#1a1a2e);border-radius:10px;border:none"><div style="font-size:20px;margin-bottom:4px;color:#BA7517">&#127919;</div><div class="value" style="color:#BA7517">' + (leader && leader.total > 0 ? leader.total : '-') + '</div><div class="label">Top Score</div>' + (topExact > 0 ? '<div style="font-size:11px;color:var(--muted);margin-top:4px">' + topExact + ' exact</div>' : '') + '</div></div>';
+  // Logged-in bar: fixed top-right
+  if(!document.getElementById('loggedInBar')) {
+    var lib = document.createElement('div'); lib.id = 'loggedInBar'; lib.className = 'logged-in-bar';
+    lib.innerHTML = chessIcon(currentPlayer) + ' <strong>' + currentPlayer + '</strong> ' + chessLabel(currentPlayer) + ' <button class="btn-sm" onclick="logout()" style="margin-left:6px">Switch</button>';
+    document.body.appendChild(lib);
+  }
   if(!players.length) return h + '<div class="card"><div class="empty">Share the link to get friends to join!</div></div>';
   if(lb.length) {
-    h += '<div class="card"><h2>Leaderboard</h2><table><tr><th>#</th><th>Player</th><th style="text-align:right">Exact</th><th style="text-align:right">Correct</th><th style="text-align:right">Points</th></tr>';
+    h += '<div class="card"><div class="collapsible-hdr" onclick="var b=this.nextElementSibling;var a=this.querySelector(\'.collapsible-arrow\');b.classList.toggle(\'collapsed\');a.classList.toggle(\'open\')"><h2 style="margin:0">Leaderboard</h2><span class="collapsible-arrow open">&#9660;</span></div><div class="collapsible-body"><table><tr><th>#</th><th>Player</th><th style="text-align:right">Exact</th><th style="text-align:right">Correct</th><th style="text-align:right">Points</th></tr>';
     lb.forEach((p, i) => { h += '<tr><td class="' + (i < 3 ? 'rank-' + (i + 1) : '') + '">' + (i + 1) + '</td><td>' + (playerTeams[p.name] ? teamFlag(playerTeams[p.name], 14) : '') + chessIcon(p.name) + p.name + '</td><td style="text-align:right">' + p.exact + '</td><td style="text-align:right">' + p.correct + '</td><td style="text-align:right;font-weight:600">' + p.total + '</td></tr>'; });
-    h += '</table></div>';
+    h += '</table></div></div>';
   }
-  const nm = MATCHES.find(m => !state.actuals?.['m' + m.id]);
+  const _now = new Date();
+  const nm = MATCHES.filter(m => !state.actuals?.['m' + m.id]).sort((a,b) => getMatchTime(a)-getMatchTime(b)).find(m => getMatchTime(m) > _now) || MATCHES.find(m => !state.actuals?.['m' + m.id]);
   if(nm) {
     h += '<div class="card"><h2>Next match</h2>';
     h += '<div class="match-header"><span>Group ' + nm.group + '</span><span class="countdown">' + getCountdown(nm) + '</span></div>';
@@ -1199,17 +1253,24 @@ function renderDashboard() {
 }
 
 function renderLive() {
-  const now = new Date(), players = Object.keys(state.players || {}).filter(p => currentPlayer === ADMIN || p !== ADMIN);
-  const live = MATCHES.filter(m => { const t = getMatchTime(m); return now >= t && now <= new Date(t.getTime() + 7200000); });
-  const todayAll = MATCHES.filter(m => { const t = getMatchTime(m); return t.toDateString() === now.toDateString(); });
-  const upcoming = todayAll.filter(m => !live.includes(m));
-  let h = '';
-  if(live.length) { h += '<div class="card"><h2><span class="live-badge">LIVE</span> Matches in progress</h2>'; live.forEach(m => h += liveCard(m, players)); h += '</div>'; }
-  if(upcoming.length) { h += '<div class="card"><h2>Today\'s matches</h2>'; upcoming.forEach(m => h += liveCard(m, players)); h += '</div>'; }
-  if(!live.length && !upcoming.length) {
-    const next = MATCHES.filter(m => !isMatchStarted(m)).slice(0, 6);
+  var now = new Date(), players = Object.keys(state.players || {}).filter(function(p){return currentPlayer === ADMIN || p !== ADMIN});
+  var live = MATCHES.filter(function(m) { var t = getMatchTime(m); return now >= t && now <= new Date(t.getTime() + 7200000); });
+  var todayET = now.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+  var todayAll = MATCHES.filter(function(m) { return m.date === todayET; });
+  var todayUpcoming = todayAll.filter(function(m) { return !live.includes(m) && !state.actuals?.['m' + m.id]; });
+  var todayCompleted = todayAll.filter(function(m) { return !!state.actuals?.['m' + m.id] && !live.includes(m); });
+  var h = '';
+  if(live.length) { h += '<div class="card"><h2><span class="live-badge">LIVE</span> Matches in progress</h2>'; live.forEach(function(m){h += liveCard(m, players)}); h += '</div>'; }
+  if(todayUpcoming.length) { h += '<div class="card"><h2>Today\'s upcoming</h2>'; todayUpcoming.forEach(function(m){h += liveCard(m, players)}); h += '</div>'; }
+  if(todayCompleted.length) {
+    h += '<div class="card"><div class="collapsible-hdr" onclick="var b=this.nextElementSibling;var a=this.querySelector(\'.collapsible-arrow\');b.classList.toggle(\'collapsed\');a.classList.toggle(\'open\')"><h2 style="margin:0">Today\'s completed (' + todayCompleted.length + ')</h2><span class="collapsible-arrow open">&#9660;</span></div><div class="collapsible-body">';
+    todayCompleted.forEach(function(m){h += liveCard(m, players)});
+    h += '</div></div>';
+  }
+  if(!live.length && !todayUpcoming.length && !todayCompleted.length) {
+    var next = MATCHES.filter(function(m){return !isMatchStarted(m)}).slice(0, 6);
     h += '<div class="card"><h2>Upcoming matches</h2>';
-    if(next.length) next.forEach(m => h += liveCard(m, players));
+    if(next.length) next.forEach(function(m){h += liveCard(m, players)});
     else h += '<div class="empty">No upcoming matches</div>';
     h += '</div>';
   }
@@ -1343,7 +1404,7 @@ function renderResults() {
     else h += '<span class="match-vs">vs</span>';
     h += '</div><span class="team">' + m.team2 + teamFlag(m.team2) + '</span></div>';
     if(hasA) {
-      h += '<div style="margin-top:10px;border-top:1px dashed var(--border);padding-top:8px"><div style="font-size:11px;color:var(--hint);margin-bottom:6px">Predictions:</div>';
+      h += '<div style="margin-top:10px;border-top:1px dashed var(--border);padding-top:8px"><div class="collapsible-hdr" onclick="var b=this.nextElementSibling;var a=this.querySelector(\'.collapsible-arrow\');b.classList.toggle(\'collapsed\');a.classList.toggle(\'open\')"><div style="font-size:11px;color:var(--hint)">Predictions:</div><span class="collapsible-arrow">&#9660;</span></div><div class="collapsible-body collapsed">';
       Object.keys(state.players || {}).filter(p => currentPlayer === ADMIN || p !== ADMIN).forEach(p => {
         const pred = state.predictions?.[p]?.['m' + m.id];
         if(!pred || !pred.locked) return;
@@ -1352,7 +1413,7 @@ function renderResults() {
         if(r) h += '<span class="result-badge ' + cls + '">+' + r.pts + '</span>';
         h += '</div>';
       });
-      h += '</div>';
+      h += '</div></div>';
     }
     h += '</div>';
   });
@@ -2059,6 +2120,7 @@ function renderHero() {
       '<div class="hero-stats">' +
         '<div style="display:flex;align-items:center;gap:12px"><span class="hero-chess">' + rank.piece + '</span><div><div class="hero-name">' + currentPlayer + '</div><div class="hero-rank-label">' + rank.name + (myPos > 0 && me.total > 0 ? ' \u2014 #' + myPos : '') + '</div></div></div>' +
         '<div class="hero-stat-row"><div><div class="hero-stat-num">' + me.total + '</div><div class="hero-stat-label">Points</div></div><div><div class="hero-stat-num">' + me.exact + '</div><div class="hero-stat-label">Exact</div></div><div><div class="hero-stat-num">' + me.predicted + '</div><div class="hero-stat-label">Predicted</div></div></div>' +
+        '<div style="text-align:center;background:rgba(255,255,255,0.08);border-radius:8px;padding:6px 10px;margin-top:6px"><div style="font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:0.5px">UK TIME</div><div id="ukClock" style="font-size:18px;font-weight:500;font-variant-numeric:tabular-nums">--:--:--</div><div style="font-size:10px;color:rgba(255,255,255,0.4)">BST</div></div>' +
       '</div>' +
       '<div class="hero-center">' + centerHtml + fuseHtml + '</div>' +
       '<div class="hero-podium">' + podiumHtml + '</div>' +
@@ -2711,7 +2773,7 @@ renderDashboard = function() {
   if(currentPlayer && !playerTeams[currentPlayer]) {
     teamBtn = '<button class="export-btn" onclick="showTeamPicker(true)" style="margin-right:auto">&#9917; Pick your team</button>';
   } else if(currentPlayer && playerTeams[currentPlayer]) {
-    teamBtn = '<span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;background:var(--hover);border:1px solid var(--border);font-size:12px;color:var(--text);margin-right:auto">' + teamFlag(playerTeams[currentPlayer], 16) + playerTeams[currentPlayer] + '</span>';
+    teamBtn = '<span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;background:rgba(29,158,117,0.15);border:1px solid rgba(29,158,117,0.3);font-size:12px;color:var(--text);margin-right:auto;cursor:default;position:relative" onmouseenter="this.querySelector(\'.tw-tip\').style.display=\'block\'" onmouseleave="this.querySelector(\'.tw-tip\').style.display=\'none\'"><span style="font-size:14px">&#127942;</span>' + teamFlag(playerTeams[currentPlayer], 16) + playerTeams[currentPlayer] + '<span class="tw-tip" style="display:none;position:absolute;left:0;bottom:calc(100% + 8px);background:#1a1a2e;color:#fff;font-size:11px;padding:4px 10px;border-radius:6px;white-space:nowrap;pointer-events:none">Predicted winner</span></span>';
   }
   var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">' + teamBtn + '<span class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">' + (userTheme === 'dark' ? '&#127769; Dark' : '&#9728;&#65039; Light') + '</span></div>';
   h += renderTodayPinned();
@@ -2720,6 +2782,15 @@ renderDashboard = function() {
   h += renderMiniLeague();
   if(currentPlayer === ADMIN) h += renderBulkEntry();
   h += renderPrizesPodium();
+  // Account section
+  h += '<div class="card"><div class="collapsible-hdr" onclick="var b=this.nextElementSibling;var a=this.querySelector(\'.collapsible-arrow\');b.classList.toggle(\'collapsed\');a.classList.toggle(\'open\')"><h2 style="margin:0">&#9881; Your Account</h2><span class="collapsible-arrow">&#9660;</span></div><div class="collapsible-body collapsed">';
+  h += '<div style="margin-top:12px"><label style="font-size:13px;color:var(--muted);display:block;margin-bottom:4px">Your email (optional)</label>';
+  h += '<div style="display:flex;gap:8px"><input type="email" id="playerEmailInput" placeholder="your@email.com" style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px" />';
+  h += '<button class="btn-primary btn-sm" onclick="savePlayerEmail()">Save</button></div></div>';
+  h += '<div style="margin-top:12px"><button class="export-btn" onclick="contactSupport()" style="width:100%">&#9993; Contact Support</button></div>';
+  h += '</div></div>';
+  // Load saved email
+  if(currentPlayer) db.ref('wc2026/playerEmails/' + currentPlayer).once('value').then(function(snap) { var el = document.getElementById('playerEmailInput'); if(el && snap.val()) el.value = snap.val(); });
   h += berryCard();
   return h;
 };
@@ -2775,7 +2846,94 @@ window.showProfile = function(name) {
   el.scrollIntoView({behavior:'smooth'});
 };
 
-// Flags added directly in render functions
+// UK Time clock
+setInterval(function() {
+  var el = document.getElementById('ukClock');
+  if(!el) return;
+  el.textContent = new Date().toLocaleTimeString('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}, 1000);
+
+// Floating chat panel
+var _chatPanelOpen = false;
+var _chatLastSeen = parseInt(localStorage.getItem('wc2026_chat_seen') || '0');
+
+window.toggleChatPanel = function() {
+  _chatPanelOpen = !_chatPanelOpen;
+  var panel = document.getElementById('chatPanel');
+  if(panel) panel.classList.toggle('open', _chatPanelOpen);
+  if(_chatPanelOpen) {
+    _chatLastSeen = chatMessages.length;
+    localStorage.setItem('wc2026_chat_seen', String(_chatLastSeen));
+    updateChatBadge();
+    renderFloatingChat();
+    var msgs = document.getElementById('floatingChatMsgs');
+    if(msgs) setTimeout(function() { msgs.scrollTop = msgs.scrollHeight; }, 50);
+  }
+};
+
+function updateChatBadge() {
+  var badge = document.getElementById('chatBadge');
+  if(!badge) return;
+  var unread = chatMessages.length - _chatLastSeen;
+  if(unread > 0 && !_chatPanelOpen) {
+    badge.textContent = unread > 9 ? '9+' : String(unread);
+    badge.style.display = 'flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function renderFloatingChat() {
+  var container = document.getElementById('floatingChatMsgs');
+  if(!container) { updateChatBadge(); return; }
+  if(!_chatPanelOpen) { updateChatBadge(); return; }
+  var h = '';
+  if(chatMessages.length === 0) {
+    h = '<div class="empty" style="padding:40px">No messages yet!</div>';
+  } else {
+    chatMessages.forEach(function(msg) {
+      var isMe = msg.name === currentPlayer;
+      var time = new Date(msg.ts);
+      var timeStr = time.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'America/New_York' });
+      var rank = getChessRank(msg.name);
+      h += '<div style="display:flex;align-items:flex-start;gap:8px;' + (isMe ? 'flex-direction:row-reverse;text-align:right' : '') + '">';
+      h += '<div style="flex-shrink:0;width:28px;height:28px;border-radius:50%;background:' + (isMe ? 'var(--accent)' : 'var(--border)') + ';display:flex;align-items:center;justify-content:center;font-size:14px">' + rank.piece + '</div>';
+      h += '<div style="max-width:75%;padding:6px 10px;border-radius:10px;background:' + (isMe ? 'var(--accent)' : 'rgba(29,158,117,0.1)') + ';' + (isMe ? 'color:#fff;border-bottom-right-radius:4px' : 'border-bottom-left-radius:4px') + '">';
+      h += '<div style="font-size:10px;font-weight:600;margin-bottom:1px;' + (isMe ? 'color:rgba(255,255,255,0.8)' : 'color:var(--accent)') + '">' + msg.name + '</div>';
+      h += '<div style="font-size:13px;word-break:break-word">' + escapeHtml(msg.text) + '</div>';
+      h += '<div style="font-size:9px;margin-top:2px;' + (isMe ? 'color:rgba(255,255,255,0.5)' : 'color:var(--muted)') + '">' + timeStr + '</div>';
+      h += '</div></div>';
+    });
+  }
+  container.innerHTML = h;
+  container.scrollTop = container.scrollHeight;
+  updateChatBadge();
+}
+
+window.sendFloatingChat = function() {
+  var input = document.getElementById('floatingChatInput');
+  if(!input) return;
+  var text = input.value.trim();
+  if(!text || !currentPlayer) return;
+  db.ref('wc2026/chat').push({ name: currentPlayer, text: text, ts: firebase.database.ServerValue.TIMESTAMP });
+  input.value = '';
+};
+
+// Email save
+window.savePlayerEmail = function() {
+  var input = document.getElementById('playerEmailInput');
+  if(!input || !currentPlayer) return;
+  var email = input.value.trim();
+  db.ref('wc2026/playerEmails/' + currentPlayer).set(email);
+  alert('Email saved!');
+};
+
+// Contact support
+window.contactSupport = function() {
+  var subject = encodeURIComponent('WC2026 Predictions - Support Request from ' + (currentPlayer || 'Unknown'));
+  var body = encodeURIComponent('Player: ' + (currentPlayer || 'Unknown') + '\nIssue: ');
+  window.open('mailto:tsowho@gmail.com?subject=' + subject + '&body=' + body);
+};
 
 </script>
 </body>
