@@ -2389,23 +2389,32 @@ function berryCard() {
 // ============================================================
 // UPGRADE 1G: TODAY'S MATCHES PINNED
 // ============================================================
+function etToUkTime(dateStr, timeStr) {
+  var d = new Date(dateStr + 'T' + timeStr + ':00-04:00');
+  return d.toLocaleTimeString('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit' });
+}
 function renderTodayPinned() {
   var now = new Date();
-  var todayStr = now.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
-  var todayMatches = MATCHES.filter(function(m) { return m.date === todayStr; });
+  var todayStr = now.toLocaleDateString('en-CA', { timeZone: 'Europe/London' });
+  var todayMatches = MATCHES.filter(function(m) {
+    var ukDate = new Date(m.date + 'T' + m.time + ':00-04:00').toLocaleDateString('en-CA', { timeZone: 'Europe/London' });
+    return ukDate === todayStr;
+  });
   if(!todayMatches.length) return '';
   var h = '<div class="today-pin"><h3>&#128197; Today\'s matches — ' + fmtDate(todayStr) + '</h3>';
   todayMatches.forEach(function(m) {
     var started = isMatchStarted(m);
     var actual = state.actuals?.['m' + m.id];
-    var isLive = started && !actual;
+    var t = getMatchTime(m);
+    var isLive = started && !actual && (now - t) < 9000000;
     h += '<div class="today-match-row ' + (isLive ? 'live' : 'upcoming') + '">';
     if(isLive) h += '<div class="live-dot-sm"></div>';
     else h += '<span style="font-size:10px;color:var(--hint);width:8px">&#9200;</span>';
     h += '<span style="font-size:13px;flex:1">' + teamFlag(m.team1) + m.team1 + ' vs ' + m.team2 + teamFlag(m.team2) + '</span>';
     if(actual && actual.s1 !== undefined) h += '<span style="font-weight:600;color:var(--accent)">' + actual.s1 + ' — ' + actual.s2 + '</span>';
     else if(isLive) h += '<span style="font-size:11px;color:#e24b4a;font-weight:600">LIVE</span>';
-    else h += '<span style="font-size:12px;color:var(--muted)">' + m.time + ' ET</span>';
+    else if(!started) h += '<span style="font-size:12px;color:var(--muted)">' + etToUkTime(m.date, m.time) + ' UK</span>';
+    else h += '<span style="font-size:12px;color:var(--muted)">Awaiting result</span>';
     h += '</div>';
   });
   h += '</div>';
