@@ -2210,7 +2210,8 @@ function renderHero() {
     _twDots.push(['#BA7517','#888','#a0522d'][i]);
   });
   trashMsgs.forEach(function(msg) {
-    _twItems.push(msg);
+    var tmp = document.createElement('span'); tmp.innerHTML = msg;
+    _twItems.push(tmp.textContent || tmp.innerText || msg);
     _twDots.push('#e24b4a');
   });
   var chatPrompts = [
