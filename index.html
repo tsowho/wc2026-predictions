@@ -2219,7 +2219,7 @@ setInterval(() => {
 
 // Patch render to also update hero
 const _origRender = render;
-render = function() { renderHero(); _origRender(); };
+render = function(immediate) { renderHero(); _origRender(immediate); };
 
 setInterval(() => { if(currentTab === 'live') render(); }, 30000);
 render();
