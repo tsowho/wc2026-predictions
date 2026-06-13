@@ -700,6 +700,8 @@ function teamFlag(name, size) {
 // Player favourite teams
 let playerTeams = {};
 db.ref('wc2026/playerTeams').on('value', function(snap) { playerTeams = snap.val() || {}; });
+let playerEmails = {};
+db.ref('wc2026/playerEmails').on('value', function(snap) { playerEmails = snap.val() || {}; });
 
 function isSignupOpen() { return new Date() < SIGNUP_CUTOFF; }
 
@@ -1547,6 +1549,23 @@ function renderPlayers() {
   h += '<div style="margin:12px 0"><label style="font-size:13px;color:var(--muted);display:block;margin-bottom:4px">Your email (optional)</label><div style="display:flex;gap:8px"><input type="email" id="playerEmailInput" placeholder="your@email.com" style="flex:1;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px" /><button class="btn-primary btn-sm" onclick="savePlayerEmail()">Save</button></div></div>';
   h += '<div style="margin-top:12px"><button class="export-btn" onclick="contactSupport()" style="width:100%">&#9993; Contact Support</button></div>';
   h += '</div>';
+  if(isAdmin) {
+    var emailKeys = Object.keys(playerEmails);
+    h += '<div class="card"><h2>&#9993; Player Emails (' + emailKeys.length + ')</h2>';
+    if(emailKeys.length === 0) {
+      h += '<p style="font-size:13px;color:var(--muted)">No players have saved their email yet.</p>';
+    } else {
+      h += '<div style="display:flex;flex-direction:column;gap:6px">';
+      emailKeys.sort().forEach(function(name) {
+        h += '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:var(--bg);border-radius:8px;border:1px solid var(--border)">';
+        h += '<span style="font-weight:600;font-size:14px">' + name + '</span>';
+        h += '<a href="mailto:' + playerEmails[name] + '" style="font-size:13px;color:var(--blue);text-decoration:none">' + playerEmails[name] + '</a>';
+        h += '</div>';
+      });
+      h += '</div>';
+    }
+    h += '</div>';
+  }
   return h;
 }
 
@@ -2025,13 +2044,13 @@ function runTypewriter() {
   textEl.offsetHeight; // force reflow
   textEl.textContent = item;
   var charCount = item.length;
-  var typeDur = Math.max(1, charCount * 0.05); // 50ms per char
+  var typeDur = Math.max(1.2, charCount * 0.08); // 80ms per char
   textEl.style.setProperty('--type-dur', typeDur + 's');
   textEl.style.setProperty('--type-steps', charCount);
   textEl.style.animation = 'tickerType ' + typeDur + 's steps(' + charCount + ') forwards';
   
   // Hold for 2s after typing, then fade and move to next
-  var holdTime = typeDur * 1000 + 2000;
+  var holdTime = typeDur * 1000 + 3000;
   _tickerIdx++;
   _tickerTimeout = setTimeout(function() {
     textEl.style.transition = 'opacity 0.4s';
@@ -2194,7 +2213,16 @@ function renderHero() {
     _twItems.push(msg);
     _twDots.push('#e24b4a');
   });
-  if(_twItems.length === 0) _twItems.push('World Cup 2026 — Predictions open!');
+  var chatPrompts = [
+    'Drop your hot takes in the chat!',
+    'Who\'s winning it all? Tell us in chat!',
+    'Agree with the rankings? Chat about it!',
+    'Any bold predictions? Share in chat!',
+    'Banter welcome — hit the chat bubble!'
+  ];
+  _twItems.push(chatPrompts[Math.floor(Math.random() * chatPrompts.length)]);
+  _twDots.push('#6c63ff');
+  if(_twItems.length === 1) _twItems.push('World Cup 2026 — Predictions open!');
   setTimeout(function() { startTypewriterTicker(_twItems, _twDots); }, 100);
 }
 
@@ -2968,27 +2996,26 @@ window.sendFloatingChat = function() {
   var input = document.getElementById('floatingChatInput');
   if(!input) return;
   var text = input.value.trim();
-  if(!text || !currentPlayer) return;
-  db.ref('wc2026/chat').push({ name: currentPlayer, text: text, ts: firebase.database.ServerValue.TIMESTAMP });
+  if(!text) return;
   input.value = '';
+  db.ref('wc2026/chat').push({ name: currentPlayer, text: text, ts: Date.now() });
 };
 
-// Email save
 window.savePlayerEmail = function() {
   var input = document.getElementById('playerEmailInput');
-  if(!input || !currentPlayer) return;
+  if(!input) return;
   var email = input.value.trim();
-  db.ref('wc2026/playerEmails/' + currentPlayer).set(email);
-  alert('Email saved!');
+  if(!email) { alert('Please enter an email address.'); return; }
+  db.ref('wc2026/playerEmails/' + currentPlayer).set(email).then(function() {
+    alert('Email saved!');
+  });
 };
 
-// Contact support
 window.contactSupport = function() {
-  var subject = encodeURIComponent('WC2026 Predictions - Support Request from ' + (currentPlayer || 'Unknown'));
-  var body = encodeURIComponent('Player: ' + (currentPlayer || 'Unknown') + '\nIssue: ');
+  var subject = encodeURIComponent('WC2026 Predictions - Support Request');
+  var body = encodeURIComponent('Player: ' + currentPlayer + '\n\nDescribe your issue:\n');
   window.open('mailto:tsowho@gmail.com?subject=' + subject + '&body=' + body);
 };
-
 
 </script>
 </body>
