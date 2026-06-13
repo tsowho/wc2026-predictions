@@ -1259,8 +1259,16 @@ function renderLive() {
   var todayUpcoming = todayAll.filter(function(m) { return !live.includes(m) && !state.actuals?.['m' + m.id]; });
   var todayCompleted = todayAll.filter(function(m) { return !!state.actuals?.['m' + m.id] && !live.includes(m); });
   var h = '';
-  if(live.length) { h += '<div class="card"><h2><span class="live-badge">LIVE</span> Matches in progress</h2>'; live.forEach(function(m){h += liveCard(m, players)}); h += '</div>'; }
-  if(todayUpcoming.length) { h += '<div class="card"><h2>Today\'s upcoming</h2>'; todayUpcoming.forEach(function(m){h += liveCard(m, players)}); h += '</div>'; }
+  if(live.length) {
+    h += '<div class="card"><div class="collapsible-hdr" onclick="toggleCollapse(this)"><h2 style="margin:0"><span class="live-badge">LIVE</span> Matches in progress (' + live.length + ')</h2><span class="collapsible-arrow open">&#9660;</span></div><div class="collapsible-body">';
+    live.forEach(function(m){h += liveCard(m, players)});
+    h += '</div></div>';
+  }
+  if(todayUpcoming.length) {
+    h += '<div class="card"><div class="collapsible-hdr" onclick="toggleCollapse(this)"><h2 style="margin:0">Today\'s upcoming (' + todayUpcoming.length + ')</h2><span class="collapsible-arrow open">&#9660;</span></div><div class="collapsible-body">';
+    todayUpcoming.forEach(function(m){h += liveCard(m, players)});
+    h += '</div></div>';
+  }
   if(todayCompleted.length) {
     h += '<div class="card"><div class="collapsible-hdr" onclick="toggleCollapse(this)"><h2 style="margin:0">Today\'s completed (' + todayCompleted.length + ')</h2><span class="collapsible-arrow open">&#9660;</span></div><div class="collapsible-body">';
     todayCompleted.forEach(function(m){h += liveCard(m, players)});
@@ -1268,10 +1276,10 @@ function renderLive() {
   }
   if(!live.length && !todayUpcoming.length && !todayCompleted.length) {
     var next = MATCHES.filter(function(m){return !isMatchStarted(m)}).slice(0, 6);
-    h += '<div class="card"><h2>Upcoming matches</h2>';
+    h += '<div class="card"><div class="collapsible-hdr" onclick="toggleCollapse(this)"><h2 style="margin:0">Upcoming matches (' + next.length + ')</h2><span class="collapsible-arrow open">&#9660;</span></div><div class="collapsible-body">';
     if(next.length) next.forEach(function(m){h += liveCard(m, players)});
     else h += '<div class="empty">No upcoming matches</div>';
-    h += '</div>';
+    h += '</div></div>';
   }
   return h;
 }
