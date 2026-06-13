@@ -1244,7 +1244,7 @@ function renderDashboard() {
     h += '<div class="card"><h2>Next match</h2>';
     h += '<div class="match-header"><span>Group ' + nm.group + '</span><span class="countdown">' + getCountdown(nm) + '</span></div>';
     h += '<div class="match-teams"><span class="team">' + teamFlag(nm.team1) + nm.team1 + '</span><span class="match-vs">vs</span><span class="team">' + nm.team2 + teamFlag(nm.team2) + '</span></div>';
-    h += '<div style="text-align:center;margin-top:8px;font-size:12px;color:var(--hint)">' + nm.venue + '<br>' + fmtDate(nm.date) + ' ' + nm.time + ' ET</div>';
+    h += '<div style="text-align:center;margin-top:8px;font-size:12px;color:var(--hint)">' + nm.venue + '<br>' + fmtDate(nm.date) + ' ' + etToUkTime(nm.date, nm.time) + ' UK</div>';
     h += isPredLocked(currentPlayer, nm.id) ? '<div style="text-align:center;margin-top:8px"><span class="locked-badge">Your prediction is locked</span></div>' : '<div style="text-align:center;margin-top:8px"><span style="font-size:12px;color:var(--danger)">You haven\'t predicted this match yet!</span></div>';
     h += '</div>';
   }
@@ -1253,7 +1253,7 @@ function renderDashboard() {
 
 function renderLive() {
   var now = new Date(), players = Object.keys(state.players || {}).filter(function(p){return currentPlayer === ADMIN || p !== ADMIN});
-  var live = MATCHES.filter(function(m) { var t = getMatchTime(m); return now >= t && now <= new Date(t.getTime() + 7200000); });
+  var live = MATCHES.filter(function(m) { var t = getMatchTime(m); return now >= t && now <= new Date(t.getTime() + 9000000) && !state.actuals?.['m' + m.id]; });
   var todayET = now.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
   var todayAll = MATCHES.filter(function(m) { return m.date === todayET; });
   var todayUpcoming = todayAll.filter(function(m) { return !live.includes(m) && !state.actuals?.['m' + m.id]; });
@@ -1288,8 +1288,9 @@ function liveCard(m, players) {
   const actual = state.actuals?.['m' + m.id], started = isMatchStarted(m);
   const mvp = getMatchMVP(m.id);
   const matchReactions = reactions['m' + m.id] || {};
-  let h = '<div class="match-card"><div class="match-header"><span>Group ' + m.group + ' | ' + fmtDate(m.date) + ' ' + m.time + ' ET</span>';
-  h += started && !actual ? '<span class="live-badge">LIVE</span>' : !started ? '<span class="countdown">' + getCountdown(m) + '</span>' : '';
+  var _isLive = started && !actual && (new Date() - getMatchTime(m)) < 9000000;
+  let h = '<div class="match-card"><div class="match-header"><span>Group ' + m.group + ' | ' + fmtDate(m.date) + ' ' + etToUkTime(m.date, m.time) + ' UK</span>';
+  h += _isLive ? '<span class="live-badge">LIVE</span>' : !started ? '<span class="countdown">' + getCountdown(m) + '</span>' : '';
   h += '</div><div class="match-teams"><span class="team">' + teamFlag(m.team1) + m.team1 + '</span>';
   h += actual && actual.s1 !== undefined ? '<div class="match-score"><span style="font-size:20px;font-weight:700">' + actual.s1 + ' - ' + actual.s2 + '</span></div>' : '<span class="match-vs">vs</span>';
   h += '<span class="team">' + m.team2 + teamFlag(m.team2) + '</span></div>';
@@ -1380,7 +1381,7 @@ function renderPredict() {
     // Hide matches that already have results entered
     if(state.actuals?.['m' + m.id]) return;
     const pred = state.predictions?.[currentPlayer]?.['m' + m.id] || {}, locked = pred.locked, started = isMatchStarted(m), result = calcPoints(pred, state.actuals?.['m' + m.id]);
-    h += '<div class="match-card" data-group="' + m.group + '"' + (m.group !== 'A' ? ' style="display:none"' : '') + '><div class="match-header"><span>Group ' + m.group + ' | ' + fmtDate(m.date) + ' ' + m.time + ' ET</span>';
+    h += '<div class="match-card" data-group="' + m.group + '"' + (m.group !== 'A' ? ' style="display:none"' : '') + '><div class="match-header"><span>Group ' + m.group + ' | ' + fmtDate(m.date) + ' ' + etToUkTime(m.date, m.time) + ' UK</span>';
     h += locked ? '<span class="locked-badge">Locked</span>' : started ? '<span style="font-size:11px;color:var(--danger)">Match started</span>' : '<span class="countdown">' + getCountdown(m) + '</span>';
     h += '</div><div class="match-teams"><span class="team">' + teamFlag(m.team1) + m.team1 + '</span><div class="match-score">';
     h += '<input type="number" min="0" max="20" value="' + (pred.s1 ?? '') + '" data-match="' + m.id + '" data-side="s1" class="pred-input"' + (locked || started ? ' disabled' : '') + '/>';
@@ -1722,7 +1723,7 @@ function renderKnockout() {
       var matchStarted = m.date && m.time ? new Date() >= new Date(m.date + 'T' + m.time + ':00-04:00') : false;
 
       h += '<div class="match-card" data-koround="' + round.id + '">';
-      h += '<div class="match-header"><span>' + round.name + ' #' + slot.num + (m.date ? ' | ' + fmtDate(m.date) + ' ' + m.time + ' ET' : '') + '</span>';
+      h += '<div class="match-header"><span>' + round.name + ' #' + slot.num + (m.date ? ' | ' + fmtDate(m.date) + ' ' + etToUkTime(m.date, m.time) + ' UK' : '') + '</span>';
       if(locked) h += '<span class="locked-badge">Locked</span>';
       else if(hasResult) h += '<span class="result-badge result-exact">Final</span>';
       else if(!hasBothTeams) h += '<span style="font-size:11px;color:var(--muted)">Awaiting teams</span>';
@@ -1963,7 +1964,7 @@ function buildStreakBar() {
   if(si.tournamentOver) {
     h += '<div style="text-align:right"><div class="streak-badge-hero">+' + si.streak + ' pts added</div></div>';
   } else {
-    h += '<div style="text-align:right;min-width:70px"><div style="font-size:11px;opacity:0.7">+' + si.streak + ' pts banked</div><div style="font-size:9px;opacity:0.4">' + (claimedToday ? 'come back tomorrow!' : 'resets at midnight ET') + '</div></div>';
+    h += '<div style="text-align:right;min-width:70px"><div style="font-size:11px;opacity:0.7">+' + si.streak + ' pts banked</div><div style="font-size:9px;opacity:0.4">' + (claimedToday ? 'come back tomorrow!' : 'resets at midnight') + '</div></div>';
   }
   h += '</div>';
   return h;
@@ -2085,7 +2086,7 @@ function renderHero() {
     const d = Math.floor(diff / 86400000), h = Math.floor((diff % 86400000) / 3600000), min = Math.floor((diff % 3600000) / 60000), s = Math.floor((diff % 60000) / 1000);
     centerHtml = '<div class="hero-next-label">Next match</div>';
     centerHtml += '<div class="hero-next-teams">' + nextMatch.team1 + ' vs ' + nextMatch.team2 + '</div>';
-    centerHtml += '<div class="hero-next-meta">Group ' + nextMatch.group + ' | ' + fmtDate(nextMatch.date) + ' ' + nextMatch.time + ' ET</div>';
+    centerHtml += '<div class="hero-next-meta">Group ' + nextMatch.group + ' | ' + fmtDate(nextMatch.date) + ' ' + etToUkTime(nextMatch.date, nextMatch.time) + ' UK</div>';
     centerHtml += '<div class="hero-countdown">';
     if(d > 0) centerHtml += '<div class="hero-cd-box"><div class="hero-cd-num" id="cdDays">' + d + '</div><div class="hero-cd-unit">days</div></div>';
     centerHtml += '<div class="hero-cd-box"><div class="hero-cd-num" id="cdHrs">' + h + '</div><div class="hero-cd-unit">hrs</div></div>';
