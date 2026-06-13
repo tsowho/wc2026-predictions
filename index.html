@@ -979,9 +979,11 @@ function render(immediate) {
       gfBtns.forEach(function(b) {
         b.classList.toggle('active', b.dataset.group === _activeGroup);
       });
-      c.querySelectorAll('.match-card[data-group]').forEach(function(card) {
-        card.style.display = card.dataset.group === _activeGroup ? '' : 'none';
-      });
+      if(_activeGroup !== 'bydate') {
+        c.querySelectorAll('.match-card[data-group]').forEach(function(card) {
+          card.style.display = card.dataset.group === _activeGroup ? '' : 'none';
+        });
+      }
     }
     window.scrollTo(0, scrollY);
     if(activeMatch && activeSide) {
@@ -1355,6 +1357,7 @@ function renderPredict() {
     teams = teams.filter(function(t,i){return teams.indexOf(t)===i}).slice(0,4);
     h += '<button class="group-btn' + (g === 'A' ? ' active' : '') + '" data-group="' + g + '" title="' + teams.join(', ') + '">' + g + '</button>';
   });
+  h += '<button class="group-btn" data-group="bydate" style="margin-left:auto">By Date</button>';
   h += '</div></div>';
   h += '<div class="card" style="padding:10px 16px;margin-bottom:16px"><p style="font-size:13px;color:var(--muted)">Enter your predicted score and click <strong>Lock</strong> to submit. Locked predictions cannot be changed. Predictions are hidden from others until the match starts.</p></div>';
   // Bonus predictions section
@@ -1396,11 +1399,14 @@ function renderPredict() {
   else if(!bonusClosed && myBonus._locked) {} // already locked, nothing extra
   else if(bonusClosed && !myBonus._locked) h += '<p style="font-size:13px;color:var(--muted);margin-top:8px">You missed the deadline. No bonus points will be awarded.</p>';
   h += '</div></div>';
-  MATCHES.forEach(m => {
+  var _predMatches = _activeGroup === 'bydate' ? MATCHES.slice().sort(function(a,b) { return getMatchTime(a) - getMatchTime(b); }) : MATCHES;
+  var _predDefaultGroup = _activeGroup || 'A';
+  _predMatches.forEach(m => {
     // Hide matches that already have results entered
     if(state.actuals?.['m' + m.id]) return;
     const pred = state.predictions?.[currentPlayer]?.['m' + m.id] || {}, locked = pred.locked, started = isMatchStarted(m), result = calcPoints(pred, state.actuals?.['m' + m.id]);
-    h += '<div class="match-card" data-group="' + m.group + '"' + (m.group !== 'A' ? ' style="display:none"' : '') + '><div class="match-header"><span>Group ' + m.group + ' | ' + fmtDate(m.date) + ' ' + etToUkTime(m.date, m.time) + ' UK</span>';
+    var _showCard = _activeGroup === 'bydate' || _activeGroup === 'all' || m.group === _predDefaultGroup;
+    h += '<div class="match-card" data-group="' + m.group + '"' + (!_showCard ? ' style="display:none"' : '') + '><div class="match-header"><span>Group ' + m.group + ' | ' + fmtDate(m.date) + ' ' + etToUkTime(m.date, m.time) + ' UK</span>';
     h += locked ? '<span class="locked-badge">Locked</span>' : started ? '<span style="font-size:11px;color:var(--danger)">Match started</span>' : '<span class="countdown">' + getCountdown(m) + '</span>';
     h += '</div><div class="match-teams"><span class="team">' + teamFlag(m.team1) + m.team1 + '</span><div class="match-score">';
     h += '<input type="number" min="0" max="20" value="' + (pred.s1 ?? '') + '" data-match="' + m.id + '" data-side="s1" class="pred-input"' + (locked || started ? ' disabled' : '') + '/>';
@@ -1421,10 +1427,12 @@ function renderResults() {
     : '<div class="card"><h2>Match results</h2><p style="font-size:13px;color:var(--muted);margin-bottom:16px">Only the admin (Baba) can enter results.</p></div>';
   h += '<div class="group-filter" id="groupFilter"><button class="group-btn active" data-group="all">All</button>';
   GROUPS.forEach(g => h += '<button class="group-btn" data-group="' + g + '">' + g + '</button>');
+  h += '<button class="group-btn" data-group="bydate" style="margin-left:auto">By Date</button>';
   h += '</div>';
-  MATCHES.forEach(m => {
+  var sortedMatches = _activeGroup === 'bydate' ? MATCHES.slice().sort(function(a,b) { return getMatchTime(a) - getMatchTime(b); }) : MATCHES;
+  sortedMatches.forEach(m => {
     const actual = state.actuals?.['m' + m.id] || {}, hasA = actual.s1 !== undefined && actual.s1 !== '';
-    h += '<div class="match-card" data-group="' + m.group + '"><div class="match-header"><span>Group ' + m.group + ' | ' + fmtDate(m.date) + '</span><span>' + m.venue + '</span></div>';
+    h += '<div class="match-card" data-group="' + m.group + '"><div class="match-header"><span>Group ' + m.group + ' | ' + fmtDate(m.date) + ' ' + etToUkTime(m.date, m.time) + ' UK</span><span>' + m.venue + '</span></div>';
     h += '<div class="match-teams"><span class="team">' + teamFlag(m.team1) + m.team1 + '</span><div class="match-score">';
     if(isAdmin) { h += '<input type="number" min="0" max="20" value="' + (actual.s1 ?? '') + '" data-match="' + m.id + '" data-side="s1" class="actual-input"/><span class="match-vs">-</span><input type="number" min="0" max="20" value="' + (actual.s2 ?? '') + '" data-match="' + m.id + '" data-side="s2" class="actual-input"/>'; }
     else if(hasA) h += '<span style="font-size:18px;font-weight:700">' + actual.s1 + ' - ' + actual.s2 + '</span>';
@@ -1670,7 +1678,12 @@ function attachEvents() {
     gf.querySelectorAll('.group-btn').forEach(b => b.classList.remove('active'));
     e.target.classList.add('active');
     const g = e.target.dataset.group;
-    document.querySelectorAll('.match-card').forEach(mc => { mc.style.display = g === 'all' || mc.dataset.group === g ? '' : 'none'; });
+    _activeGroup = g;
+    if(g === 'bydate') {
+      render(true);
+    } else {
+      document.querySelectorAll('.match-card').forEach(mc => { mc.style.display = g === 'all' || mc.dataset.group === g ? '' : 'none'; });
+    }
   });
 }
 
