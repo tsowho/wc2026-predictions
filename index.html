@@ -606,7 +606,7 @@ const MATCHES = [
 {id:17,group:"C",team1:"Scotland",team2:"Brazil",date:"2026-06-24",time:"18:00",venue:"Hard Rock Stadium, Miami"},
 {id:18,group:"C",team1:"Morocco",team2:"Haiti",date:"2026-06-24",time:"18:00",venue:"Mercedes-Benz Stadium, Atlanta"},
 {id:19,group:"D",team1:"USA",team2:"Paraguay",date:"2026-06-12",time:"21:00",venue:"SoFi Stadium, Los Angeles"},
-{id:20,group:"D",team1:"Australia",team2:"Turkey",date:"2026-06-13",time:"00:00",venue:"BC Place, Vancouver"},
+{id:20,group:"D",team1:"Australia",team2:"Turkey",date:"2026-06-13",time:"21:00",venue:"BC Place, Vancouver"},
 {id:21,group:"D",team1:"USA",team2:"Australia",date:"2026-06-19",time:"15:00",venue:"Lumen Field, Seattle"},
 {id:22,group:"D",team1:"Turkey",team2:"Paraguay",date:"2026-06-19",time:"00:00",venue:"Levi's Stadium, San Francisco"},
 {id:23,group:"D",team1:"Turkey",team2:"USA",date:"2026-06-25",time:"22:00",venue:"SoFi Stadium, Los Angeles"},
@@ -1402,8 +1402,9 @@ function renderPredict() {
   var _predMatches = _activeGroup === 'bydate' ? MATCHES.slice().sort(function(a,b) { return getMatchTime(a) - getMatchTime(b); }) : MATCHES;
   var _predDefaultGroup = _activeGroup || 'A';
   _predMatches.forEach(m => {
-    // Hide matches that already have results entered
+    // Hide matches that already have results entered or started over 2.5hrs ago
     if(state.actuals?.['m' + m.id]) return;
+    if(isMatchStarted(m) && (new Date() - getMatchTime(m)) > 9000000) return;
     const pred = state.predictions?.[currentPlayer]?.['m' + m.id] || {}, locked = pred.locked, started = isMatchStarted(m), result = calcPoints(pred, state.actuals?.['m' + m.id]);
     var _showCard = _activeGroup === 'bydate' || _activeGroup === 'all' || m.group === _predDefaultGroup;
     h += '<div class="match-card" data-group="' + m.group + '"' + (!_showCard ? ' style="display:none"' : '') + '><div class="match-header"><span>Group ' + m.group + ' | ' + fmtDate(m.date) + ' ' + etToUkTime(m.date, m.time) + ' UK</span>';
