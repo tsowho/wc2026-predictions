@@ -844,7 +844,7 @@ function updateLoginCountdown() {
   var target = WC_START;
   // Find next match if tournament started
   if(now >= WC_START) {
-    var nm = MATCHES.find(function(m) { return !state.actuals?.['m' + m.id] && getMatchTime(m) > now; });
+    var nm = MATCHES.filter(function(m) { return !state.actuals?.['m' + m.id] && getMatchTime(m) > now; }).sort(function(a,b) { return getMatchTime(a) - getMatchTime(b); })[0];
     if(nm) target = getMatchTime(nm);
     else { el.innerHTML = '<div style="font-size:13px;opacity:0.5">Tournament complete!</div>'; return; }
   }
@@ -2042,7 +2042,7 @@ function renderHero() {
 
   // Find live and next match
   const liveMatches = MATCHES.filter(m => { const t = getMatchTime(m); return now >= t && now <= new Date(t.getTime() + 7200000) && !state.actuals?.['m' + m.id]; });
-  const nextMatch = MATCHES.find(m => !state.actuals?.['m' + m.id] && !liveMatches.includes(m) && getMatchTime(m) > now);
+  const nextMatch = MATCHES.filter(m => !state.actuals?.['m' + m.id] && !liveMatches.includes(m) && getMatchTime(m) > now).sort((a,b) => getMatchTime(a) - getMatchTime(b))[0];
 
   // Ticker items
   let tickerItems = [];
@@ -2173,7 +2173,7 @@ setInterval(() => {
   if(!cdSec) return;
   const now = new Date();
   const liveMatches = MATCHES.filter(m => { const t = getMatchTime(m); return now >= t && now <= new Date(t.getTime() + 7200000) && !state.actuals?.['m' + m.id]; });
-  const nextMatch = MATCHES.find(m => !state.actuals?.['m' + m.id] && !liveMatches.includes(m) && getMatchTime(m) > now);
+  const nextMatch = MATCHES.filter(m => !state.actuals?.['m' + m.id] && !liveMatches.includes(m) && getMatchTime(m) > now).sort((a,b) => getMatchTime(a) - getMatchTime(b))[0];
   if(!nextMatch) return;
   const diff = getMatchTime(nextMatch) - now;
   if(diff <= 0) { renderHero(); return; }
