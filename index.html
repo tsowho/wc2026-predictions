@@ -880,7 +880,7 @@ document.getElementById('tabs').addEventListener('click', e => {
   currentTab = e.target.dataset.tab;
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   e.target.classList.add('active');
-  render();
+  render(true);
 });
 
 let newsCache = null;
