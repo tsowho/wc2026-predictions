@@ -946,12 +946,21 @@ function timeAgo(date) {
 }
 setInterval(() => { if(currentTab === 'news') fetchNews(); }, 300000);
 
-function render() {
+var _activeGroup = 'all';
+var _renderTimer = null;
+function render(immediate) {
+  if(!immediate && (currentTab === 'results' || currentTab === 'predict')) {
+    if(_renderTimer) clearTimeout(_renderTimer);
+    _renderTimer = setTimeout(function() { render(true); }, 500);
+    return;
+  }
   var c = document.getElementById('content');
   var scrollY = window.scrollY;
   var activeEl = document.activeElement;
   var activeMatch = activeEl ? activeEl.getAttribute('data-match') : null;
   var activeSide = activeEl ? activeEl.getAttribute('data-side') : null;
+  var gfEl = document.querySelector('.group-filter .group-btn.active');
+  if(gfEl) _activeGroup = gfEl.dataset.group || 'all';
   switch(currentTab) {
     case 'dashboard': c.innerHTML = renderDashboard(); break;
     case 'live': c.innerHTML = renderLive(); break;
@@ -964,6 +973,16 @@ function render() {
   }
   attachEvents();
   if(currentTab === 'results' || currentTab === 'predict') {
+    // Restore group filter
+    if(_activeGroup && _activeGroup !== 'all') {
+      var gfBtns = c.querySelectorAll('.group-filter .group-btn');
+      gfBtns.forEach(function(b) {
+        b.classList.toggle('active', b.dataset.group === _activeGroup);
+      });
+      c.querySelectorAll('.match-card[data-group]').forEach(function(card) {
+        card.style.display = card.dataset.group === _activeGroup ? '' : 'none';
+      });
+    }
     window.scrollTo(0, scrollY);
     if(activeMatch && activeSide) {
       var el = c.querySelector('[data-match="' + activeMatch + '"][data-side="' + activeSide + '"]');
