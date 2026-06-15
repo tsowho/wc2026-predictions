@@ -702,8 +702,10 @@ let playerTeams = {};
 db.ref('wc2026/playerTeams').on('value', function(snap) { playerTeams = snap.val() || {}; });
 let playerEmails = {};
 db.ref('wc2026/playerEmails').on('value', function(snap) { playerEmails = snap.val() || {}; });
+let registrationOpen = false;
+db.ref('wc2026/registrationOpen').on('value', function(snap) { registrationOpen = snap.val() === true; });
 
-function isSignupOpen() { return new Date() < SIGNUP_CUTOFF; }
+function isSignupOpen() { return registrationOpen || new Date() < SIGNUP_CUTOFF; }
 
 
 let state = { players: {}, predictions: {}, actuals: {} };
@@ -825,7 +827,14 @@ document.getElementById('loginBtn').addEventListener('click', () => {
       completeLogin(name);
       return;
     }
-    // New player — set a password
+    // New player — check if registration is open
+    if(!isSignupOpen()) {
+      var overlay = document.createElement('div');
+      overlay.className = 'reject-overlay';
+      overlay.innerHTML = '<div class="reject-card"><div class="reject-icon">&#9940;</div><div class="reject-title">Registration Closed</div><div class="reject-msg">New players cannot join at this time.<br><br>The admin may reopen registration later.</div><button class="reject-btn" onclick="this.closest(\'.reject-overlay\').remove()">OK</button></div>';
+      document.body.appendChild(overlay);
+      return;
+    }
     const pw = prompt('Set a password for your account:');
     if(!pw) return;
     const pw2 = prompt('Confirm your password:');
@@ -1537,6 +1546,14 @@ function renderPlayers() {
     h += '<div class="player-chip">' + (playerTeams[p] ? teamFlag(playerTeams[p], 14) : '') + chessIcon(p) + '<span>' + p + '</span>' + chessLabel(p) + (p === ADMIN && isAdmin ? '<span class="admin-badge">admin</span>' : '') + (isAdmin && jt ? '<span style="font-size:10px;color:var(--hint);margin-left:6px">joined ' + jt + '</span>' : '') + (isAdmin && p !== ADMIN ? '<span style="font-size:11px;color:var(--blue);cursor:pointer;margin-left:6px" onclick="resetPlayerPassword(\'' + p.replace(/'/g, "\\'") + '\')">reset pw</span><span class="remove" onclick="removePlayer(\'' + p.replace(/'/g, "\\'") + '\')">&times;</span>' : '') + '</div>';
   });
   h += '</div></div>';
+  if(isAdmin) {
+    h += '<div class="card"><h2>&#9881; Registration</h2>';
+    h += '<div style="display:flex;align-items:center;justify-content:space-between">';
+    h += '<div><span style="font-size:14px;font-weight:600">' + (registrationOpen ? '&#128994; Open' : '&#128308; Closed') + '</span>';
+    h += '<p style="font-size:12px;color:var(--muted);margin:4px 0 0">' + (registrationOpen ? 'New players can join' : 'New players are blocked') + '</p></div>';
+    h += '<button class="btn-primary btn-sm" onclick="toggleRegistration()" style="white-space:nowrap">' + (registrationOpen ? 'Close Registration' : 'Open Registration') + '</button>';
+    h += '</div></div>';
+  }
   h += '<div class="card"><h2>Share this link</h2><p style="font-size:14px;color:var(--muted);margin-bottom:12px">Send this to your friends so they can join and predict:</p>';
   h += '<div style="display:flex;gap:8px"><input type="text" value="https://tsowho.github.io/wc2026-predictions" id="shareLink" readonly style="font-size:13px"/>';
   h += '<button class="btn-primary btn-sm" onclick="copyLink()">Copy</button></div></div>';
@@ -1585,6 +1602,10 @@ window.lockPrediction = function(mid) {
   const m = MATCHES.find(x => x.id === mid);
   if(!confirm('Lock prediction: ' + m.team1 + ' ' + s1 + ' - ' + s2 + ' ' + m.team2 + '?\n\nThis cannot be changed!')) return;
   db.ref('wc2026/predictions/' + currentPlayer + '/m' + mid).set({ s1: parseInt(s1), s2: parseInt(s2), locked: true, lockedAt: Date.now() });
+};
+window.toggleRegistration = function() {
+  var newVal = !registrationOpen;
+  db.ref('wc2026/registrationOpen').set(newVal).then(function() { render(true); });
 };
 window.removePlayer = function(name) { if(confirm('Remove ' + name + '?')) { db.ref('wc2026/players/' + name).remove(); db.ref('wc2026/predictions/' + name).remove(); db.ref('wc2026/passwords/' + name).remove(); db.ref('wc2026/joinTimes/' + name).remove(); db.ref('wc2026/bonus/' + name).remove(); db.ref('wc2026/loginDates/' + name).remove(); } };
 
