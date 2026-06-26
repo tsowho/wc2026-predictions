@@ -700,6 +700,8 @@ function teamFlag(name, size) {
 // Player favourite teams
 let playerTeams = {};
 db.ref('wc2026/playerTeams').on('value', function(snap) { playerTeams = snap.val() || {}; });
+let teamPickChanges = {};
+db.ref('wc2026/teamPickChanges').on('value', function(snap) { teamPickChanges = snap.val() || {}; });
 let playerEmails = {};
 db.ref('wc2026/playerEmails').on('value', function(snap) { playerEmails = snap.val() || {}; });
 let registrationOpen = false;
@@ -1388,7 +1390,9 @@ function renderPredict() {
   const myBonus = bonusPredictions[currentPlayer] || {};
   const bonusDeadline = new Date('2026-06-27T23:59:59-04:00'); // Last group stage day ET
   const bonusClosed = new Date() > bonusDeadline;
-  const bonusLocked = myBonus._locked || bonusClosed;
+  const bonusChanges = myBonus._changes || 0;
+  const bonusEditing = myBonus._editing === true;
+  const bonusLocked = (myBonus._locked && !bonusEditing) || bonusClosed;
   var bonusFilled = BONUS_CATS.filter(function(c){ return myBonus[c.id]; }).length;
   var bonusSummary = bonusLocked ? 'Locked (' + bonusFilled + '/' + BONUS_CATS.length + ')' : bonusClosed ? 'Closed' : bonusFilled + '/' + BONUS_CATS.length + ' filled';
   h += '<div class="card" style="margin-bottom:16px"><div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding:4px 0" onclick="var bd=document.getElementById(\'bonusBody\');var ar=document.getElementById(\'bonusArrow\');if(bd.style.display===\'none\'){bd.style.display=\'block\';ar.textContent=\'\u25B2\'}else{bd.style.display=\'none\';ar.textContent=\'\u25BC\'}">' +
@@ -1420,7 +1424,9 @@ function renderPredict() {
     h += '</div>';
   });
   if(!bonusLocked) h += '<button class="btn-primary" onclick="lockBonus()">Lock Bonus Predictions</button>';
-  else if(!bonusClosed && myBonus._locked) {} // already locked, nothing extra
+  else if(!bonusClosed && myBonus._locked && !bonusEditing && bonusChanges < 2) {
+    h += '<button class="btn-sm" style="margin-top:8px;background:linear-gradient(135deg,#e67e22,#d35400);color:#fff;border:none" onclick="editBonus()">&#9998; Edit Predictions (' + (2 - bonusChanges) + ' change' + (2 - bonusChanges === 1 ? '' : 's') + ' left)</button>';
+  }
   else if(bonusClosed && !myBonus._locked) h += '<p style="font-size:13px;color:var(--muted);margin-top:8px">You missed the deadline. No bonus points will be awarded.</p>';
   h += '</div></div>';
   var _predMatches = _activeGroup === 'bydate' ? MATCHES.slice().sort(function(a,b) { return getMatchTime(a) - getMatchTime(b); }) : MATCHES;
@@ -1600,13 +1606,26 @@ function renderPlayers() {
 }
 
 window.lockBonus = function() {
+  const existing = bonusPredictions[currentPlayer] || {};
   const myBonus = {};
   document.querySelectorAll('.bonus-input').forEach(el => { if(el.value) myBonus[el.dataset.cat] = el.value; });
   const filled = BONUS_CATS.filter(c => myBonus[c.id]);
   if(filled.length === 0) { alert('Fill in at least one bonus prediction before locking.'); return; }
-  if(!confirm('Lock ' + filled.length + ' bonus prediction(s)? This cannot be changed!')) return;
+  var changesUsed = existing._changes || 0;
+  if(existing._editing) changesUsed++;
+  if(!confirm('Lock ' + filled.length + ' bonus prediction(s)?' + (changesUsed > 0 ? ' (' + (2 - changesUsed) + ' edit(s) remaining)' : ''))) return;
   myBonus._locked = true;
+  myBonus._changes = changesUsed;
   db.ref('wc2026/bonus/' + currentPlayer).set(myBonus);
+};
+window.editBonus = function() {
+  var existing = bonusPredictions[currentPlayer] || {};
+  var changesUsed = existing._changes || 0;
+  if(changesUsed >= 2) { alert('You have used all your edits.'); return; }
+  if(!confirm('Edit your bonus predictions? You have ' + (2 - changesUsed) + ' edit(s) left.')) return;
+  db.ref('wc2026/bonus/' + currentPlayer + '/_editing').set(true);
+  _heroHash = '';
+  render(true);
 };
 window.lockPrediction = function(mid) {
   const s1 = document.querySelector('[data-match="' + mid + '"][data-side="s1"]')?.value;
@@ -2422,8 +2441,9 @@ function copyInviteLink() {
 // ============================================================
 var selectedTeam = null;
 function showTeamPicker(isReturning) {
-  // Lock: if team already selected, don't allow changes
-  if(currentPlayer && playerTeams[currentPlayer]) return;
+  // Lock: if team already selected and no changes left
+  var teamChanges = (teamPickChanges[currentPlayer] || 0);
+  if(currentPlayer && playerTeams[currentPlayer] && teamChanges >= 2) return;
   var overlay = document.getElementById('teamPickerOverlay');
   overlay.style.display = 'flex';
   var title = document.getElementById('tpTitle');
@@ -2474,7 +2494,12 @@ function filterTeamPicker() {
 
 function confirmTeamPick() {
   if(!selectedTeam || !currentPlayer) return;
+  var hadTeam = !!playerTeams[currentPlayer];
   db.ref('wc2026/playerTeams/' + currentPlayer).set(selectedTeam);
+  if(hadTeam) {
+    var c = (teamPickChanges[currentPlayer] || 0) + 1;
+    db.ref('wc2026/teamPickChanges/' + currentPlayer).set(c);
+  }
   document.getElementById('teamPickerOverlay').style.display = 'none';
   _heroHash = '';
   render();
@@ -2898,7 +2923,9 @@ renderDashboard = function() {
   if(currentPlayer && !playerTeams[currentPlayer]) {
     teamBtn = '<button class="export-btn" onclick="showTeamPicker(true)" style="margin-right:auto">&#9917; Pick your team</button>';
   } else if(currentPlayer && playerTeams[currentPlayer]) {
-    teamBtn = '<span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;background:rgba(29,158,117,0.15);border:1px solid rgba(29,158,117,0.3);font-size:12px;color:var(--text);margin-right:auto;cursor:default;position:relative" onmouseenter="this.querySelector(\'.tw-tip\').style.display=\'block\'" onmouseleave="this.querySelector(\'.tw-tip\').style.display=\'none\'"><span style="font-size:14px">&#127942;</span>' + teamFlag(playerTeams[currentPlayer], 16) + playerTeams[currentPlayer] + '<span class="tw-tip" style="display:none;position:absolute;left:0;bottom:calc(100% + 8px);background:#1a1a2e;color:#fff;font-size:11px;padding:4px 10px;border-radius:6px;white-space:nowrap;pointer-events:none">Predicted winner</span></span>';
+    var tpc = teamPickChanges[currentPlayer] || 0;
+    var canChange = tpc < 2;
+    teamBtn = '<span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;background:rgba(29,158,117,0.15);border:1px solid rgba(29,158,117,0.3);font-size:12px;color:var(--text);margin-right:auto;' + (canChange ? 'cursor:pointer' : 'cursor:default') + ';position:relative" ' + (canChange ? 'onclick="showTeamPicker(true)" ' : '') + 'onmouseenter="this.querySelector(\'.tw-tip\').style.display=\'block\'" onmouseleave="this.querySelector(\'.tw-tip\').style.display=\'none\'"><span style="font-size:14px">&#127942;</span>' + teamFlag(playerTeams[currentPlayer], 16) + playerTeams[currentPlayer] + (canChange ? '<span style="font-size:10px;color:var(--muted);margin-left:4px">&#9998;</span>' : '') + '<span class="tw-tip" style="display:none;position:absolute;left:0;bottom:calc(100% + 8px);background:#1a1a2e;color:#fff;font-size:11px;padding:4px 10px;border-radius:6px;white-space:nowrap;pointer-events:none">' + (canChange ? 'Click to change (' + (2 - tpc) + ' left)' : 'Predicted winner (locked)') + '</span></span>';
   }
   var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">' + teamBtn + '<span class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">' + (userTheme === 'dark' ? '&#127769; Dark' : '&#9728;&#65039; Light') + '</span></div>';
   h += renderTodayPinned();
