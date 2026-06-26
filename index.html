@@ -767,7 +767,20 @@ window.claimStreak = function() {
   var already = loginDates[currentPlayer] && loginDates[currentPlayer][today];
   if(already) return;
   db.ref('wc2026/loginDates/' + currentPlayer + '/' + today).set(true);
-  // Force hero refresh
+  _heroHash = '';
+  renderHero();
+};
+let streakRecoveries = {};
+db.ref('wc2026/streakRecoveries').on('value', function(snap) { streakRecoveries = snap.val() || {}; });
+window.recoverStreak = function() {
+  if(!currentPlayer) return;
+  if(streakRecoveries[currentPlayer]) { alert('You have already used your streak recovery.'); return; }
+  if(!confirm('Use your one-time streak recovery? This backfills yesterday so your streak continues.')) return;
+  var now = new Date();
+  var yesterday = new Date(now.getTime() - 86400000);
+  var yStr = yesterday.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+  db.ref('wc2026/loginDates/' + currentPlayer + '/' + yStr).set(true);
+  db.ref('wc2026/streakRecoveries/' + currentPlayer).set(true);
   _heroHash = '';
   renderHero();
 };
@@ -2007,6 +2020,10 @@ function buildStreakBar() {
       h += '<button class="streak-claim-btn claimed" disabled>Claimed today &#10003;</button>';
     } else {
       h += '<button class="streak-claim-btn available" onclick="claimStreak()">Claim today\'s streak</button>';
+    }
+    // Recover button — shows when streak broken and recovery not used
+    if(si.streak === 0 && si.days.length > 0 && si.days.some(function(d){return d.logged;}) && !streakRecoveries[currentPlayer]) {
+      h += '<button class="streak-claim-btn" style="background:linear-gradient(135deg,#e67e22,#d35400);color:#fff;margin-left:4px" onclick="recoverStreak()">&#128296; Recover streak</button>';
     }
   }
   // Day squares
