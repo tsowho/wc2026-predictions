@@ -1064,7 +1064,7 @@ function getLeaderboard(includeAdmin) {
     // Knockout stage points
     let koPts = 0;
     const playerKo = koPredictions[p];
-    if(playerKo) { KO_SLOTS.forEach(function(slot) { var pred = playerKo[slot.id]; var actual = koActuals[slot.id]; if(pred && pred.locked && actual) { var r = calcPoints(pred, actual); if(r) koPts += r.pts; } }); }
+    if(playerKo) { KO_SLOTS.forEach(function(slot) { var pred = playerKo[slot.id]; var actual = koActuals[slot.id]; if(pred && pred.locked && actual) { var r = calcPoints(pred, actual); if(r) koPts += r.pts; if(pred.advance && actual.advance && pred.advance === actual.advance) koPts += 3; } }); }
     total += koPts;
     // Login streak points (only added after tournament ends)
     const si = getStreakInfo(p);
@@ -1931,7 +1931,6 @@ function renderKnockout() {
         h += '<input type="number" min="0" max="20" value="' + (predObj.s1 != null ? predObj.s1 : '') + '" data-ko="' + slot.id + '" data-side="s1" class="ko-input"' + (!canPredict ? ' disabled' : '') + '/>';
         h += '<span class="match-vs">-</span>';
         h += '<input type="number" min="0" max="20" value="' + (predObj.s2 != null ? predObj.s2 : '') + '" data-ko="' + slot.id + '" data-side="s2" class="ko-input"' + (!canPredict ? ' disabled' : '') + '/>';
-        if(canPredict) h += '<button class="btn-lock" onclick="lockKoPrediction(\'' + slot.id + '\')">Lock</button>';
       } else {
         h += '<span class="match-vs">vs</span>';
       }
@@ -1943,6 +1942,33 @@ function renderKnockout() {
         h += '<span class="team">' + teamFlag(m.team2) + m.team2 + '</span>';
       }
       h += '</div>';
+
+      // Who advances picker
+      if(hasBothTeams && !hasResult) {
+        var advPick = predObj.advance || '';
+        var canPredict2 = !locked && !matchStarted && !hasResult;
+        h += '<div style="border-top:1px dashed var(--border);margin-top:10px;padding-top:10px;text-align:center">';
+        h += '<div style="font-size:12px;color:var(--muted);margin-bottom:8px">&#127942; Who advances? (in case of penalties)</div>';
+        h += '<div style="display:flex;gap:8px;justify-content:center;max-width:320px;margin:0 auto">';
+        var a1Active = advPick === m.team1;
+        var a2Active = advPick === m.team2;
+        if(canPredict2) {
+          h += '<button style="flex:1;padding:7px 10px;border-radius:8px;font-size:12px;font-weight:' + (a1Active ? '600' : '400') + ';cursor:pointer;border:' + (a1Active ? '2px solid var(--accent)' : '1px solid var(--border)') + ';background:' + (a1Active ? 'rgba(29,158,117,0.15)' : 'transparent') + ';color:' + (a1Active ? 'var(--accent)' : 'var(--text)') + '" onclick="pickKoAdvance(\'' + slot.id + '\',\'' + m.team1.replace(/'/g,"\\'") + '\')">' + (a1Active ? '&#10003; ' : '') + teamFlag(m.team1) + m.team1 + '</button>';
+          h += '<button style="flex:1;padding:7px 10px;border-radius:8px;font-size:12px;font-weight:' + (a2Active ? '600' : '400') + ';cursor:pointer;border:' + (a2Active ? '2px solid var(--accent)' : '1px solid var(--border)') + ';background:' + (a2Active ? 'rgba(29,158,117,0.15)' : 'transparent') + ';color:' + (a2Active ? 'var(--accent)' : 'var(--text)') + '" onclick="pickKoAdvance(\'' + slot.id + '\',\'' + m.team2.replace(/'/g,"\\'") + '\')">' + (a2Active ? '&#10003; ' : '') + teamFlag(m.team2) + m.team2 + '</button>';
+        } else {
+          h += '<span style="font-size:12px;color:var(--accent);font-weight:600">' + (advPick ? teamFlag(advPick) + advPick + ' &#10003;' : 'Not picked') + '</span>';
+        }
+        h += '</div>';
+        h += '<div style="font-size:10px;color:var(--muted);margin-top:4px">+3 bonus points if correct</div>';
+        if(canPredict2) h += '<button class="btn-lock" style="margin-top:10px;width:100%;max-width:320px" onclick="lockKoPrediction(\'' + slot.id + '\')">Lock prediction</button>';
+        h += '</div>';
+      }
+
+      // Show advance result for completed matches
+      if(hasResult && pred && pred.locked && pred.advance && actual.advance) {
+        var advCorrect = pred.advance === actual.advance;
+        h += '<div style="text-align:center;margin-top:4px"><span style="font-size:11px;padding:2px 8px;border-radius:4px;background:' + (advCorrect ? 'rgba(29,158,117,0.15)' : 'rgba(226,75,74,0.1)') + ';color:' + (advCorrect ? 'var(--accent)' : 'var(--danger)') + '">Advance pick: ' + pred.advance + (advCorrect ? ' &#10003; +3' : ' &#10007;') + '</span></div>';
+      }
 
       // Show result points if both prediction and actual exist
       if(hasResult && pred && pred.locked) {
@@ -1956,13 +1982,22 @@ function renderKnockout() {
 
       // Admin: enter actual result
       if(isAdmin && hasBothTeams) {
-        h += '<div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);display:flex;align-items:center;gap:8px;justify-content:center">';
+        h += '<div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);text-align:center">';
+        h += '<div style="display:flex;align-items:center;gap:8px;justify-content:center">';
         h += '<span style="font-size:11px;color:var(--muted)">Result:</span>';
         h += '<input type="number" min="0" max="20" value="' + (actual.s1 != null ? actual.s1 : '') + '" data-koactual="' + slot.id + '" data-side="s1" class="ko-actual-input" style="width:50px"/>';
         h += '<span>-</span>';
         h += '<input type="number" min="0" max="20" value="' + (actual.s2 != null ? actual.s2 : '') + '" data-koactual="' + slot.id + '" data-side="s2" class="ko-actual-input" style="width:50px"/>';
-        h += '<button class="btn-primary" style="padding:4px 10px;font-size:11px" onclick="saveKoResult(\'' + slot.id + '\')">Save</button>';
         h += '</div>';
+        h += '<div style="display:flex;align-items:center;gap:8px;justify-content:center;margin-top:6px">';
+        h += '<span style="font-size:11px;color:var(--muted)">Advanced:</span>';
+        h += '<select data-koactual-adv="' + slot.id + '" style="padding:4px 8px;font-size:11px;border-radius:4px;border:1px solid var(--border);background:var(--bg);color:var(--text)">';
+        h += '<option value="">-- select --</option>';
+        h += '<option value="' + m.team1 + '"' + (actual.advance === m.team1 ? ' selected' : '') + '>' + m.team1 + '</option>';
+        h += '<option value="' + m.team2 + '"' + (actual.advance === m.team2 ? ' selected' : '') + '>' + m.team2 + '</option>';
+        h += '</select>';
+        h += '<button class="btn-primary" style="padding:4px 10px;font-size:11px" onclick="saveKoResult(\'' + slot.id + '\')">Save</button>';
+        h += '</div></div>';
       }
 
       h += '</div>';
@@ -1982,23 +2017,33 @@ window.setKoTeam = function(slotId, side) {
   db.ref('wc2026/knockout/teams/' + slotId + '/team' + side).set(team);
 };
 
+window.pickKoAdvance = function(slotId, team) {
+  db.ref('wc2026/knockout/predictions/' + currentPlayer + '/' + slotId + '/advance').set(team);
+};
+
 window.lockKoPrediction = function(slotId) {
   var s1El = document.querySelector('[data-ko="' + slotId + '"][data-side="s1"]');
   var s2El = document.querySelector('[data-ko="' + slotId + '"][data-side="s2"]');
   if(!s1El || !s2El) return;
   var s1 = s1El.value, s2 = s2El.value;
   if(s1 === '' || s2 === '') { alert('Enter both scores before locking.'); return; }
-  if(!confirm('Lock prediction ' + s1 + '-' + s2 + '? Cannot be changed!')) return;
-  db.ref('wc2026/knockout/predictions/' + currentPlayer + '/' + slotId).set({ s1: parseInt(s1), s2: parseInt(s2), locked: true });
+  var existingPred = koPredictions[currentPlayer] ? koPredictions[currentPlayer][slotId] : null;
+  var advance = existingPred ? existingPred.advance : '';
+  if(!advance) { alert('Please select who you think will advance before locking.'); return; }
+  if(!confirm('Lock prediction ' + s1 + '-' + s2 + ' (advance: ' + advance + ')? Cannot be changed!')) return;
+  db.ref('wc2026/knockout/predictions/' + currentPlayer + '/' + slotId).set({ s1: parseInt(s1), s2: parseInt(s2), advance: advance, locked: true });
 };
 
 window.saveKoResult = function(slotId) {
   var s1El = document.querySelector('[data-koactual="' + slotId + '"][data-side="s1"]');
   var s2El = document.querySelector('[data-koactual="' + slotId + '"][data-side="s2"]');
+  var advEl = document.querySelector('[data-koactual-adv="' + slotId + '"]');
   if(!s1El || !s2El) return;
   var s1 = s1El.value, s2 = s2El.value;
   if(s1 === '' || s2 === '') { alert('Enter both scores.'); return; }
-  db.ref('wc2026/knockout/actuals/' + slotId).set({ s1: parseInt(s1), s2: parseInt(s2) });
+  var advance = advEl ? advEl.value : '';
+  if(!advance) { alert('Please select which team advanced.'); return; }
+  db.ref('wc2026/knockout/actuals/' + slotId).set({ s1: parseInt(s1), s2: parseInt(s2), advance: advance });
 };
 
 // Admin can also set date/time for KO matches
