@@ -1323,10 +1323,42 @@ function renderLive() {
   }
   if(!live.length && !todayUpcoming.length && !todayCompleted.length) {
     var next = MATCHES.filter(function(m){return !isMatchStarted(m)}).slice(0, 6);
-    h += '<div class="card"><div class="collapsible-hdr" onclick="toggleCollapse(this)"><h2 style="margin:0">Upcoming matches (' + next.length + ')</h2><span class="collapsible-arrow open">&#9660;</span></div><div class="collapsible-body">';
-    if(next.length) next.forEach(function(m){h += liveCard(m, players)});
-    else h += '<div class="empty">No upcoming matches</div>';
-    h += '</div></div>';
+    if(next.length) {
+      h += '<div class="card"><div class="collapsible-hdr" onclick="toggleCollapse(this)"><h2 style="margin:0">Upcoming matches (' + next.length + ')</h2><span class="collapsible-arrow open">&#9660;</span></div><div class="collapsible-body">';
+      next.forEach(function(m){h += liveCard(m, players)});
+      h += '</div></div>';
+    } else {
+      // Show knockout matches
+      var koAll = KO_SLOTS.map(function(s){ return getKoMatch(s.id); }).filter(function(m){ return m.team1 !== 'TBD' && m.team2 !== 'TBD' && m.date && m.time; });
+      var koNow = new Date();
+      var koLive = koAll.filter(function(m){ var t = new Date(m.date + 'T' + m.time + ':00-04:00'); return koNow >= t && koNow <= new Date(t.getTime() + 7200000) && !koActuals[m.id]; });
+      var koTodayET = koNow.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+      var koTodayAll = koAll.filter(function(m){ return m.date === koTodayET; });
+      var koTodayUpcoming = koTodayAll.filter(function(m){ return !koLive.some(function(l){ return l.id === m.id; }) && !koActuals[m.id]; });
+      var koTodayDone = koTodayAll.filter(function(m){ return !!koActuals[m.id]; });
+      var koUpcoming = koAll.filter(function(m){ return !koActuals[m.id] && new Date(m.date + 'T' + m.time + ':00-04:00') > koNow; }).sort(function(a,b){ return new Date(a.date + 'T' + a.time + ':00-04:00') - new Date(b.date + 'T' + b.time + ':00-04:00'); }).slice(0, 6);
+      if(koLive.length) {
+        h += '<div class="card"><div class="collapsible-hdr" onclick="toggleCollapse(this)"><h2 style="margin:0"><span class="live-badge">LIVE</span> Knockout in progress (' + koLive.length + ')</h2><span class="collapsible-arrow open">&#9660;</span></div><div class="collapsible-body">';
+        koLive.forEach(function(m){ h += koLiveCard(m, players); });
+        h += '</div></div>';
+      }
+      if(koTodayUpcoming.length) {
+        h += '<div class="card"><div class="collapsible-hdr" onclick="toggleCollapse(this)"><h2 style="margin:0">Today\'s knockout matches (' + koTodayUpcoming.length + ')</h2><span class="collapsible-arrow open">&#9660;</span></div><div class="collapsible-body">';
+        koTodayUpcoming.forEach(function(m){ h += koLiveCard(m, players); });
+        h += '</div></div>';
+      }
+      if(koTodayDone.length) {
+        h += '<div class="card"><div class="collapsible-hdr" onclick="toggleCollapse(this)"><h2 style="margin:0">Today\'s completed (' + koTodayDone.length + ')</h2><span class="collapsible-arrow open">&#9660;</span></div><div class="collapsible-body">';
+        koTodayDone.forEach(function(m){ h += koLiveCard(m, players); });
+        h += '</div></div>';
+      }
+      if(!koLive.length && !koTodayUpcoming.length && !koTodayDone.length) {
+        h += '<div class="card"><div class="collapsible-hdr" onclick="toggleCollapse(this)"><h2 style="margin:0">Upcoming knockout matches (' + koUpcoming.length + ')</h2><span class="collapsible-arrow open">&#9660;</span></div><div class="collapsible-body">';
+        if(koUpcoming.length) koUpcoming.forEach(function(m){ h += koLiveCard(m, players); });
+        else h += '<div class="empty">No upcoming matches</div>';
+        h += '</div></div>';
+      }
+    }
   }
   return h;
 }
@@ -1372,6 +1404,37 @@ function liveCard(m, players) {
     h += '</div>';
   }
   h += '</div></div>';
+  return h;
+}
+
+function koRoundLabel(r) { return r === 'r32' ? 'Round of 32' : r === 'r16' ? 'Round of 16' : r === 'qf' ? 'Quarter-Final' : r === 'sf' ? 'Semi-Final' : r === '3rd' ? '3rd Place' : r === 'final' ? 'Final' : r; }
+
+function koLiveCard(m, players) {
+  var actual = koActuals[m.id];
+  var t = m.date && m.time ? new Date(m.date + 'T' + m.time + ':00-04:00') : null;
+  var now = new Date();
+  var started = t ? now >= t : false;
+  var isLive = started && !actual && t && (now - t) < 7200000;
+  var h = '<div class="match-card"><div class="match-header"><span>' + koRoundLabel(m.round) + ' | ' + fmtDate(m.date) + ' ' + etToUkTime(m.date, m.time) + ' UK</span>';
+  if(isLive) h += '<span class="live-badge">LIVE</span>';
+  else if(!started) { var diff = t - now; var hh = Math.floor(diff/3600000); var mm = Math.floor((diff%3600000)/60000); h += '<span class="countdown">' + (hh > 24 ? Math.floor(hh/24) + 'd ' + (hh%24) + 'h' : hh + 'h ' + mm + 'm') + '</span>'; }
+  h += '</div><div class="match-teams"><span class="team">' + teamFlag(m.team1) + m.team1 + '</span>';
+  h += actual && actual.s1 !== undefined ? '<div class="match-score"><span style="font-size:20px;font-weight:700">' + actual.s1 + ' - ' + actual.s2 + '</span></div>' : '<span class="match-vs">vs</span>';
+  h += '<span class="team">' + m.team2 + teamFlag(m.team2) + '</span></div>';
+  h += '<div style="margin-top:10px;border-top:1px dashed var(--border);padding-top:8px"><div style="font-size:11px;color:var(--hint);margin-bottom:6px">Knockout predictions:</div><div class="pred-grid">';
+  players.forEach(function(p) {
+    var pred = koPredictions[p] && koPredictions[p][m.id];
+    if(!pred || !pred.locked) { h += '<div class="pred-item"><span class="name">' + chessIcon(p) + p + '</span><span style="color:var(--hint)">-</span></div>'; return; }
+    if(started || actual) {
+      var r = calcPoints(pred, actual);
+      var s = r ? (r.type === 'exact' ? 'color:#0f6e56;font-weight:700' : r.type === 'correct' ? 'color:#854f0b;font-weight:600' : 'color:var(--danger)') : '';
+      var isExact = r && r.type === 'exact';
+      h += '<div class="pred-item"><span class="name' + (isExact ? ' gold-glow' : '') + '">' + chessIcon(p) + p + '</span><span style="' + s + '">' + pred.s1 + '-' + pred.s2 + (isExact ? ' &#127919;' : '') + '</span></div>';
+    } else {
+      h += '<div class="pred-item"><span class="name">' + chessIcon(p) + p + '</span><span style="color:var(--accent)">Locked</span></div>';
+    }
+  });
+  h += '</div></div></div>';
   return h;
 }
 
@@ -2112,11 +2175,11 @@ function runTypewriter() {
   var textEl = document.getElementById('tickerText');
   var dotEl = document.getElementById('tickerDot');
   if(!textEl || !_tickerItems.length) return;
-  
+
   var item = _tickerItems[_tickerIdx % _tickerItems.length];
   var dotColor = _tickerDotColors[_tickerIdx % _tickerDotColors.length] || '#1d9e75';
   dotEl.style.background = dotColor;
-  
+
   // Reset animation
   textEl.style.animation = 'none';
   textEl.offsetHeight; // force reflow
@@ -2126,7 +2189,7 @@ function runTypewriter() {
   textEl.style.setProperty('--type-dur', typeDur + 's');
   textEl.style.setProperty('--type-steps', charCount);
   textEl.style.animation = 'tickerType ' + typeDur + 's steps(' + charCount + ') forwards';
-  
+
   // Hold for 2s after typing, then fade and move to next
   var holdTime = typeDur * 1000 + 3000;
   _tickerIdx++;
@@ -2300,7 +2363,8 @@ function renderHero() {
       '<div class="hero-center">' + centerHtml + fuseHtml + '</div>' +
       '<div class="hero-podium">' + podiumHtml + '</div>' +
     '</div>' +
-    '<div class="hero-progress"><span class="hero-progress-label">Tournament</span><div class="hero-progress-bar"><div class="hero-progress-fill" style="width:' + pct + '%"></div></div><span class="hero-progress-label">' + played + '/' + MATCHES.length + ' groups</span></div>' +
+    '<div class="hero-progress"><span class="hero-progress-label">Groups</span><div class="hero-progress-bar"><div class="hero-progress-fill" style="width:' + pct + '%"></div></div><span class="hero-progress-label">' + played + '/' + MATCHES.length + '</span></div>' +
+    (function(){ var koPlayed = KO_SLOTS.filter(function(s){ return !!koActuals[s.id]; }).length; var koPct = KO_SLOTS.length > 0 ? Math.round((koPlayed / KO_SLOTS.length) * 100) : 0; return '<div class="hero-progress"><span class="hero-progress-label">Knockout</span><div class="hero-progress-bar"><div class="hero-progress-fill" style="width:' + koPct + '%;background:linear-gradient(90deg,#BA7517,#e24b4a)"></div></div><span class="hero-progress-label">' + koPlayed + '/' + KO_SLOTS.length + '</span></div>'; })() +
     buildStreakBar();
   // Start typewriter ticker
   var _twItems = [];
@@ -2993,49 +3057,13 @@ renderDashboard = function() {
   h += renderPrizesPodium();
   h += berryCard();
   return h;
-};
-
-// ============================================================
-// PATCH: renderLeaderboard to add flags, badges, export, H2H, profiles
-// ============================================================
-var _origRenderLeaderboard = renderLeaderboard;
-renderLeaderboard = function() {
-  var lb = getLeaderboard();
-  var h = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><div style="display:flex;gap:6px">';
-  h += '<button class="export-btn" onclick="exportLeaderboard()">&#128247; Export as image</button>';
-  
-  h += '</div></div>';
-  h += '<div class="card"><h2>Leaderboard</h2><table><tr><th>#</th><th>Player</th><th style="text-align:right">Exact</th><th style="text-align:right">Correct</th><th style="text-align:right">Points</th><th></th></tr>';
-  lb.forEach(function(p, i) {
-    var flag = playerTeams[p.name] ? teamFlag(playerTeams[p.name], 14) : '';
-    var badges = renderBadgesInline(p.name);
-    h += '<tr><td class="' + (i < 3 ? 'rank-' + (i+1) : '') + '">' + (i+1) + '</td>';
-    h += '<td>' + flag + chessIcon(p.name) + p.name + (badges ? ' ' + badges : '') + '</td>';
-    h += '<td style="text-align:right">' + p.exact + '</td>';
-    h += '<td style="text-align:right">' + p.correct + '</td>';
-    h += '<td style="text-align:right;font-weight:600">' + p.total + '</td>';
-    h += '<td><button class="btn-sm" onclick="showProfile(this.dataset.p)" data-p="' + p.name + '">&#128100;</button></td></tr>';
-  });
-  h += '</table></div>';
-  // H2H selector
-  var players = Object.keys(state.players || {}).filter(function(p) { return p !== ADMIN || currentPlayer === ADMIN; });
-  if(players.length >= 2) {
-    h += '<div class="card"><h2>&#9876; Head to Head</h2>';
-    h += '<div style="display:flex;gap:8px;margin-bottom:12px">';
-    h += '<select id="h2h1" style="flex:1">' + players.map(function(p) { return '<option>' + p + '</option>'; }).join('') + '</select>';
-    h += '<span style="align-self:center;color:var(--muted)">vs</span>';
-    h += '<select id="h2h2" style="flex:1">' + players.map(function(p,i) { return '<option' + (i===1?' selected':'') + '>' + p + '</option>'; }).join('') + '</select>';
-    h += '<button class="btn-primary btn-sm" onclick="showH2H()">Compare</button></div>';
-    h += '<div id="h2hResult"></div></div>';
-  }
-  return h;
 }
 
 var _chatLastSeen = 0;
 var _chatPanelOpen = false;
 window.toggleChatPanel = function() {
   _chatPanelOpen = !_chatPanelOpen;
-  var panel = document.getElementById('floatingChatPanel');
+  var panel = document.getElementById('chatPanel');
   if(panel) panel.style.display = _chatPanelOpen ? 'flex' : 'none';
   if(_chatPanelOpen) {
     _chatLastSeen = chatMessages.length;
