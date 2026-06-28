@@ -1928,9 +1928,9 @@ function renderKnockout() {
         h += '<span style="font-size:18px;font-weight:700">' + actual.s1 + ' - ' + actual.s2 + '</span>';
       } else if(hasBothTeams) {
         var canPredict = !locked && !matchStarted && !hasResult;
-        h += '<input type="number" min="0" max="20" value="' + (predObj.s1 != null ? predObj.s1 : '') + '" data-ko="' + slot.id + '" data-side="s1" class="ko-input"' + (!canPredict ? ' disabled' : '') + '/>';
+        h += '<input type="number" min="0" max="20" value="' + (predObj.s1 != null ? predObj.s1 : '') + '" data-ko="' + slot.id + '" data-side="s1" class="ko-input"' + (!canPredict ? ' disabled' : ' onchange="saveKoScore(\'' + slot.id + '\')"') + '/>';
         h += '<span class="match-vs">-</span>';
-        h += '<input type="number" min="0" max="20" value="' + (predObj.s2 != null ? predObj.s2 : '') + '" data-ko="' + slot.id + '" data-side="s2" class="ko-input"' + (!canPredict ? ' disabled' : '') + '/>';
+        h += '<input type="number" min="0" max="20" value="' + (predObj.s2 != null ? predObj.s2 : '') + '" data-ko="' + slot.id + '" data-side="s2" class="ko-input"' + (!canPredict ? ' disabled' : ' onchange="saveKoScore(\'' + slot.id + '\')"') + '/>';
       } else {
         h += '<span class="match-vs">vs</span>';
       }
@@ -2017,8 +2017,22 @@ window.setKoTeam = function(slotId, side) {
   db.ref('wc2026/knockout/teams/' + slotId + '/team' + side).set(team);
 };
 
+window.saveKoScore = function(slotId) {
+  var s1El = document.querySelector('[data-ko="' + slotId + '"][data-side="s1"]');
+  var s2El = document.querySelector('[data-ko="' + slotId + '"][data-side="s2"]');
+  var updates = {};
+  if(s1El && s1El.value !== '') updates.s1 = parseInt(s1El.value);
+  if(s2El && s2El.value !== '') updates.s2 = parseInt(s2El.value);
+  if(Object.keys(updates).length) db.ref('wc2026/knockout/predictions/' + currentPlayer + '/' + slotId).update(updates);
+};
+
 window.pickKoAdvance = function(slotId, team) {
-  db.ref('wc2026/knockout/predictions/' + currentPlayer + '/' + slotId + '/advance').set(team);
+  var s1El = document.querySelector('[data-ko="' + slotId + '"][data-side="s1"]');
+  var s2El = document.querySelector('[data-ko="' + slotId + '"][data-side="s2"]');
+  var updates = { advance: team };
+  if(s1El && s1El.value !== '') updates.s1 = parseInt(s1El.value);
+  if(s2El && s2El.value !== '') updates.s2 = parseInt(s2El.value);
+  db.ref('wc2026/knockout/predictions/' + currentPlayer + '/' + slotId).update(updates);
 };
 
 window.lockKoPrediction = function(slotId) {
