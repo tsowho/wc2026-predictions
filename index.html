@@ -1271,7 +1271,16 @@ function renderDashboard() {
   var topExact = lb.length ? lb.reduce(function(a,b){return a.exact>b.exact?a:b}).exact : 0;
   let h = '<div class="stats-row">';
   h += '<div class="stat-card" style="text-align:center;background:linear-gradient(135deg,#0a2e1f,#1a1a2e);border-radius:10px;border:none"><div style="font-size:20px;margin-bottom:4px;color:#1d9e75">&#128101;</div><div class="value">' + players.length + '</div><div class="label">Players</div></div>';
-  h += '<div class="stat-card" style="text-align:center;background:linear-gradient(135deg,#0a2e1f,#1a1a2e);border-radius:10px;border:none"><div style="font-size:20px;margin-bottom:4px;color:#1d9e75">&#9917;</div><div class="value">' + played + '<span style="font-size:14px;color:var(--muted)"> / ' + MATCHES.length + '</span></div><div class="label">Matches</div><div style="height:3px;background:rgba(255,255,255,0.1);border-radius:2px;margin-top:6px"><div style="height:100%;width:' + pctPlayed + '%;background:#1d9e75;border-radius:2px"></div></div></div>';
+  var koPlayed = KO_SLOTS.filter(function(s){ return !!koActuals[s.id]; }).length;
+  var koTotal = KO_SLOTS.length;
+  var allGroupsDone = played >= MATCHES.length;
+  if(!allGroupsDone) {
+    h += '<div class="stat-card" style="text-align:center;background:linear-gradient(135deg,#0a2e1f,#1a1a2e);border-radius:10px;border:none"><div style="font-size:20px;margin-bottom:4px;color:#1d9e75">&#9917;</div><div class="value">' + played + '<span style="font-size:14px;color:var(--muted)"> / ' + MATCHES.length + '</span></div><div class="label">Groups</div><div style="height:3px;background:rgba(255,255,255,0.1);border-radius:2px;margin-top:6px"><div style="height:100%;width:' + pctPlayed + '%;background:#1d9e75;border-radius:2px"></div></div></div>';
+  } else {
+    var koPct = koTotal > 0 ? Math.round((koPlayed / koTotal) * 100) : 0;
+    var currentKoRound = koPlayed === 0 ? 'Round of 32' : koPlayed < 16 ? 'Round of 32' : koPlayed < 24 ? 'Round of 16' : koPlayed < 28 ? 'Quarter-Finals' : koPlayed < 30 ? 'Semi-Finals' : koPlayed < 32 ? 'Finals' : 'Complete';
+    h += '<div class="stat-card" style="text-align:center;background:linear-gradient(135deg,#0a2e1f,#1a1a2e);border-radius:10px;border:none"><div style="font-size:20px;margin-bottom:4px;color:#BA7517">&#127942;</div><div class="value">' + koPlayed + '<span style="font-size:14px;color:var(--muted)"> / ' + koTotal + '</span></div><div class="label">' + currentKoRound + '</div><div style="height:3px;background:rgba(255,255,255,0.1);border-radius:2px;margin-top:6px"><div style="height:100%;width:' + koPct + '%;background:linear-gradient(90deg,#BA7517,#e24b4a);border-radius:2px"></div></div></div>';
+  }
   h += '<div class="stat-card" style="text-align:center;background:linear-gradient(135deg,#0a2e1f,#1a1a2e);border-radius:10px;border:none"><div style="font-size:18px;margin-bottom:4px">&#128081;</div><div class="value">' + (leader && leader.total > 0 ? leader.name : '-') + '</div><div class="label">Leader</div>' + (leader && leader.total > 0 ? '<div style="display:flex;align-items:center;justify-content:center;gap:4px;margin-top:4px">' + leaderFlag + '<span style="font-size:11px;color:var(--muted)">' + leader.total + ' pts</span></div>' : '') + '</div>';
   h += '<div class="stat-card" style="text-align:center;background:linear-gradient(135deg,#0a2e1f,#1a1a2e);border-radius:10px;border:none"><div style="font-size:20px;margin-bottom:4px;color:#BA7517">&#127919;</div><div class="value" style="color:#BA7517">' + (leader && leader.total > 0 ? leader.total : '-') + '</div><div class="label">Top Score</div>' + (topExact > 0 ? '<div style="font-size:11px;color:var(--muted);margin-top:4px">' + topExact + ' exact</div>' : '') + '</div></div>';
   if(!document.getElementById('loggedInBar')) {
@@ -3188,7 +3197,6 @@ window.savePlayerEmail = function() {
     alert('Email saved!');
   });
 };
-
 
 window.contactSupport = function() {
   var subject = encodeURIComponent('WC2026 Predictions - Support Request');
