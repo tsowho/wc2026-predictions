@@ -1103,7 +1103,7 @@ function streakBadge(player) {
   const s = getStreak(player);
   if(s < 2) return '';
   const flames = s >= 10 ? '&#128293;&#128293;&#128293;' : s >= 5 ? '&#128293;&#128293;' : '&#128293;';
-  return '<span class="streak-badge">' + s + ' in a row ' + flames + '</span>';
+  return '<span class="streak-badge" title="' + s + ' correct in a row" style="cursor:help">' + flames + '</span>';
 }
 
 function getAchievements(player) {
@@ -1118,9 +1118,9 @@ function getAchievements(player) {
     if(r.pts > 0) totalCorrect++;
   });
   const achs = [];
-  if(exactCount >= 5) achs.push('<span class="achievement ach-oracle">Oracle</span>');
-  if(getStreak(player) >= 3) achs.push('<span class="achievement ach-streaker">Streaker</span>');
-  if(getLoseStreak(player) >= 5) achs.push('<span class="achievement ach-cursed">Cursed</span>');
+  if(exactCount >= 5) achs.push('<span class="achievement ach-oracle" title="Oracle: 5+ exact scores">&#129504;</span>');
+  if(getStreak(player) >= 3) achs.push('<span class="achievement ach-streaker" title="Streaker: 3+ correct in a row">&#9889;</span>');
+  if(getLoseStreak(player) >= 5) achs.push('<span class="achievement ach-cursed" title="Cursed: 5+ wrong in a row">&#128128;</span>');
   return achs.join('');
 }
 
@@ -3188,6 +3188,7 @@ window.savePlayerEmail = function() {
     alert('Email saved!');
   });
 };
+
 
 window.contactSupport = function() {
   var subject = encodeURIComponent('WC2026 Predictions - Support Request');
