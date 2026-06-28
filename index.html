@@ -1775,7 +1775,25 @@ const KO_ROUNDS = [
 // R32 matchups based on FIFA format: group winners vs third-place, runners-up vs runners-up
 const KO_SLOTS = [];
 // Round of 32 (16 matches)
-for(var ki = 1; ki <= 16; ki++) KO_SLOTS.push({ id: 'r32_' + ki, round: 'r32', num: ki, team1: 'TBD', team2: 'TBD', date: '', time: '' });
+var R32_MATCHES = [
+  { team1:'South Africa', team2:'Canada', date:'2026-06-28', time:'15:00' },
+  { team1:'Brazil', team2:'Japan', date:'2026-06-29', time:'13:00' },
+  { team1:'Germany', team2:'Paraguay', date:'2026-06-29', time:'16:30' },
+  { team1:'Netherlands', team2:'Morocco', date:'2026-06-29', time:'21:00' },
+  { team1:'Ivory Coast', team2:'Norway', date:'2026-06-30', time:'13:00' },
+  { team1:'France', team2:'Sweden', date:'2026-06-30', time:'17:00' },
+  { team1:'Mexico', team2:'Ecuador', date:'2026-06-30', time:'21:00' },
+  { team1:'England', team2:'DR Congo', date:'2026-07-01', time:'12:00' },
+  { team1:'Belgium', team2:'Senegal', date:'2026-07-01', time:'16:00' },
+  { team1:'USA', team2:'Bosnia', date:'2026-07-01', time:'20:00' },
+  { team1:'Spain', team2:'Austria', date:'2026-07-02', time:'15:00' },
+  { team1:'Portugal', team2:'Croatia', date:'2026-07-02', time:'19:00' },
+  { team1:'Switzerland', team2:'Algeria', date:'2026-07-02', time:'23:00' },
+  { team1:'Australia', team2:'Egypt', date:'2026-07-03', time:'14:00' },
+  { team1:'Argentina', team2:'Cabo Verde', date:'2026-07-03', time:'18:00' },
+  { team1:'Colombia', team2:'Ghana', date:'2026-07-03', time:'21:30' }
+];
+R32_MATCHES.forEach(function(m, i) { KO_SLOTS.push({ id: 'r32_' + (i+1), round: 'r32', num: i+1, team1: m.team1, team2: m.team2, date: m.date, time: m.time }); });
 // Round of 16
 for(var ki = 1; ki <= 8; ki++) KO_SLOTS.push({ id: 'r16_' + ki, round: 'r16', num: ki, team1: 'TBD', team2: 'TBD', date: '', time: '' });
 // QF
@@ -1798,7 +1816,7 @@ function getKoMatch(id) {
   var slot = KO_SLOTS.find(function(s) { return s.id === id; });
   if(!slot) return null;
   var teams = koTeams[id] || {};
-  return { id: id, round: slot.round, num: slot.num, team1: teams.team1 || 'TBD', team2: teams.team2 || 'TBD', date: teams.date || '', time: teams.time || '' };
+  return { id: id, round: slot.round, num: slot.num, team1: teams.team1 || slot.team1 || 'TBD', team2: teams.team2 || slot.team2 || 'TBD', date: teams.date || slot.date || '', time: teams.time || slot.time || '' };
 }
 
 function renderKnockout() {
@@ -2153,9 +2171,20 @@ function renderHero() {
   const pct = MATCHES.length > 0 ? Math.round((played / MATCHES.length) * 100) : 0;
   const now = new Date();
 
-  // Find live and next match
+  // Find live and next match (group + knockout)
   const liveMatches = MATCHES.filter(m => { const t = getMatchTime(m); return now >= t && now <= new Date(t.getTime() + 7200000) && !state.actuals?.['m' + m.id]; });
-  const nextMatch = MATCHES.filter(m => !state.actuals?.['m' + m.id] && !liveMatches.includes(m) && getMatchTime(m) > now).sort((a,b) => getMatchTime(a) - getMatchTime(b))[0];
+  var nextMatch = MATCHES.filter(m => !state.actuals?.['m' + m.id] && !liveMatches.includes(m) && getMatchTime(m) > now).sort((a,b) => getMatchTime(a) - getMatchTime(b))[0];
+  // Check knockout matches if no group matches left
+  var nextKo = null;
+  if(!nextMatch && !liveMatches.length) {
+    var koAll = KO_SLOTS.map(function(s) { return getKoMatch(s.id); }).filter(function(m) { return m.team1 !== 'TBD' && m.team2 !== 'TBD' && m.date && m.time; });
+    var koLive = koAll.filter(function(m) { var t = new Date(m.date + 'T' + m.time + ':00-04:00'); return now >= t && now <= new Date(t.getTime() + 7200000) && !koActuals[m.id]; });
+    if(koLive.length) { nextKo = { type: 'live', match: koLive[0] }; }
+    else {
+      var koNext = koAll.filter(function(m) { return !koActuals[m.id] && new Date(m.date + 'T' + m.time + ':00-04:00') > now; }).sort(function(a,b) { return new Date(a.date + 'T' + a.time + ':00-04:00') - new Date(b.date + 'T' + b.time + ':00-04:00'); });
+      if(koNext.length) nextKo = { type: 'next', match: koNext[0] };
+    }
+  }
 
   // Ticker items
   let tickerItems = [];
@@ -2205,6 +2234,26 @@ function renderHero() {
     centerHtml += '<div class="hero-cd-box"><div class="hero-cd-num" id="cdMin">' + min + '</div><div class="hero-cd-unit">min</div></div>';
     centerHtml += '<div class="hero-cd-box"><div class="hero-cd-num" id="cdSec">' + s + '</div><div class="hero-cd-unit">sec</div></div>';
     centerHtml += '</div>';
+  } else if(nextKo && nextKo.type === 'live') {
+    var klm = nextKo.match;
+    centerHtml = '<div class="hero-next-label">Match in progress</div>';
+    centerHtml += '<div class="hero-next-teams">' + klm.team1 + ' vs ' + klm.team2 + '</div>';
+    centerHtml += '<div class="hero-next-meta">' + klm.round.toUpperCase().replace('R32','Round of 32').replace('R16','Round of 16').replace('QF','Quarter-Final').replace('SF','Semi-Final') + ' | ' + etToUkTime(klm.date, klm.time) + ' UK</div>';
+    centerHtml += '<div class="hero-live-now"><span class="hero-live-pulse"></span> LIVE NOW</div>';
+  } else if(nextKo && nextKo.type === 'next') {
+    var knm = nextKo.match;
+    var kDiff = new Date(knm.date + 'T' + knm.time + ':00-04:00') - now;
+    var kd = Math.floor(kDiff / 86400000), kh = Math.floor((kDiff % 86400000) / 3600000), kmin = Math.floor((kDiff % 3600000) / 60000), ks = Math.floor((kDiff % 60000) / 1000);
+    var roundLabel = knm.round.replace('r32','Round of 32').replace('r16','Round of 16').replace('qf','Quarter-Final').replace('sf','Semi-Final').replace('final','Final').replace('3rd','3rd Place');
+    centerHtml = '<div class="hero-next-label">Next match</div>';
+    centerHtml += '<div class="hero-next-teams">' + knm.team1 + ' vs ' + knm.team2 + '</div>';
+    centerHtml += '<div class="hero-next-meta">' + roundLabel + ' | ' + fmtDate(knm.date) + ' ' + etToUkTime(knm.date, knm.time) + ' UK</div>';
+    centerHtml += '<div class="hero-countdown">';
+    if(kd > 0) centerHtml += '<div class="hero-cd-box"><div class="hero-cd-num" id="cdDays">' + kd + '</div><div class="hero-cd-unit">days</div></div>';
+    centerHtml += '<div class="hero-cd-box"><div class="hero-cd-num" id="cdHrs">' + kh + '</div><div class="hero-cd-unit">hrs</div></div>';
+    centerHtml += '<div class="hero-cd-box"><div class="hero-cd-num" id="cdMin">' + kmin + '</div><div class="hero-cd-unit">min</div></div>';
+    centerHtml += '<div class="hero-cd-box"><div class="hero-cd-num" id="cdSec">' + ks + '</div><div class="hero-cd-unit">sec</div></div>';
+    centerHtml += '</div>';
   } else {
     centerHtml = '<div class="hero-next-label">Tournament</div><div class="hero-next-teams">Complete!</div>';
   }
@@ -2231,9 +2280,11 @@ function renderHero() {
 
   // Burning fuse under countdown
   var fuseHtml = '';
-  if(nextMatch && !liveMatches.length) {
-    var diff2 = getMatchTime(nextMatch) - now;
-    var burnPct = Math.max(0, Math.min(100, (1 - diff2 / (7 * 86400000)) * 100));
+  var fuseDiff = null;
+  if(nextMatch && !liveMatches.length) { fuseDiff = getMatchTime(nextMatch) - now; }
+  else if(nextKo && nextKo.type === 'next') { fuseDiff = new Date(nextKo.match.date + 'T' + nextKo.match.time + ':00-04:00') - now; }
+  if(fuseDiff !== null && fuseDiff > 0) {
+    var burnPct = Math.max(0, Math.min(100, (1 - fuseDiff / (7 * 86400000)) * 100));
     fuseHtml = '<div class="fuse-wrap"><div class="fuse-label">&#9200;</div><div class="fuse-line"><div class="fuse-burned" style="width:' + burnPct + '%"></div><div class="fuse-spark" style="left:calc(' + burnPct + '% - 4px)"><div class="fuse-sparks"><div class="fuse-spark-p" style="--sx:6px;--sy:-10px"></div><div class="fuse-spark-p" style="--sx:-4px;--sy:-12px"></div><div class="fuse-spark-p" style="--sx:3px;--sy:-8px"></div></div></div></div><div class="fuse-bomb">&#128163;</div></div>';
   }
 
@@ -2249,7 +2300,7 @@ function renderHero() {
       '<div class="hero-center">' + centerHtml + fuseHtml + '</div>' +
       '<div class="hero-podium">' + podiumHtml + '</div>' +
     '</div>' +
-    '<div class="hero-progress"><span class="hero-progress-label">Tournament</span><div class="hero-progress-bar"><div class="hero-progress-fill" style="width:' + pct + '%"></div></div><span class="hero-progress-label">' + played + '/' + MATCHES.length + '</span></div>' +
+    '<div class="hero-progress"><span class="hero-progress-label">Tournament</span><div class="hero-progress-bar"><div class="hero-progress-fill" style="width:' + pct + '%"></div></div><span class="hero-progress-label">' + played + '/' + MATCHES.length + ' groups</span></div>' +
     buildStreakBar();
   // Start typewriter ticker
   var _twItems = [];
@@ -2296,9 +2347,15 @@ setInterval(() => {
   if(!cdSec) return;
   const now = new Date();
   const liveMatches = MATCHES.filter(m => { const t = getMatchTime(m); return now >= t && now <= new Date(t.getTime() + 7200000) && !state.actuals?.['m' + m.id]; });
-  const nextMatch = MATCHES.filter(m => !state.actuals?.['m' + m.id] && !liveMatches.includes(m) && getMatchTime(m) > now).sort((a,b) => getMatchTime(a) - getMatchTime(b))[0];
-  if(!nextMatch) return;
-  const diff = getMatchTime(nextMatch) - now;
+  var nextMatch = MATCHES.filter(m => !state.actuals?.['m' + m.id] && !liveMatches.includes(m) && getMatchTime(m) > now).sort((a,b) => getMatchTime(a) - getMatchTime(b))[0];
+  var diff;
+  if(nextMatch) { diff = getMatchTime(nextMatch) - now; }
+  else {
+    var koAll = KO_SLOTS.map(function(s) { return getKoMatch(s.id); }).filter(function(m) { return m.team1 !== 'TBD' && m.team2 !== 'TBD' && m.date && m.time && !koActuals[m.id]; });
+    var koNext = koAll.filter(function(m) { return new Date(m.date + 'T' + m.time + ':00-04:00') > now; }).sort(function(a,b) { return new Date(a.date + 'T' + a.time + ':00-04:00') - new Date(b.date + 'T' + b.time + ':00-04:00'); })[0];
+    if(!koNext) return;
+    diff = new Date(koNext.date + 'T' + koNext.time + ':00-04:00') - now;
+  }
   if(diff <= 0) { renderHero(); return; }
   const d = Math.floor(diff / 86400000), h = Math.floor((diff % 86400000) / 3600000), min = Math.floor((diff % 3600000) / 60000), s = Math.floor((diff % 60000) / 1000);
   if(cdDays) cdDays.textContent = d;
@@ -2971,55 +3028,20 @@ renderLeaderboard = function() {
     h += '<button class="btn-primary btn-sm" onclick="showH2H()">Compare</button></div>';
     h += '<div id="h2hResult"></div></div>';
   }
-  // Profile section
-  h += '<div id="profileSection"></div>';
   return h;
-};
-
-window.showH2H = function() {
-  var p1 = document.getElementById('h2h1').value;
-  var p2 = document.getElementById('h2h2').value;
-  if(p1 === p2) { alert('Pick two different players!'); return; }
-  document.getElementById('h2hResult').innerHTML = renderH2H(p1, p2);
-};
-
-window.showProfile = function(name) {
-  var el = document.getElementById('profileSection');
-  if(el) el.innerHTML = renderProfile(name);
-  el.scrollIntoView({behavior:'smooth'});
-};
-
-// toggleCollapse helper
-function toggleCollapse(hdr) {
-  var body = hdr.nextElementSibling;
-  var arrow = hdr.querySelector('.collapsible-arrow');
-  if(body) body.classList.toggle('collapsed');
-  if(arrow) arrow.classList.toggle('open');
 }
 
-// UK Time clock
-setInterval(function() {
-  var el = document.getElementById('ukClock');
-  if(!el) return;
-  el.textContent = new Date().toLocaleTimeString('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit', second: '2-digit' });
-}, 1000);
-
-// Floating chat panel
+var _chatLastSeen = 0;
 var _chatPanelOpen = false;
-var _chatLastSeen = parseInt(localStorage.getItem('wc2026_chat_seen') || '0');
-
 window.toggleChatPanel = function() {
   _chatPanelOpen = !_chatPanelOpen;
-  var panel = document.getElementById('chatPanel');
-  if(panel) panel.classList.toggle('open', _chatPanelOpen);
+  var panel = document.getElementById('floatingChatPanel');
+  if(panel) panel.style.display = _chatPanelOpen ? 'flex' : 'none';
   if(_chatPanelOpen) {
     _chatLastSeen = chatMessages.length;
-    localStorage.setItem('wc2026_chat_seen', String(_chatLastSeen));
-    updateChatBadge();
     renderFloatingChat();
-    var msgs = document.getElementById('floatingChatMsgs');
-    if(msgs) setTimeout(function() { msgs.scrollTop = msgs.scrollHeight; }, 50);
   }
+  updateChatBadge();
 };
 
 function updateChatBadge() {
