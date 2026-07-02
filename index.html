@@ -1866,8 +1866,18 @@ var R32_MATCHES = [
   { team1:'Colombia', team2:'Ghana', date:'2026-07-03', time:'21:30' }
 ];
 R32_MATCHES.forEach(function(m, i) { KO_SLOTS.push({ id: 'r32_' + (i+1), round: 'r32', num: i+1, team1: m.team1, team2: m.team2, date: m.date, time: m.time }); });
-// Round of 16
-for(var ki = 1; ki <= 8; ki++) KO_SLOTS.push({ id: 'r16_' + ki, round: 'r16', num: ki, team1: 'TBD', team2: 'TBD', date: '', time: '' });
+// Round of 16 (8 matches)
+var R16_MATCHES = [
+  { team1:'Canada', team2:'Morocco', date:'2026-07-04', time:'13:00' },
+  { team1:'Paraguay', team2:'France', date:'2026-07-04', time:'17:00' },
+  { team1:'Brazil', team2:'Norway', date:'2026-07-05', time:'16:00' },
+  { team1:'Mexico', team2:'England', date:'2026-07-05', time:'20:00' },
+  { team1:'TBD', team2:'TBD', date:'2026-07-06', time:'15:00' },
+  { team1:'Belgium', team2:'USA', date:'2026-07-06', time:'20:00' },
+  { team1:'TBD', team2:'TBD', date:'2026-07-07', time:'12:00' },
+  { team1:'TBD', team2:'TBD', date:'2026-07-07', time:'16:00' }
+];
+R16_MATCHES.forEach(function(m, i) { KO_SLOTS.push({ id: 'r16_' + (i+1), round: 'r16', num: i+1, team1: m.team1, team2: m.team2, date: m.date, time: m.time }); });
 // QF
 for(var ki = 1; ki <= 4; ki++) KO_SLOTS.push({ id: 'qf_' + ki, round: 'qf', num: ki, team1: 'TBD', team2: 'TBD', date: '', time: '' });
 // SF
