@@ -502,11 +502,12 @@ button:disabled{opacity:.5;cursor:not-allowed}
 <div class="tabs" id="tabs">
 <button class="tab active" data-tab="dashboard">Dashboard</button>
 <button class="tab" data-tab="live">Live</button>
-<button class="tab" data-tab="predict">Predict</button>
+<!-- <button class="tab" data-tab="predict">Predict</button> -->
 <button class="tab" data-tab="results">Results</button>
 <button class="tab" data-tab="leaderboard">Leaderboard</button>
 <button class="tab" data-tab="news">News</button>
 <button class="tab" data-tab="knockout">Knockout</button>
+<button class="tab" data-tab="rewards">Rewards</button>
 <button class="tab" data-tab="players">Players</button>
 </div>
 <div id="content"></div>
@@ -995,6 +996,7 @@ function render(immediate) {
     case 'leaderboard': c.innerHTML = renderLeaderboard(); break;
     case 'news': c.innerHTML = renderNews(); break;
     case 'knockout': c.innerHTML = renderKnockout(); break;
+    case 'rewards': c.innerHTML = renderRewards(); break;
     case 'players': c.innerHTML = renderPlayers(); if(currentPlayer) db.ref('wc2026/playerEmails/' + currentPlayer).once('value').then(function(snap) { var el = document.getElementById('playerEmailInput'); if(el && snap.val()) el.value = snap.val(); }); break;
   }
   attachEvents();
@@ -1900,6 +1902,129 @@ function getKoMatch(id) {
   return { id: id, round: slot.round, num: slot.num, team1: teams.team1 || slot.team1 || 'TBD', team2: teams.team2 || slot.team2 || 'TBD', date: teams.date || slot.date || '', time: teams.time || slot.time || '' };
 }
 
+// === REWARDS ===
+let rewardsOpen = false;
+let rewardsPicks = {};
+stateRef.child('rewards/open').on('value', snap => { rewardsOpen = !!snap.val(); if(currentPlayer) render(); });
+stateRef.child('rewards/picks').on('value', snap => { rewardsPicks = snap.val() || {}; if(currentPlayer) render(); });
+
+var REWARD_OPTIONS = [
+  { id: 'cash', icon: '&#128176;', label: 'Cash prize', desc: 'Direct bank transfer in naira' },
+  { id: 'digital', icon: '&#127873;', label: 'Digital reward', desc: 'VPN, Proton bundle, or virtual Visa card', sub: [
+    { id: 'proton_unlimited', label: 'Proton Unlimited', desc: '50% off — VPN + Mail + Drive + Pass bundle' },
+    { id: 'proton_vpn', label: 'Proton VPN', desc: '15-month plan at $3.99/mo' },
+    { id: 'korp_vpn', label: 'Korp VPN', desc: '3 months at $1.66/mo' },
+    { id: 'tevau_visa', label: 'Tevau virtual Visa card', desc: 'Limited edition Web3 Visa card' }
+  ]},
+  { id: 'airtime', icon: '&#128241;', label: 'Airtime / Data', desc: 'Mobile top-up to your number' },
+  { id: 'takeout', icon: '&#127860;', label: 'Chinese takeout', desc: 'Meal delivered to you' }
+];
+
+window.pickReward = function(rewardId) {
+  var lb = getLeaderboard();
+  var rank = -1;
+  for(var i = 0; i < lb.length; i++) { if(lb[i].name === currentPlayer) { rank = i + 1; break; } }
+  if(!rewardsOpen) { alert('Prize selection is not open yet.'); return; }
+  if(rank < 1 || rank > 5) { alert('Only top 5 players can select a prize.'); return; }
+  db.ref('wc2026/rewards/picks/' + currentPlayer).set({ choice: rewardId, timestamp: Date.now() });
+};
+
+window.pickDigitalSub = function(subId) {
+  var lb = getLeaderboard();
+  var rank = -1;
+  for(var i = 0; i < lb.length; i++) { if(lb[i].name === currentPlayer) { rank = i + 1; break; } }
+  if(!rewardsOpen) return;
+  if(rank < 1 || rank > 5) return;
+  db.ref('wc2026/rewards/picks/' + currentPlayer).set({ choice: 'digital', subChoice: subId, timestamp: Date.now() });
+};
+
+window.toggleRewardsOpen = function() {
+  db.ref('wc2026/rewards/open').set(!rewardsOpen);
+};
+
+function renderRewards() {
+  var isAdmin = currentPlayer === ADMIN;
+  var lb = getLeaderboard();
+  var rank = -1;
+  for(var i = 0; i < lb.length; i++) { if(lb[i].name === currentPlayer) { rank = i + 1; break; } }
+  var canPick = rewardsOpen && rank >= 1 && rank <= 5;
+  var myPick = rewardsPicks[currentPlayer] || {};
+  var h = '<div class="card" style="max-width:480px;margin:0 auto">';
+
+  // Admin toggle
+  if(isAdmin) {
+    h += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding:10px 14px;background:rgba(29,158,117,0.1);border-radius:8px">';
+    h += '<div><span style="font-size:14px;font-weight:600">' + (rewardsOpen ? '&#128994; Selection Open' : '&#128308; Selection Closed') + '</span>';
+    h += '<p style="font-size:12px;color:var(--muted);margin:2px 0 0">Top 5 players ' + (rewardsOpen ? 'can pick their prize' : 'cannot pick yet') + '</p></div>';
+    h += '<button class="btn-primary btn-sm" onclick="toggleRewardsOpen()">' + (rewardsOpen ? 'Close' : 'Open') + '</button></div>';
+  }
+
+  h += '<div style="text-align:center;margin-bottom:16px"><div style="font-size:18px;font-weight:600">Select your preferred prize</div>';
+  h += '<div style="font-size:13px;color:var(--muted)">If you finish in the top 3, you\'ll receive the reward you chose</div></div>';
+
+  // Lock banner if not open
+  if(!rewardsOpen) {
+    h += '<div style="background:#BA7517;color:#fff;text-align:center;padding:10px 16px;border-radius:8px;margin-bottom:14px;font-size:14px;font-weight:600">&#128274; Prize selection opens soon</div>';
+  } else if(!canPick && !isAdmin) {
+    h += '<div style="background:var(--border);color:var(--fg);text-align:center;padding:10px 16px;border-radius:8px;margin-bottom:14px;font-size:13px">Top 5 players can select their prize — keep climbing!</div>';
+  }
+
+  // Prize options
+  var opac = (!rewardsOpen || (!canPick && !isAdmin)) ? 'opacity:0.4;pointer-events:none;' : '';
+  h += '<div style="' + opac + '">';
+  REWARD_OPTIONS.forEach(function(opt) {
+    var selected = myPick.choice === opt.id;
+    var border = selected ? 'border:2px solid #1d9e75' : 'border:1px solid var(--border)';
+    h += '<div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:8px;' + border + ';margin-bottom:8px;background:var(--card);cursor:pointer" onclick="pickReward(\'' + opt.id + '\')">';
+    h += '<span style="font-size:22px">' + opt.icon + '</span>';
+    h += '<div style="flex:1"><div style="font-weight:600;font-size:14px">' + opt.label + '</div><div style="font-size:12px;color:var(--muted)">' + opt.desc + '</div></div>';
+    if(selected) h += '<div style="width:20px;height:20px;border-radius:50%;background:#1d9e75;display:flex;align-items:center;justify-content:center"><span style="color:#fff;font-size:12px">&#10003;</span></div>';
+    else h += '<div style="width:20px;height:20px;border-radius:50%;border:2px solid var(--border)"></div>';
+    h += '</div>';
+    // Digital sub-options
+    if(opt.sub && selected) {
+      h += '<div style="padding:0 12px 8px;display:flex;flex-direction:column;gap:6px">';
+      opt.sub.forEach(function(sub) {
+        var subSel = myPick.subChoice === sub.id;
+        var subBorder = subSel ? 'border:2px solid #1d9e75' : 'border:1px solid var(--border)';
+        h += '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:6px;' + subBorder + ';background:var(--bg);cursor:pointer" onclick="event.stopPropagation();pickDigitalSub(\'' + sub.id + '\')">';
+        h += '<div style="flex:1"><div style="font-weight:600;font-size:13px">' + sub.label + '</div><div style="font-size:11px;color:var(--muted)">' + sub.desc + '</div></div>';
+        if(subSel) h += '<div style="width:16px;height:16px;border-radius:50%;background:#1d9e75;display:flex;align-items:center;justify-content:center"><span style="color:#fff;font-size:10px">&#10003;</span></div>';
+        else h += '<div style="width:16px;height:16px;border-radius:50%;border:1.5px solid var(--border)"></div>';
+        h += '</div>';
+      });
+      h += '</div>';
+    }
+  });
+  h += '</div>';
+
+  // Prize tiers
+  h += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px">';
+  h += '<div style="background:var(--bg);border-radius:8px;border:1px solid var(--border);padding:12px 8px;text-align:center;border-top:3px solid #BA7517"><div style="font-size:24px;margin-bottom:4px">&#129351;</div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">1st place</div><div style="font-size:20px;font-weight:700;color:#BA7517">&#8358;10K</div></div>';
+  h += '<div style="background:var(--bg);border-radius:8px;border:1px solid var(--border);padding:12px 8px;text-align:center;border-top:3px solid #888"><div style="font-size:24px;margin-bottom:4px">&#129352;</div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">2nd place</div><div style="font-size:20px;font-weight:700;color:#888">&#8358;5K</div></div>';
+  h += '<div style="background:var(--bg);border-radius:8px;border:1px solid var(--border);padding:12px 8px;text-align:center;border-top:3px solid #CD7F32"><div style="font-size:24px;margin-bottom:4px">&#129353;</div><div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px">3rd place</div><div style="font-size:20px;font-weight:700;color:#CD7F32">&#8358;2.5K</div></div>';
+  h += '</div>';
+
+  // Digital rewards info
+  h += '<div style="margin-top:14px;padding:12px 16px;background:var(--bg);border-radius:8px;border-left:3px solid #BA7517"><div style="font-size:12px;color:var(--muted);line-height:1.5"><strong style="color:var(--fg)">Digital rewards include:</strong> Proton Unlimited (VPN + Mail + Drive), Proton VPN 15-month, Korp VPN 3-month, or Tevau virtual Visa card.</div></div>';
+
+  // Admin: show who picked what
+  if(isAdmin && Object.keys(rewardsPicks).length > 0) {
+    h += '<div style="margin-top:20px;border-top:1px solid var(--border);padding-top:14px"><div style="font-size:14px;font-weight:600;margin-bottom:8px">Player selections:</div>';
+    Object.keys(rewardsPicks).forEach(function(p) {
+      var pick = rewardsPicks[p];
+      var opt = REWARD_OPTIONS.find(function(o) { return o.id === pick.choice; });
+      var label = opt ? opt.label : pick.choice;
+      if(pick.subChoice && opt && opt.sub) { var sub = opt.sub.find(function(s) { return s.id === pick.subChoice; }); if(sub) label += ' → ' + sub.label; }
+      h += '<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px"><span>' + chessIcon(p) + p + '</span><span style="color:#1d9e75">' + label + '</span></div>';
+    });
+    h += '</div>';
+  }
+
+  h += '</div>';
+  return h;
+}
+
 function renderKnockout() {
   var isAdmin = currentPlayer === ADMIN;
   var now = new Date();
@@ -2441,7 +2566,6 @@ function renderHero() {
       '<div class="hero-podium">' + podiumHtml + '</div>' +
     '</div>' +
     '<div class="hero-progress"><span class="hero-progress-label">Groups</span><div class="hero-progress-bar"><div class="hero-progress-fill" style="width:' + pct + '%"></div></div><span class="hero-progress-label">' + played + '/' + MATCHES.length + '</span></div>' +
-    (function(){ var koPlayed = KO_SLOTS.filter(function(s){ return !!koActuals[s.id]; }).length; var koPct = KO_SLOTS.length > 0 ? Math.round((koPlayed / KO_SLOTS.length) * 100) : 0; return '<div class="hero-progress"><span class="hero-progress-label">Knockout</span><div class="hero-progress-bar"><div class="hero-progress-fill" style="width:' + koPct + '%;background:linear-gradient(90deg,#BA7517,#e24b4a)"></div></div><span class="hero-progress-label">' + koPlayed + '/' + KO_SLOTS.length + '</span></div>'; })() +
     buildStreakBar();
   // Start typewriter ticker
   var _twItems = [];
