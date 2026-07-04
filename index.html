@@ -1872,10 +1872,10 @@ var R16_MATCHES = [
   { team1:'Paraguay', team2:'France', date:'2026-07-04', time:'17:00' },
   { team1:'Brazil', team2:'Norway', date:'2026-07-05', time:'16:00' },
   { team1:'Mexico', team2:'England', date:'2026-07-05', time:'20:00' },
-  { team1:'TBD', team2:'TBD', date:'2026-07-06', time:'15:00' },
+  { team1:'Portugal', team2:'Spain', date:'2026-07-06', time:'15:00' },
   { team1:'Belgium', team2:'USA', date:'2026-07-06', time:'20:00' },
-  { team1:'TBD', team2:'TBD', date:'2026-07-07', time:'12:00' },
-  { team1:'TBD', team2:'TBD', date:'2026-07-07', time:'16:00' }
+  { team1:'Argentina', team2:'Egypt', date:'2026-07-07', time:'12:00' },
+  { team1:'Colombia', team2:'Switzerland', date:'2026-07-07', time:'16:00' }
 ];
 R16_MATCHES.forEach(function(m, i) { KO_SLOTS.push({ id: 'r16_' + (i+1), round: 'r16', num: i+1, team1: m.team1, team2: m.team2, date: m.date, time: m.time }); });
 // QF
@@ -3212,7 +3212,7 @@ window.contactSupport = function() {
   var subject = encodeURIComponent('WC2026 Predictions - Support Request');
   var body = encodeURIComponent('Player: ' + currentPlayer + '\n\nDescribe your issue:\n');
   window.open('mailto:tsowho@gmail.com?subject=' + subject + '&body=' + body);
-};
+};};
 
 </script>
 </body>
