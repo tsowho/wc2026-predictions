@@ -1041,8 +1041,7 @@ function calcPoints(pred, actual) {
 }
 
 function getLeaderboard(includeAdmin) {
-  const showAdmin = includeAdmin || currentPlayer === ADMIN;
-  return Object.keys(state.players || {}).filter(p => showAdmin || p !== ADMIN).map(p => {
+  return Object.keys(state.players || {}).map(p => {
     let total = 0, exact = 0, correct = 0, wrong = 0, predicted = 0;
     MATCHES.forEach(m => {
       const pred = state.predictions?.[p]?.['m' + m.id];
