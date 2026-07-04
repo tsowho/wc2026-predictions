@@ -2424,7 +2424,9 @@ function renderHero() {
     Object.keys(state.predictions || {}),
     Object.keys(bonusPredictions || {}),
     currentPlayer,
-    loginDates[currentPlayer] || {}
+    loginDates[currentPlayer] || {},
+    Object.keys(koActuals || {}),
+    Object.keys(koPredictions || {})
   ]);
   if(dataHash === _heroHash && el.innerHTML !== '') return;
   _heroHash = dataHash;
