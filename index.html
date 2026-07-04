@@ -1307,7 +1307,7 @@ function renderDashboard() {
 }
 
 function renderLive() {
-  var now = new Date(), players = Object.keys(state.players || {}).filter(function(p){return currentPlayer === ADMIN || p !== ADMIN});
+  var now = new Date(), players = Object.keys(state.players || {});
   var live = MATCHES.filter(function(m) { var t = getMatchTime(m); return now >= t && now <= new Date(t.getTime() + 9000000) && !state.actuals?.['m' + m.id]; });
   var todayET = now.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
   var todayAll = MATCHES.filter(function(m) { return m.date === todayET; });
@@ -1542,7 +1542,7 @@ function renderResults() {
     h += '</div><span class="team">' + m.team2 + teamFlag(m.team2) + '</span></div>';
     if(hasA) {
       h += '<div style="margin-top:10px;border-top:1px dashed var(--border);padding-top:8px"><div class="collapsible-hdr" onclick="toggleCollapse(this)"><div style="font-size:11px;color:var(--hint)">Predictions:</div><span class="collapsible-arrow">&#9660;</span></div><div class="collapsible-body collapsed">';
-      Object.keys(state.players || {}).filter(p => currentPlayer === ADMIN || p !== ADMIN).forEach(p => {
+      Object.keys(state.players || {}).forEach(p => {
         const pred = state.predictions?.[p]?.['m' + m.id];
         if(!pred || !pred.locked) return;
         const r = calcPoints(pred, actual), cls = r ? (r.type === 'exact' ? 'result-exact' : r.type === 'correct' ? 'result-correct' : 'result-wrong') : '';
@@ -1579,7 +1579,7 @@ function renderResults() {
     // Show all players' predictions for this category
     if(actual) {
       h += '<div style="margin-left:210px;margin-bottom:12px;font-size:13px">';
-      Object.keys(bonusPredictions).filter(p => p !== '_' && (currentPlayer === ADMIN || p !== ADMIN)).forEach(p => {
+      Object.keys(bonusPredictions).filter(p => p !== '_').forEach(p => {
         const pb = bonusPredictions[p];
         if(!pb || !pb._locked || !pb[cat.id]) return;
         const correct = pb[cat.id] === actual;
@@ -1632,7 +1632,7 @@ function renderPlayers() {
   h += '<div class="card"><h2>Players (' + players.length + ')</h2><div class="player-list">';
   players.forEach(p => {
     const jt = joinTimes[p] ? new Date(joinTimes[p]).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
-    if(p === ADMIN && !isAdmin) return; // Hide admin from other players
+    // Baba visible to all players
     h += '<div class="player-chip">' + (playerTeams[p] ? teamFlag(playerTeams[p], 14) : '') + chessIcon(p) + '<span>' + p + '</span>' + chessLabel(p) + (p === ADMIN && isAdmin ? '<span class="admin-badge">admin</span>' : '') + (isAdmin && jt ? '<span style="font-size:10px;color:var(--hint);margin-left:6px">joined ' + jt + '</span>' : '') + (isAdmin && p !== ADMIN ? '<span style="font-size:11px;color:var(--blue);cursor:pointer;margin-left:6px" onclick="resetPlayerPassword(\'' + p.replace(/'/g, "\\'") + '\')">reset pw</span><span class="remove" onclick="removePlayer(\'' + p.replace(/'/g, "\\'") + '\')">&times;</span>' : '') + '</div>';
   });
   h += '</div></div>';
@@ -2840,7 +2840,7 @@ function renderWhoPickedWhat(matchId) {
   if(!m) return '';
   var started = isMatchStarted(m);
   if(!started) return '<div style="font-size:11px;color:var(--hint);margin-top:6px">Predictions visible after kickoff</div>';
-  var players = Object.keys(state.players || {}).filter(function(p){ return p !== ADMIN || currentPlayer === ADMIN; });
+  var players = Object.keys(state.players || {});
   var h = '<div style="margin-top:8px;border-top:1px dashed var(--border);padding-top:8px"><div style="font-size:11px;color:var(--hint);margin-bottom:4px">Who picked what:</div>';
   players.forEach(function(p) {
     var pred = state.predictions?.[p]?.['m' + matchId];
@@ -2906,7 +2906,7 @@ function renderDaySummary() {
   if(!lastDate) return '';
   var dayMatches = MATCHES.filter(function(m) { return m.date === lastDate && state.actuals?.['m' + m.id]; });
   if(!dayMatches.length) return '';
-  var players = Object.keys(state.players || {}).filter(function(p) { return p !== ADMIN || currentPlayer === ADMIN; });
+  var players = Object.keys(state.players || {});
   var dayPts = {};
   players.forEach(function(p) { dayPts[p] = 0; });
   dayMatches.forEach(function(m) {
@@ -3007,7 +3007,7 @@ function renderMiniLeague() {
   var sunStr = sun.toLocaleDateString('en-CA');
   var weekMatches = MATCHES.filter(function(m) { return m.date >= monStr && m.date <= sunStr && state.actuals?.['m' + m.id]; });
   if(!weekMatches.length) return '';
-  var players = Object.keys(state.players || {}).filter(function(p) { return p !== ADMIN || currentPlayer === ADMIN; });
+  var players = Object.keys(state.players || {});
   var weekPts = {};
   players.forEach(function(p) { weekPts[p] = 0; });
   weekMatches.forEach(function(m) {
