@@ -1880,7 +1880,13 @@ var R16_MATCHES = [
 ];
 R16_MATCHES.forEach(function(m, i) { KO_SLOTS.push({ id: 'r16_' + (i+1), round: 'r16', num: i+1, team1: m.team1, team2: m.team2, date: m.date, time: m.time }); });
 // QF
-for(var ki = 1; ki <= 4; ki++) KO_SLOTS.push({ id: 'qf_' + ki, round: 'qf', num: ki, team1: 'TBD', team2: 'TBD', date: '', time: '' });
+var QF_MATCHES = [
+  { team1:'France', team2:'Morocco', date:'2026-07-09', time:'16:00' },
+  { team1:'Spain', team2:'Belgium', date:'2026-07-10', time:'15:00' },
+  { team1:'Norway', team2:'England', date:'2026-07-11', time:'17:00' },
+  { team1:'Argentina', team2:'Switzerland', date:'2026-07-11', time:'21:00' }
+];
+QF_MATCHES.forEach(function(m, i) { KO_SLOTS.push({ id: 'qf_' + (i+1), round: 'qf', num: i+1, team1: m.team1, team2: m.team2, date: m.date, time: m.time }); });
 // SF
 for(var ki = 1; ki <= 2; ki++) KO_SLOTS.push({ id: 'sf_' + ki, round: 'sf', num: ki, team1: 'TBD', team2: 'TBD', date: '', time: '' });
 // 3rd place + Final
