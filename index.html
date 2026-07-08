@@ -974,6 +974,7 @@ function timeAgo(date) {
 setInterval(() => { if(currentTab === 'news') fetchNews(); }, 300000);
 
 var _activeGroup = 'all';
+var _activeKoRound = 'all';
 var _renderTimer = null;
 function render(immediate) {
   if(!immediate) {
@@ -981,13 +982,18 @@ function render(immediate) {
     _renderTimer = setTimeout(function() { render(true); }, 150);
     return;
   }
+  // Skip render if user is typing in a knockout input
+  var _ae = document.activeElement;
+  if(_ae && (_ae.getAttribute('data-ko') || _ae.getAttribute('data-koactual') || _ae.getAttribute('data-koactual-adv'))) return;
   var c = document.getElementById('content');
   var scrollY = window.scrollY;
-  var activeEl = document.activeElement;
+  var activeEl = _ae;
   var activeMatch = activeEl ? activeEl.getAttribute('data-match') : null;
   var activeSide = activeEl ? activeEl.getAttribute('data-side') : null;
   var gfEl = document.querySelector('.group-filter .group-btn.active');
   if(gfEl) _activeGroup = gfEl.dataset.group || 'all';
+  var koFEl = document.querySelector('#koRoundFilter .group-btn.active');
+  if(koFEl) _activeKoRound = koFEl.dataset.round || 'all';
   switch(currentTab) {
     case 'dashboard': c.innerHTML = renderDashboard(); break;
     case 'live': c.innerHTML = renderLive(); break;
@@ -1017,6 +1023,16 @@ function render(immediate) {
     if(activeMatch && activeSide) {
       var el = c.querySelector('[data-match="' + activeMatch + '"][data-side="' + activeSide + '"]');
       if(el) el.focus();
+    }
+  }
+  if(currentTab === 'knockout') {
+    window.scrollTo(0, scrollY);
+    // Restore KO round filter
+    var koFEl = document.querySelector('#koRoundFilter .group-btn.active');
+    if(_activeKoRound && _activeKoRound !== 'all') {
+      var koBtns = c.querySelectorAll('#koRoundFilter .group-btn');
+      koBtns.forEach(function(b) { b.classList.toggle('active', b.dataset.round === _activeKoRound); });
+      c.querySelectorAll('.ko-round-section').forEach(function(s) { s.style.display = s.dataset.koround === _activeKoRound ? '' : 'none'; });
     }
   }
   if(typeof renderFloatingChat === 'function') renderFloatingChat();
@@ -1648,7 +1664,7 @@ function renderLeaderboard() {
     if(statsR.length > 1) {
       h += '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">';
       h += '<div style="font-size:12px;color:var(--muted);margin-bottom:6px">Accuracy by round</div>';
-      statsR.forEach(function(r) { var pr = r.t > 0 ? Math.round((r.c / r.t) * 100) : 0; h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px"><span style="font-size:11px;color:var(--hint);width:42px">' + r.label + '</span><div style="flex:1;height:8px;background:rgba(255,255,255,0.1);border-radius:4px"><div style="height:100%;width:' + pr + '%;background:#1d9e75;border-radius:4px"></div></div><span style="font-size:11px;color:var(--muted);width:30px;text-align:right">' + pr + '%</span></div>'; });
+      statsR.forEach(function(r) { var pr = r.t > 0 ? Math.round((r.c / r.t) * 100) : 0; h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px"><span style="font-size:11px;color:var(--hint);min-width:50px;display:inline-block">' + r.label + '</span><div style="flex:1;height:8px;background:rgba(255,255,255,0.1);border-radius:4px;overflow:hidden"><div style="height:100%;width:' + pr + '%;background:#1d9e75;border-radius:4px"></div></div><span style="font-size:11px;color:var(--muted);min-width:32px;text-align:right">' + pr + '%</span></div>'; });
       h += '</div>';
     }
     // Bold picks
@@ -1677,7 +1693,7 @@ function renderLeaderboard() {
   // Streak Leaders
   var allStreaks = Object.keys(state.players || {}).map(function(p) { return { name: p, streak: getFullStreak(p) }; }).filter(function(s) { return s.streak > 0; }).sort(function(a, b) { return b.streak - a.streak; });
   if(allStreaks.length) {
-    h += '<div class="card"><h2>&#128293; Streak leaders</h2>';
+    h += '<div class="card"><h2>&#128293; Prediction streaks</h2>';
     allStreaks.forEach(function(s, i) { h += '<div style="display:flex;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)"><span style="width:24px;font-weight:600;color:var(--muted)">' + (i + 1) + '.</span><span style="flex:1">' + chessIcon(s.name) + s.name + '</span><span style="background:' + (s.streak >= 5 ? '#e24b4a' : s.streak >= 3 ? '#BA7517' : 'var(--card)') + ';color:' + (s.streak >= 3 ? '#fff' : 'var(--muted)') + ';padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">' + s.streak + ' &#128293;</span></div>'; });
     h += '</div>';
   }
