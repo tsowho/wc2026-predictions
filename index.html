@@ -510,7 +510,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 <button class="tab" data-tab="rewards">Rewards</button>
 <button class="tab" data-tab="players">Players</button>
 </div>
-<div id="content"></div>
+<div id="content"><div style="text-align:center;padding:60px 20px;color:var(--muted)"><div style="font-size:28px;margin-bottom:12px">&#9917;</div><div>Loading predictions...</div></div></div>
 </div>
 </div>
 
@@ -976,9 +976,9 @@ setInterval(() => { if(currentTab === 'news') fetchNews(); }, 300000);
 var _activeGroup = 'all';
 var _renderTimer = null;
 function render(immediate) {
-  if(!immediate && (currentTab === 'results' || currentTab === 'predict')) {
+  if(!immediate) {
     if(_renderTimer) clearTimeout(_renderTimer);
-    _renderTimer = setTimeout(function() { render(true); }, 500);
+    _renderTimer = setTimeout(function() { render(true); }, 150);
     return;
   }
   var c = document.getElementById('content');
