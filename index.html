@@ -1305,6 +1305,25 @@ function renderDashboard() {
     h += isPredLocked(currentPlayer, nm.id) ? '<div style="text-align:center;margin-top:8px"><span class="locked-badge">Your prediction is locked</span></div>' : '<div style="text-align:center;margin-top:8px"><span style="font-size:12px;color:var(--danger)">You haven\'t predicted this match yet!</span></div>';
     h += '</div>';
   }
+  // Match day alerts
+  var mAlerts = getMatchAlerts(currentPlayer);
+  if(mAlerts.length) {
+    h += '<div class="card"><h2>&#9200; Upcoming predictions</h2>';
+    mAlerts.forEach(function(a) {
+      var urgent = a.hrs < 3;
+      var soon = a.hrs < 24;
+      if(a.locked) {
+        h += '<div style="padding:8px 10px;margin-bottom:6px;border-radius:8px;background:rgba(29,158,117,0.1);display:flex;align-items:center;gap:8px"><span style="color:#1d9e75">&#10003;</span><span style="font-size:13px;flex:1;color:#1d9e75">' + a.team1 + ' vs ' + a.team2 + ' — locked in</span><span style="font-size:11px;color:var(--muted)">' + a.round + '</span></div>';
+      } else if(urgent) {
+        h += '<div style="padding:8px 10px;margin-bottom:6px;border-radius:8px;background:rgba(226,75,74,0.12);display:flex;align-items:center;gap:8px"><span style="color:#e24b4a">&#9888;</span><span style="font-size:13px;flex:1;color:#e24b4a;font-weight:600">' + a.team1 + ' vs ' + a.team2 + ' in ' + Math.round(a.hrs) + 'h — predict now!</span><span style="font-size:11px;color:var(--muted)">' + a.round + '</span></div>';
+      } else if(soon) {
+        h += '<div style="padding:8px 10px;margin-bottom:6px;border-radius:8px;background:rgba(186,117,23,0.1);display:flex;align-items:center;gap:8px"><span style="color:#BA7517">&#9200;</span><span style="font-size:13px;flex:1;color:#BA7517">' + a.team1 + ' vs ' + a.team2 + ' in ' + Math.round(a.hrs) + 'h</span><span style="font-size:11px;color:var(--muted)">' + a.round + '</span></div>';
+      } else {
+        h += '<div style="padding:8px 10px;margin-bottom:6px;border-radius:8px;background:rgba(255,255,255,0.05);display:flex;align-items:center;gap:8px"><span style="color:var(--muted)">&#128338;</span><span style="font-size:13px;flex:1">' + a.team1 + ' vs ' + a.team2 + ' — ' + fmtDate(a.date) + '</span><span style="font-size:11px;color:var(--muted)">' + a.round + '</span></div>';
+      }
+    });
+    h += '</div>';
+  }
   return h;
 }
 
@@ -1614,7 +1633,7 @@ function renderLeaderboard() {
   h += '</table></div>';
   lb.forEach(p => {
     const pct = p.predicted > 0 ? Math.round(((p.exact + p.correct) / p.predicted) * 100) : 0;
-    const streak = getStreak(p.name);
+    const fStreak = getFullStreak(p.name);
     const achs = getAchievements(p.name);
     h += '<div class="card"><h2>' + chessIcon(p.name) + p.name + ' ' + chessLabel(p.name) + (p.name === currentPlayer ? ' (you)' : '') + '</h2>';
     if(achs) h += '<div style="margin-bottom:12px">' + achs + '</div>';
@@ -1622,9 +1641,70 @@ function renderLeaderboard() {
     h += '<div class="stat-card"><div class="label">Accuracy</div><div class="value">' + pct + '%</div></div>';
     h += '<div class="stat-card"><div class="label">Points</div><div class="value">' + p.total + '</div></div>';
     h += '<div class="stat-card"><div class="label">Exact scores</div><div class="value">' + p.exact + '</div></div>';
-    h += '<div class="stat-card"><div class="label">Streak</div><div class="value">' + (streak > 0 ? streak + ' &#128293;' : '0') + '</div></div>';
-    h += '</div></div>';
+    h += '<div class="stat-card"><div class="label">Streak</div><div class="value">' + (fStreak > 0 ? fStreak + ' &#128293;' : '0') + '</div></div>';
+    h += '</div>';
+    // Stats by round
+    var statsR = getStatsByRound(p.name);
+    if(statsR.length > 1) {
+      h += '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">';
+      h += '<div style="font-size:12px;color:var(--muted);margin-bottom:6px">Accuracy by round</div>';
+      statsR.forEach(function(r) { var pr = r.t > 0 ? Math.round((r.c / r.t) * 100) : 0; h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:3px"><span style="font-size:11px;color:var(--hint);width:42px">' + r.label + '</span><div style="flex:1;height:8px;background:rgba(255,255,255,0.1);border-radius:4px"><div style="height:100%;width:' + pr + '%;background:#1d9e75;border-radius:4px"></div></div><span style="font-size:11px;color:var(--muted);width:30px;text-align:right">' + pr + '%</span></div>'; });
+      h += '</div>';
+    }
+    // Bold picks
+    var bolds = getBoldPicks(p.name);
+    if(bolds.length) {
+      h += '<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border)"><div style="font-size:12px;color:var(--muted);margin-bottom:4px">&#127942; Bold calls</div>';
+      bolds.forEach(function(b) { h += '<div style="font-size:12px;padding:2px 0;color:var(--muted)"><span style="background:#BA7517;color:#fff;padding:1px 6px;border-radius:8px;font-size:10px;margin-right:4px">BOLD</span>' + b.team + ' over ' + b.opponent + ' (' + b.round.toUpperCase() + ') — only ' + b.pct + '% picked</div>'; });
+      h += '</div>';
+    }
+    // H2H button
+    if(p.name !== currentPlayer) {
+      h += '<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);text-align:center">';
+      h += '<button class="btn-sm" onclick="setH2H(\'' + p.name.replace(/'/g, "\\'") + '\')" style="font-size:12px">' + (h2hTarget === p.name ? 'Hide comparison' : '&#9876; Compare with ' + p.name) + '</button>';
+      if(h2hTarget === p.name) {
+        var hth = getHeadToHead(currentPlayer, p.name);
+        h += '<div style="display:flex;align-items:center;gap:12px;margin-top:10px;justify-content:center">';
+        h += '<div style="text-align:center"><div style="font-size:18px;font-weight:600;color:#1d9e75">' + hth.w1 + '</div><div style="font-size:11px;color:var(--muted)">' + currentPlayer + '</div></div>';
+        h += '<div style="text-align:center;padding:0 8px"><div style="font-size:11px;color:var(--hint)">' + hth.total + ' matches</div><div style="font-size:12px;color:var(--muted)">vs</div><div style="font-size:11px;color:var(--hint)">' + hth.ties + ' ties</div></div>';
+        h += '<div style="text-align:center"><div style="font-size:18px;font-weight:600;color:#BA7517">' + hth.w2 + '</div><div style="font-size:11px;color:var(--muted)">' + p.name + '</div></div>';
+        h += '</div>';
+      }
+      h += '</div>';
+    }
+    h += '</div>';
   });
+  // Streak Leaders
+  var allStreaks = Object.keys(state.players || {}).map(function(p) { return { name: p, streak: getFullStreak(p) }; }).filter(function(s) { return s.streak > 0; }).sort(function(a, b) { return b.streak - a.streak; });
+  if(allStreaks.length) {
+    h += '<div class="card"><h2>&#128293; Streak leaders</h2>';
+    allStreaks.forEach(function(s, i) { h += '<div style="display:flex;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)"><span style="width:24px;font-weight:600;color:var(--muted)">' + (i + 1) + '.</span><span style="flex:1">' + chessIcon(s.name) + s.name + '</span><span style="background:' + (s.streak >= 5 ? '#e24b4a' : s.streak >= 3 ? '#BA7517' : 'var(--card)') + ';color:' + (s.streak >= 3 ? '#fff' : 'var(--muted)') + ';padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600">' + s.streak + ' &#128293;</span></div>'; });
+    h += '</div>';
+  }
+  // Bold Picks Feed
+  var allBolds = [];
+  Object.keys(state.players || {}).forEach(function(p) { getBoldPicks(p).forEach(function(b) { b.player = p; allBolds.push(b); }); });
+  if(allBolds.length) {
+    h += '<div class="card"><h2>&#127942; Bold calls</h2>';
+    allBolds.forEach(function(b) { h += '<div style="padding:5px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px"><span style="background:#BA7517;color:#fff;padding:1px 6px;border-radius:8px;font-size:10px">BOLD</span><span style="font-size:13px;flex:1">' + chessIcon(b.player) + b.player + ' called ' + b.team + ' over ' + b.opponent + '</span><span style="font-size:11px;color:var(--muted)">' + b.round.toUpperCase() + '</span></div>'; });
+    h += '</div>';
+  }
+  // Duels
+  var curRound = getCurrentKoRound();
+  var duels = getDuels(curRound);
+  if(duels.length) {
+    var roundName = curRound.replace('r32','Round of 32').replace('r16','Round of 16').replace('qf','Quarter-Finals').replace('sf','Semi-Finals').replace('final','Final');
+    h += '<div class="card"><h2>&#9876; ' + roundName + ' duels</h2><p style="font-size:12px;color:var(--muted)">Random 1v1 matchups this round</p>';
+    duels.forEach(function(d) {
+      if(d.bye) { h += '<div style="padding:6px 0;font-size:13px;color:var(--muted)">' + chessIcon(d.p1) + d.p1 + ' — bye</div>'; return; }
+      var ldr = d.s1 > d.s2 ? 1 : d.s2 > d.s1 ? 2 : 0;
+      h += '<div style="display:flex;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)">';
+      h += '<div style="flex:1;text-align:left"><span style="font-weight:' + (ldr===1?'700':'400') + ';color:' + (ldr===1?'#1d9e75':'var(--fg)') + '">' + chessIcon(d.p1) + d.p1 + '</span></div>';
+      h += '<div style="text-align:center;min-width:60px"><span style="font-weight:700;font-size:16px">' + d.s1 + '</span><span style="color:var(--muted);margin:0 4px">-</span><span style="font-weight:700;font-size:16px">' + d.s2 + '</span></div>';
+      h += '<div style="flex:1;text-align:right"><span style="font-weight:' + (ldr===2?'700':'400') + ';color:' + (ldr===2?'#1d9e75':'var(--fg)') + '">' + d.p2 + chessIcon(d.p2) + '</span></div></div>';
+    });
+    h += '</div>';
+  }
   return h;
 }
 
@@ -2031,6 +2111,154 @@ function renderRewards() {
   return h;
 }
 
+// === ENGAGEMENT FEATURES ===
+var h2hTarget = '';
+window.setH2H = function(name) { h2hTarget = (h2hTarget === name) ? '' : name; render(); };
+
+function getFullStreak(player) {
+  var results = [];
+  MATCHES.forEach(function(m) {
+    var actual = state.actuals?.['m' + m.id]; if(!actual) return;
+    var pred = state.predictions?.[player]?.['m' + m.id]; if(!pred || !pred.locked) return;
+    var r = calcPoints(pred, actual);
+    results.push({ time: getMatchTime(m), correct: r && r.pts > 0 });
+  });
+  KO_SLOTS.forEach(function(slot) {
+    var m = getKoMatch(slot.id);
+    if(!m || m.team1 === 'TBD' || !m.date || !m.time) return;
+    var actual = koActuals[slot.id]; if(!actual) return;
+    var pred = koPredictions[player] ? koPredictions[player][slot.id] : null;
+    if(!pred || !pred.locked) return;
+    var r = calcPoints(pred, actual);
+    var ok = (r && r.pts > 0) || (pred.advance && actual.advance && pred.advance === actual.advance);
+    results.push({ time: new Date(m.date + 'T' + m.time + ':00-04:00'), correct: ok });
+  });
+  results.sort(function(a, b) { return b.time - a.time; });
+  var streak = 0;
+  for(var i = 0; i < results.length; i++) { if(results[i].correct) streak++; else break; }
+  return streak;
+}
+
+function getBoldPicks(player) {
+  var bold = [], allP = Object.keys(state.players || {});
+  KO_SLOTS.forEach(function(slot) {
+    var actual = koActuals[slot.id]; if(!actual || !actual.advance) return;
+    var pred = koPredictions[player] ? koPredictions[player][slot.id] : null;
+    if(!pred || !pred.advance || pred.advance !== actual.advance) return;
+    var same = 0, tot = 0;
+    allP.forEach(function(p) {
+      var pp = koPredictions[p] ? koPredictions[p][slot.id] : null;
+      if(!pp || !pp.advance) return; tot++; if(pp.advance === actual.advance) same++;
+    });
+    if(tot >= 3 && (same / tot) < 0.4) {
+      var m = getKoMatch(slot.id);
+      bold.push({ round: slot.round, team: actual.advance, opponent: actual.advance === m.team1 ? m.team2 : m.team1, pct: Math.round((same / tot) * 100) });
+    }
+  });
+  return bold;
+}
+
+function getHeadToHead(p1, p2) {
+  var w1 = 0, w2 = 0, ties = 0, tot = 0;
+  MATCHES.forEach(function(m) {
+    var actual = state.actuals?.['m' + m.id]; if(!actual) return;
+    var pr1 = state.predictions?.[p1]?.['m' + m.id], pr2 = state.predictions?.[p2]?.['m' + m.id];
+    if(!pr1 || !pr1.locked || !pr2 || !pr2.locked) return;
+    var r1 = calcPoints(pr1, actual), r2 = calcPoints(pr2, actual);
+    tot++; if((r1?r1.pts:0) > (r2?r2.pts:0)) w1++; else if((r2?r2.pts:0) > (r1?r1.pts:0)) w2++; else ties++;
+  });
+  KO_SLOTS.forEach(function(slot) {
+    var actual = koActuals[slot.id]; if(!actual) return;
+    var pr1 = koPredictions[p1] ? koPredictions[p1][slot.id] : null;
+    var pr2 = koPredictions[p2] ? koPredictions[p2][slot.id] : null;
+    if(!pr1 || !pr1.locked || !pr2 || !pr2.locked) return;
+    var pts1 = 0, pts2 = 0;
+    var r1 = calcPoints(pr1, actual), r2 = calcPoints(pr2, actual);
+    pts1 += r1 ? r1.pts : 0; pts2 += r2 ? r2.pts : 0;
+    if(pr1.advance && actual.advance && pr1.advance === actual.advance) pts1 += 3;
+    if(pr2.advance && actual.advance && pr2.advance === actual.advance) pts2 += 3;
+    tot++; if(pts1 > pts2) w1++; else if(pts2 > pts1) w2++; else ties++;
+  });
+  return { w1: w1, w2: w2, ties: ties, total: tot };
+}
+
+function getPickDistribution(slotId) {
+  var m = getKoMatch(slotId);
+  if(!m || m.team1 === 'TBD' || m.team2 === 'TBD') return null;
+  var allP = Object.keys(state.players || {}), t1 = [], t2 = [], none = [];
+  allP.forEach(function(p) {
+    var pred = koPredictions[p] ? koPredictions[p][slotId] : null;
+    if(!pred || !pred.advance) { none.push(p); return; }
+    if(pred.advance === m.team1) t1.push(p); else t2.push(p);
+  });
+  return { team1: m.team1, team2: m.team2, t1: t1, t2: t2, none: none, total: allP.length };
+}
+
+function getMatchAlerts(player) {
+  var alerts = [], now = new Date();
+  KO_SLOTS.forEach(function(slot) {
+    var m = getKoMatch(slot.id);
+    if(!m || m.team1 === 'TBD' || !m.date || !m.time) return;
+    if(koActuals[slot.id]) return;
+    var kick = new Date(m.date + 'T' + m.time + ':00-04:00');
+    if(kick <= now) return;
+    var hrs = (kick - now) / 3600000;
+    if(hrs > 48) return;
+    var pred = koPredictions[player] ? koPredictions[player][slot.id] : null;
+    var rnd = slot.round.replace('r32','R32').replace('r16','R16').replace('qf','QF').replace('sf','SF');
+    alerts.push({ id: slot.id, team1: m.team1, team2: m.team2, hrs: hrs, locked: !!(pred && pred.locked), round: rnd, date: m.date, time: m.time });
+  });
+  return alerts.sort(function(a, b) { return a.hrs - b.hrs; });
+}
+
+function getDuels(roundId) {
+  var ap = Object.keys(state.players || {}).sort();
+  if(ap.length < 2) return [];
+  var seed = 0;
+  for(var i = 0; i < roundId.length; i++) seed += roundId.charCodeAt(i) * (i + 1);
+  var sh = ap.slice();
+  for(var i = sh.length - 1; i > 0; i--) { seed = (seed * 9301 + 49297) % 233280; var j = seed % (i + 1); var t = sh[i]; sh[i] = sh[j]; sh[j] = t; }
+  var duels = [];
+  for(var i = 0; i < sh.length - 1; i += 2) {
+    var p1 = sh[i], p2 = sh[i + 1], s1 = 0, s2 = 0, rm = 0;
+    KO_SLOTS.filter(function(s) { return s.round === roundId; }).forEach(function(slot) {
+      var act = koActuals[slot.id]; if(!act) return; rm++;
+      var pr1 = koPredictions[p1] ? koPredictions[p1][slot.id] : null;
+      var pr2 = koPredictions[p2] ? koPredictions[p2][slot.id] : null;
+      if(pr1 && pr1.locked) { var r = calcPoints(pr1, act); if(r) s1 += r.pts; if(pr1.advance && act.advance && pr1.advance === act.advance) s1 += 3; }
+      if(pr2 && pr2.locked) { var r = calcPoints(pr2, act); if(r) s2 += r.pts; if(pr2.advance && act.advance && pr2.advance === act.advance) s2 += 3; }
+    });
+    duels.push({ p1: p1, p2: p2, s1: s1, s2: s2, matches: rm });
+  }
+  if(sh.length % 2) duels.push({ p1: sh[sh.length - 1], p2: null, s1: 0, s2: 0, matches: 0, bye: true });
+  return duels;
+}
+
+function getStatsByRound(player) {
+  var rounds = [{ id: 'groups', label: 'Groups', c: 0, t: 0 }, { id: 'r32', label: 'R32', c: 0, t: 0 }, { id: 'r16', label: 'R16', c: 0, t: 0 }, { id: 'qf', label: 'QF', c: 0, t: 0 }, { id: 'sf', label: 'SF', c: 0, t: 0 }, { id: 'final', label: 'Final', c: 0, t: 0 }];
+  MATCHES.forEach(function(m) {
+    var act = state.actuals?.['m' + m.id]; if(!act) return;
+    var pred = state.predictions?.[player]?.['m' + m.id]; if(!pred || !pred.locked) return;
+    rounds[0].t++; var r = calcPoints(pred, act); if(r && r.pts > 0) rounds[0].c++;
+  });
+  KO_SLOTS.forEach(function(slot) {
+    var act = koActuals[slot.id]; if(!act) return;
+    var pred = koPredictions[player] ? koPredictions[player][slot.id] : null; if(!pred || !pred.locked) return;
+    var ro = rounds.find(function(r) { return r.id === slot.round; }); if(!ro) return;
+    ro.t++; var r = calcPoints(pred, act); if((r && r.pts > 0) || (pred.advance && act.advance && pred.advance === act.advance)) ro.c++;
+  });
+  return rounds.filter(function(r) { return r.t > 0; });
+}
+
+function getCurrentKoRound() {
+  var rounds = ['r32', 'r16', 'qf', 'sf', 'final'];
+  for(var i = rounds.length - 1; i >= 0; i--) {
+    if(KO_SLOTS.filter(function(s) { return s.round === rounds[i]; }).some(function(s) { return !!koActuals[s.id]; })) return rounds[i];
+  }
+  return 'r32';
+}
+
+
 function renderKnockout() {
   var isAdmin = currentPlayer === ADMIN;
   var now = new Date();
@@ -2111,6 +2339,22 @@ function renderKnockout() {
         h += '<div style="font-size:10px;color:var(--muted);margin-top:4px">+3 bonus points if correct</div>';
         if(canPredict2) h += '<button class="btn-lock" style="margin-top:10px;width:100%;max-width:320px" onclick="lockKoPrediction(\'' + slot.id + '\')">Lock prediction</button>';
         h += '</div>';
+      }
+
+      // Pick distribution for upcoming matches
+      if(hasBothTeams && !hasResult && !matchStarted) {
+        var dist = getPickDistribution(slot.id);
+        if(dist && (dist.t1.length + dist.t2.length) > 0) {
+          var picked = dist.t1.length + dist.t2.length;
+          var pct1 = picked > 0 ? Math.round((dist.t1.length / picked) * 100) : 0;
+          var pct2 = 100 - pct1;
+          h += '<div style="border-top:1px solid var(--border);margin-top:8px;padding-top:8px">';
+          h += '<div style="font-size:11px;color:var(--muted);margin-bottom:6px;text-align:center">&#128202; Who\'s picking who (' + picked + '/' + dist.total + ' predicted)</div>';
+          h += '<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px"><span style="font-size:11px;min-width:50px;text-align:right">' + dist.team1 + '</span><div style="flex:1;height:14px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden"><div style="height:100%;width:' + pct1 + '%;background:#1d9e75;border-radius:4px"></div></div><span style="font-size:11px;min-width:28px">' + pct1 + '%</span></div>';
+          h += '<div style="display:flex;align-items:center;gap:6px"><span style="font-size:11px;min-width:50px;text-align:right">' + dist.team2 + '</span><div style="flex:1;height:14px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden"><div style="height:100%;width:' + pct2 + '%;background:#BA7517;border-radius:4px"></div></div><span style="font-size:11px;min-width:28px">' + pct2 + '%</span></div>';
+          h += '<div style="font-size:10px;color:var(--hint);margin-top:4px;text-align:center">' + dist.t1.join(', ') + (dist.t1.length ? ' → ' + dist.team1 : '') + (dist.t1.length && dist.t2.length ? ' | ' : '') + dist.t2.join(', ') + (dist.t2.length ? ' → ' + dist.team2 : '') + '</div>';
+          h += '</div>';
+        }
       }
 
       // Show advance result for completed matches
