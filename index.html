@@ -787,6 +787,27 @@ window.recoverStreak = function() {
   _heroHash = '';
   renderHero();
 };
+window.adminRecoverStreak = function(playerName, dateStr) {
+  if(currentPlayer !== ADMIN) return;
+  if(!playerName) {
+    playerName = prompt('Enter player name to recover streak for:');
+    if(!playerName) return;
+  }
+  if(!dateStr) {
+    dateStr = prompt('Enter date to backfill (YYYY-MM-DD) or leave blank for yesterday:', '');
+    if(dateStr === null) return;
+    if(!dateStr) {
+      var now = new Date();
+      var yesterday = new Date(now.getTime() - 86400000);
+      dateStr = yesterday.toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+    }
+  }
+  if(!confirm('Backfill login for ' + playerName + ' on ' + dateStr + '?')) return;
+  db.ref('wc2026/loginDates/' + playerName + '/' + dateStr).set(true);
+  alert('Done! ' + playerName + ' now has ' + dateStr + ' logged.');
+  _heroHash = '';
+  renderHero();
+};
 function getStreakInfo(name) {
   const dates = loginDates[name] || {};
   const now = new Date();
@@ -1319,6 +1340,24 @@ function renderDashboard() {
     h += '<div class="match-teams"><span class="team">' + teamFlag(nm.team1) + nm.team1 + '</span><span class="match-vs">vs</span><span class="team">' + nm.team2 + teamFlag(nm.team2) + '</span></div>';
     h += '<div style="text-align:center;margin-top:8px;font-size:12px;color:var(--hint)">' + nm.venue + '<br>' + fmtDate(nm.date) + ' ' + etToUkTime(nm.date, nm.time) + ' UK</div>';
     h += isPredLocked(currentPlayer, nm.id) ? '<div style="text-align:center;margin-top:8px"><span class="locked-badge">Your prediction is locked</span></div>' : '<div style="text-align:center;margin-top:8px"><span style="font-size:12px;color:var(--danger)">You haven\'t predicted this match yet!</span></div>';
+    h += '</div>';
+  }
+  // Admin: recover any player streak
+  if(currentPlayer === ADMIN) {
+    h += '<div class="card" style="border:1px solid var(--accent)"><h2>&#128737; Admin: streak management</h2>';
+    var allP = Object.keys(state.players || {}).sort();
+    allP.forEach(function(p) {
+      var psi = getStreakInfo(p);
+      var pDates = loginDates[p] || {};
+      var yStr = new Date(new Date().getTime() - 86400000).toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+      var yMissed = !pDates[yStr];
+      var pe = p.replace(/'/g, "\\'");
+      h += '<div style="display:flex;align-items:center;padding:4px 0;border-bottom:1px solid var(--border);gap:8px">';
+      h += '<span style="flex:1;font-size:13px">' + chessIcon(p) + p + ' &mdash; ' + psi.streak + ' day streak</span>';
+      if(yMissed) h += '<button class="btn-sm" style="font-size:11px;background:#e67e22;color:#fff;border:none" onclick="adminRecoverStreak(\'' + pe + '\',\'' + yStr + '\')">Recover yesterday</button>';
+      h += '<button class="btn-sm" style="font-size:11px" onclick="adminRecoverStreak(\'' + pe + '\')">Backfill date</button>';
+      h += '</div>';
+    });
     h += '</div>';
   }
   // Match day alerts
