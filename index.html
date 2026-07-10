@@ -777,7 +777,7 @@ let streakRecoveries = {};
 db.ref('wc2026/streakRecoveries').on('value', function(snap) { streakRecoveries = snap.val() || {}; });
 window.recoverStreak = function() {
   if(!currentPlayer) return;
-  if(streakRecoveries[currentPlayer]) { alert('You have already used your streak recovery.'); return; }
+  if(currentPlayer !== ADMIN && streakRecoveries[currentPlayer]) { alert('You have already used your streak recovery.'); return; }
   if(!confirm('Use your one-time streak recovery? This backfills yesterday so your streak continues.')) return;
   var now = new Date();
   var yesterday = new Date(now.getTime() - 86400000);
@@ -2593,7 +2593,7 @@ function buildStreakBar() {
     var yesterdayStr = new Date(new Date().getTime() - 86400000).toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
     var playerDts = loginDates[currentPlayer] || {};
     var yesterdayMissed = !playerDts[yesterdayStr] && si.days.length > 1 && si.days.some(function(d){ return d.logged && d.date < yesterdayStr; });
-    if(yesterdayMissed && !streakRecoveries[currentPlayer]) {
+    if(yesterdayMissed && (currentPlayer === ADMIN || !streakRecoveries[currentPlayer])) {
       h += '<button class="streak-claim-btn" style="background:linear-gradient(135deg,#e67e22,#d35400);color:#fff;margin-left:4px" onclick="recoverStreak()">&#128296; Recover streak</button>';
     }
   }
