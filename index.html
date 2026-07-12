@@ -2023,7 +2023,11 @@ var QF_MATCHES = [
 ];
 QF_MATCHES.forEach(function(m, i) { KO_SLOTS.push({ id: 'qf_' + (i+1), round: 'qf', num: i+1, team1: m.team1, team2: m.team2, date: m.date, time: m.time }); });
 // SF
-for(var ki = 1; ki <= 2; ki++) KO_SLOTS.push({ id: 'sf_' + ki, round: 'sf', num: ki, team1: 'TBD', team2: 'TBD', date: '', time: '' });
+var SF_MATCHES = [
+  { team1:'France', team2:'Spain', date:'2026-07-14', time:'15:00' },
+  { team1:'England', team2:'Argentina', date:'2026-07-15', time:'15:00' }
+];
+SF_MATCHES.forEach(function(m, i) { KO_SLOTS.push({ id: 'sf_' + (i+1), round: 'sf', num: i+1, team1: m.team1, team2: m.team2, date: m.date, time: m.time }); });
 // 3rd place + Final
 KO_SLOTS.push({ id: '3rd_1', round: '3rd', num: 1, team1: 'TBD', team2: 'TBD', date: '', time: '' });
 KO_SLOTS.push({ id: 'final_1', round: 'final', num: 1, team1: 'TBD', team2: 'TBD', date: '', time: '' });
