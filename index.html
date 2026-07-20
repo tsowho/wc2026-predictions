@@ -2879,38 +2879,14 @@ function renderHero() {
     '<div class="hero-progress"><span class="hero-progress-label">Groups</span><div class="hero-progress-bar"><div class="hero-progress-fill" style="width:' + pct + '%"></div></div><span class="hero-progress-label">' + played + '/' + MATCHES.length + '</span></div>' +
     buildStreakBar();
   // Start typewriter ticker
-  var _twItems = [];
-  var _twDots = [];
-  results.forEach(function(m) {
-    var a = state.actuals['m' + m.id];
-    _twItems.push(m.team1 + ' ' + a.s1 + ' - ' + a.s2 + ' ' + m.team2);
-    _twDots.push('#1d9e75');
-  });
-  if(liveMatches.length) {
-    liveMatches.forEach(function(m) {
-      _twItems.push('LIVE: ' + m.team1 + ' vs ' + m.team2);
-      _twDots.push('#e24b4a');
-    });
-  }
-  lb.slice(0, 3).forEach(function(p, i) {
-    _twItems.push(p.name + ' — ' + p.total + ' pts');
-    _twDots.push(['#BA7517','#888','#a0522d'][i]);
-  });
-  trashMsgs.forEach(function(msg) {
-    var tmp = document.createElement('span'); tmp.innerHTML = msg;
-    _twItems.push(tmp.textContent || tmp.innerText || msg);
-    _twDots.push('#e24b4a');
-  });
-  var chatPrompts = [
-    'Drop your hot takes in the chat!',
-    'Who\'s winning it all? Tell us in chat!',
-    'Agree with the rankings? Chat about it!',
-    'Any bold predictions? Share in chat!',
-    'Banter welcome — hit the chat bubble!'
+  var _twItems = [
+    '\u{1F3C6} Spain are World Cup 2026 Champions!',
+    'The tournament is over \u2014 what a ride!',
+    'Top 3: select your prize on the Rewards tab',
+    'Reply in chat to claim before July 24th 10PM',
+    '\u23F0 Rewards close July 24th \u2014 don\u2019t miss out!'
   ];
-  _twItems.push(chatPrompts[Math.floor(Math.random() * chatPrompts.length)]);
-  _twDots.push('#6c63ff');
-  if(_twItems.length === 1) _twItems.push('World Cup 2026 — Predictions open!');
+  var _twDots = ['#BA7517', '#1d9e75', '#6c63ff', '#e24b4a', '#e67e22'];
   setTimeout(function() { startTypewriterTicker(_twItems, _twDots); }, 100);
 }
 
